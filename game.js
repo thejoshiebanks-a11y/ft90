@@ -270,7 +270,7 @@ for(const [x,z,c] of [[-22,-92,0x246a86],[22,-88,0x8b4b2d]]){const kiosk=new T.G
 
 let mode='play',tt=0,cm=0,sprint=false;
 const CM=[[34,92,0],[11,20,14],[43,112,0]],CN=['broadcast','player','wide'];
-let camTrackX=0,camTrackZ=0;
+let camTrackX=0,camTrackZ=0,camBX=0,camBZ=0,camFX=0,camFZ=0,NEARHIDE=null;
 const tn=t=>t?'City':'United',nm=id=>(id%11)+1,turnA=(a,b,m)=>{const d=((b-a+Math.PI*3)%(Math.PI*2))-Math.PI;return a+cl(d,-m,m)};
 const cap=t=>{$('cp').textContent=t},fade=f=>{$('fd').style.opacity=f?1:0};
 function say(t,ms){cap(t);clearTimeout(say.h);say.h=setTimeout(()=>cap(''),ms||1800)}
@@ -568,7 +568,7 @@ function audioInit(){if(AU.c)return;try{const C=window.AudioContext||window.webk
  AU.c=c;AU.noise=g;AU.voice=vg;setInterval(chantBurst,2600)}catch(e){}}
 const CHANTS=['UNI-TED! UNI-TED!','WE ARE FT90!','OLE OLE OLE OLE!','COME ON YOU BLUES!','FT-NINETY! FT-NINETY!'];let chantI=0;
 function chantBurst(){if(!AU.c)return;if(AU.c.state==='suspended')AU.c.resume();const t0=AU.c.currentTime+.05,g=AU.voice.gain,lv=AU.lvl;if(lv<.03)return;[0,.45,.9,1.55,2.0].forEach((o,i)=>{g.cancelScheduledValues&&0;g.setTargetAtTime(lv*.55,t0+o,.03);g.setTargetAtTime(0,t0+o+(i===2||i===4?.4:.22),.05)});
- const el=document.getElementById('chant');if(el&&AU.lvl>.2){el.textContent=CHANTS[chantI++%CHANTS.length];el.style.opacity=1;setTimeout(()=>{el.style.opacity=0},1900)}}
+ const el=document.getElementById('chant');if(el&&AU.lvl>.2&&mode!=='play'){el.textContent=CHANTS[chantI++%CHANTS.length];el.style.opacity=1;setTimeout(()=>{el.style.opacity=0},1900)}}
 function crowdLevel(){if(mode==='walk'){if(WK.kind==='half')return .12;const x=WK.x,z=WK.z;if(z<-252)return Math.min(.95,.35+(Math.abs(x)<22?.6:0));if(z<-168)return .3;if(z<-112)return .2;return .1}if(mode==='lineup'||mode==='shake')return .95;if(mode==='play')return .42+Math.min(.5,ca*.2);return .1}
 function audioTick(dt){if(!AU.c)return;const lv=crowdLevel();AU.lvl+=(lv-AU.lvl)*Math.min(1,dt*1.5);AU.noise.gain.setTargetAtTime(AU.lvl*.35,AU.c.currentTime,.2)}
 /* ---- floor height, route beacon ---- */
@@ -608,7 +608,7 @@ openDlg(q,[['Motivate',()=>choose('sp')],['Demand more',()=>choose('pw')],['Stay
 function openTactics(){st.pause=true;$('pm').classList.add('on')}
 const goLevel=l=>{if(WK.busy)return;WK.busy=true;fade(1);setTimeout(()=>{WK.x=-70;WK.z=l?-160:-170.5;WK.vx=WK.vz=0;fade(0);WK.busy=false;say(l?'LEVEL 2 · Upper Concourse':'LEVEL 1 · Grand Atrium',2200)},600)};
 const INT=[
- {x:0,z:-253,r:9,label:'Security check',fn:()=>showSecurityCheck()},
+ {x:0,z:-253,r:6,skip:()=>WK.security,label:'Security check',fn:()=>showSecurityCheck()},
  {x:-14,z:-224,r:4.5,label:'Stadium map',fn:()=>openMap()},{x:14,z:-224,r:4.5,label:'Stadium map',fn:()=>openMap()},
  {x:0,z:-232,r:8,label:'Fan Zone',fn:()=>openDlg('FT90 FAN ZONE · The trophy cabinet shines under the atrium lights. Supporters queue for photos, legends videos play on the big ring screen.',[['Take a photo',()=>{closeDlg();say('Great shot! The fan zone team cheers.',2000)}],['Move on',closeDlg]])},
  {x:-60,z:-214,r:8,label:'Megastore',fn:()=>openDlg('OFFICIAL FT90 MEGASTORE · Shirts, scarves and matchday souvenirs. Staff are serving a queue of supporters.',[['Buy a scarf · £12',()=>{closeDlg();say('FT90 scarf added to your matchday bag.',2200)}],['Leave',closeDlg]])},
@@ -622,7 +622,7 @@ const INT=[
  {x:-36,z:-100,r:4.5,label:'Players-only door',fn:()=>{if(!WK.security){openDlg('ACCESS DENIED · Your accreditation must be verified at the main gate first.',[['Understood',closeDlg]])}else if(WK.access){say('Door open. Follow the corridor to the dressing room.',2200)}else{WK.access=true;openDlg('PLAYERS-ONLY ACCESS · Accreditation scanned by armed security. The corridor leads to the dressing room.',[['Enter',closeDlg]])}}},
  {x:5,z:-78,r:3.8,label:'Talk',fn:coachTalk},{x:7,z:-84,r:3.8,label:'Tactics',fn:openTactics},{x:11.5,z:-70,r:3.2,label:'Locker',fn:()=>say('Your locker. Number 10. Your boots and kit are ready.',2400)},
  ...RM.map(o=>({x:o.x,z:o.z,r:2.3,label:'Chat',fn:()=>say(o.name+': \"'+o.line+'\"',2800)}))];
-function nearInt(){let best=null,bd=1e9;for(const it of INT){const d=Math.hypot(it.x-WK.x,it.z-WK.z);if(d<it.r&&d<bd){bd=d;best=it}}return best}
+function nearInt(){let best=null,bd=1e9;for(const it of INT){if(it.skip&&it.skip())continue;const d=Math.hypot(it.x-WK.x,it.z-WK.z);if(d<it.r&&d<bd){bd=d;best=it}}return best}
 function drawMap(cv){const x=cv.getContext('2d'),W=cv.width,H=cv.height,X=z=>(z+330)/300*W,Y=q=>(q+95)/190*H;x.clearRect(0,0,W,H);x.fillStyle='#07111e';x.fillRect(0,0,W,H);
  const Z=(x0,x1,z0,z1,f,t)=>{x.fillStyle=f;x.fillRect(X(z0),Y(x0),X(z1)-X(z0),Y(x1)-Y(x0));if(t){x.fillStyle='#e8f4ff';x.font='bold 11px system-ui,sans-serif';x.textAlign='center';x.fillText(t,(X(z0)+X(z1))/2,(Y(x0)+Y(x1))/2+4)}};
  Z(-68,68,-320,-252,'#2b3a4a','ARRIVAL PLAZA');Z(-78,78,-248,-170,'#23505e','GRAND ATRIUM');Z(-78,78,-168,-140,'#2d3f6e','LEVEL 2');Z(-66,-54,-140,-96,'#35507a');Z(-66,3,-102.6,-97.4,'#1d3a6a');Z(-2.4,2.4,-98,-86,'#1d3a6a');Z(-13.2,13.2,-86,-63.4,'#2a7de1','');Z(-3.5,3.5,-63.4,-36.6,'#1d3a6a');Z(-55,55,-36,36,'#1f6a2e','PITCH');
@@ -692,25 +692,25 @@ const it=nearInt(),ia=$('ia');if(it&&!WK.busy&&!st.pause){if(ia.textContent!==it
 if(!WK.exiting&&WK.z>-35.4&&(WK.kind!=='pre'||WK.talked))exitWalk();
 mark.position.set(WK.x,4.2,WK.z);walkCam(dt,false)}
 let last=performance.now();
-function loop(n){const dt=Math.min(.05,(n-last)/1000);last=n;tt+=dt;sky.position.copy(cam.position);if(mode!=='walk')audioTick(dt);ca*=.985;crowdA.position.y=Math.max(0,Math.sin(n/230))*.25*(1+ca);crowdB.position.y=Math.max(0,Math.sin(n/230+2.1))*.25*(1+ca);
+function loop(n){const dt=Math.min(.05,(n-last)/1000);last=n;tt+=dt;sky.position.copy(cam.position);if(mode!=='play'&&NEARHIDE&&NEARHIDE.hidden){NEARHIDE.forEach(o=>o.visible=true);NEARHIDE.hidden=false}if(mode!=='walk')audioTick(dt);ca*=.985;crowdA.position.y=Math.max(0,Math.sin(n/230))*.25*(1+ca);crowdB.position.y=Math.max(0,Math.sin(n/230+2.1))*.25*(1+ca);
 if(mode==='walk'){walkTick(dt);crowdPeople.forEach((o,i)=>{const t=n/1000+o.phase;o.m.pose(o.pose,t);if(o.pose==='wave'){o.m.J.arms[0].rotation.z=2.2+Math.sin(t*4)*.35;o.m.J.arms[1].rotation.z=2.2+Math.cos(t*4)*.35}else if(o.pose==='talk'){o.m.J.hd.rotation.y=Math.sin(t*1.7)*.13;o.m.J.arms[1].rotation.z=.65+Math.max(0,Math.sin(t*2+i))*.55}});worldPeople.forEach((o,i)=>{const t=n/1000+o.phase;o.m.pose(o.pose,t);if(o.pose==='talk'){o.m.J.hd.rotation.y=Math.sin(t*1.4)*.15;o.m.J.arms[0].rotation.z=.4+Math.max(0,Math.sin(t*1.8+i))*.45}});securityStaff.forEach((o,i)=>{const t=n/1000+i;o.m.J.hd.rotation.y=Math.sin(t*1.1)*.16;o.m.J.arms[1].rotation.z=.55+Math.max(0,Math.sin(t*1.7))*.45});R.render(S,cam)}
 else if(mode==='lineup'){lineupTick(dt);if(tt>14.5){cap('Starting line-ups');shakeStart()}R.render(S,cam)}
 else if(mode==='shake'){P.forEach(p=>walk(p,p.x0+(p.t?-4:4),p.t?1.3:-1.3,1.4,dt));if(tt>3.6)toKick();R.render(S,cam)}
 else if(mode==='wait')R.render(S,cam);
 else{if(!st.pause){if(st.freeze>0)st.freeze-=dt;else step(dt);refUpd(dt)}if(u)mark.position.set(u.p.x,4.2,u.p.y);pitchCrew.forEach(o=>o.m.pose(o.pose,n/1000+o.phase));bowlPeople.forEach(o=>{const t=n/1000+o.phase;o.m.pose(o.pose,t);if(o.pose==='talk'){o.m.J.hd.rotation.y=Math.sin(t*1.5)*.14;o.m.J.arms[0].rotation.z=.45+Math.max(0,Math.sin(t*2))*0.55}});dugoutPeople.forEach(o=>{const t=n/1000+o.phase;o.m.pose(o.pose,t);if(o.pose==='talk'){o.m.J.hd.rotation.y=Math.sin(t*1.5)*.12;o.m.J.arms[1].rotation.z=.7+Math.max(0,Math.sin(t*2))*0.4}});AR.forEach((r,i)=>{r.position.x=cl(ball.position.x*.78+(i===0?-5:5),-48,48);r.position.z=i===0?-38.2:38.2;r.anim(2,n/140)});ctx();drawRad();
 const w=cam.aspect<1,b=ball.position;
-if(cm===0){
- // FC25/eFootball-style broadcast: inside the bowl, above the near roof, slowly panning with the ball.
- const bx=cl(b.x*(w?.8:.5),-(w?46:30),w?46:30);camTrackX+=(bx-camTrackX)*Math.min(1,dt*1.6);
- cam.position.set(camTrackX,w?31:25,w?61:53);
- cam.lookAt(camTrackX*.9,0,w?3:5);
-}else if(cm===2){
- const wx=cl(b.x*.25,-18,18);camTrackX+=(wx-camTrackX)*Math.min(1,dt*1.2);
- cam.position.set(camTrackX,w?38:33,w?68:60);
- cam.lookAt(camTrackX,0,2);
-}else{
- const fx=u?u.p.x+cl(u.v.x*.22,-2,2):b.x,fz=u?u.p.y:b.z,k=Math.min(1,dt*1.05);
- cam.position.x+=(fx-cam.position.x)*k;cam.position.y+=(CM[1][0]-cam.position.y)*Math.min(1,dt*1.3);cam.position.z+=(fz+CM[1][1]-cam.position.z)*k;cam.lookAt(fx,0,fz);
+if(!NEARHIDE)NEARHIDE=S.children.filter(o=>o.isMesh&&o!==sky&&o.position.z>38&&o.position.y>=11&&Math.abs(o.position.x)<110);
+NEARHIDE.forEach(o=>o.visible=cm===1);NEARHIDE.hidden=cm!==1;
+camBX+=(b.x-camBX)*Math.min(1,dt*2.2);camBZ+=(b.z-camBZ)*Math.min(1,dt*2.2);
+if(cm===0){ // broadcast: high, deep sideline view of the whole pitch, smooth ball-led pan
+ const bx=cl(camBX*(w?.7:.55),-(w?40:34),w?40:34);camTrackX+=(bx-camTrackX)*Math.min(1,dt*2);
+ cam.position.set(camTrackX,w?46:36,w?78:62);cam.lookAt(camTrackX*.95,0,w?-6:-4+camBZ*.12)
+}else if(cm===2){ // wide tactical view
+ const wx=cl(camBX*.3,-20,20);camTrackX+=(wx-camTrackX)*Math.min(1,dt*1.4);
+ cam.position.set(camTrackX,w?52:44,w?90:76);cam.lookAt(camTrackX,0,-2)
+}else{ // player cam: blends the controlled player with the ball and is low-pass filtered, so switching players never snaps the view
+ const tx=u?u.p.x*.55+camBX*.45:camBX,tz=u?u.p.y*.55+camBZ*.45:camBZ;camFX+=(tx-camFX)*Math.min(1,dt*1.5);camFZ+=(tz-camFZ)*Math.min(1,dt*1.5);
+ cam.position.x+=(camFX-cam.position.x)*Math.min(1,dt*4);cam.position.y+=(CM[1][0]+4-cam.position.y)*Math.min(1,dt*1.3);cam.position.z+=(camFZ+CM[1][1]-cam.position.z)*Math.min(1,dt*4);cam.lookAt(camFX,0,camFZ)
 }
 R.render(S,cam)}
 requestAnimationFrame(loop)}
