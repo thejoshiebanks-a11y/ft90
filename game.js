@@ -255,6 +255,14 @@ for(let side of [-1,1]){const x=side*11;for(let i=0;i<12;i++){const step=new T.M
 // Moving visitors: shoppers, families and staff use full-body models; animation is subtle and deterministic.
 for(let i=0;i<22;i++){const x=-20+(i%8)*5.5,z=-105+Math.floor(i/8)*22;const pose=i%5===0?'stretch':i%3===0?'talk':'sit';addPerson(concourse,x,z,{kind:'world',pose,rot:(i%2)*Math.PI})}
 
+// Distinctive stadium identity: fan-centre frontage, destination pylons and staffed security guides.
+function panelLabel(label,x,y,z,w=5,h=1.15){const q=new T.Mesh(new T.PlaneGeometry(w,h),new T.MeshBasicMaterial({map:tex(512,128,g=>{g.fillStyle='#07172a';g.fillRect(0,0,512,128);g.fillStyle='#63e6be';g.fillRect(0,0,12,128);g.fillStyle='#f4f8ff';g.font='bold 42px sans-serif';g.textAlign='center';g.fillText(label,264,82)}),side:T.DoubleSide}));q.position.set(x,y,z);concourse.add(q);return q}
+panelLabel('FT90 FAN CENTRE',-21,4.2,-88,6.2,1.4);panelLabel('OFFICIAL MEGASTORE',21,4.2,-78,6.8,1.4);panelLabel('PLAYERS / MEDIA ACCESS',0,4.8,-68,7,1.2);
+// Security stewards stand at the checkpoint and along the route; their high-visibility tops make them legible.
+const securityStaff=[];[[-5,-113,0],[5,-113,Math.PI],[0,-75,Math.PI]].forEach(([x,z,r],i)=>{const p=addPerson(concourse,x,z,{kind:'world',pose:'talk',color:0xf1c40f,shorts:0x17202b,rot:r});securityStaff.push({...p,homeX:x,homeZ:z,idx:i});const vest=new T.Mesh(new T.BoxGeometry(.43,.72,.24),new T.MeshStandardMaterial({color:0xf4d03f,roughness:.8}));vest.position.set(0,1.45,0);p.m.add(vest);});
+// Small kiosk displays and a family seating nook make the concourse read as a public destination.
+for(const [x,z,c] of [[-22,-92,0x246a86],[22,-88,0x8b4b2d]]){const kiosk=new T.Group();const base=new T.Mesh(new T.BoxGeometry(4.5,1.05,2.2),new T.MeshStandardMaterial({color:c,roughness:.65}));base.position.y=.55;kiosk.add(base);const top=new T.Mesh(new T.BoxGeometry(4.8,.16,2.5),new T.MeshStandardMaterial({color:0xe8edf4,metalness:.15,roughness:.4}));top.position.y=1.15;kiosk.add(top);for(let j=0;j<3;j++){const item=new T.Mesh(new T.BoxGeometry(.42,.58,.42),new T.MeshStandardMaterial({color:[0xe74c3c,0x27ae60,0xf1c40f][j]}));item.position.set(-1+j,1.5,0);kiosk.add(item)}kiosk.position.set(x,0,z);concourse.add(kiosk)}
+
 // Ball kids in high-visibility bibs near each touchline/end-zone corner.
 [[-52,-31],[52,-31],[-52,31],[52,31],[-34,-39],[34,-39]].forEach(([x,z],i)=>{const kid=mk(0xf1c40f,S,{shorts:0x101820,skin:i%5,hair:i%4,hs:i%3,boot:0x111111});kid.position.set(x,0,z);kid.rotation.y=Math.atan2(-x,-z);pitchCrew.push({m:kid,pose:'sit',phase:i*1.4})});
 // Coaches and substitutes occupy both dugouts instead of leaving the technical areas empty.
@@ -274,8 +282,14 @@ function reset(){Sim.reset(sim);sim.mood=st.m;sync(0)}
 function act(k){if(!st.run||st.pause||st.freeze>0)return;Sim.act(sim,k)}
 const pad=$('pad'),kn=$('kn');
 function pm(e){const r=pad.getBoundingClientRect();let dx=e.clientX-r.left-60,dy=e.clientY-r.top-60;const l=Math.hypot(dx,dy);if(l>50){dx*=50/l;dy*=50/l}jx=dx/50;jy=dy/50;kn.style.transform=`translate(${dx}px,${dy}px)`}
-pad.addEventListener('pointerdown',e=>{pad.setPointerCapture(e.pointerId);pm(e)});pad.addEventListener('pointermove',e=>{if(pad.hasPointerCapture(e.pointerId))pm(e)});
+pad.style.touchAction='none';pad.addEventListener('pointerdown',e=>{e.preventDefault();pad.setPointerCapture(e.pointerId);pm(e)});pad.addEventListener('pointermove',e=>{if(pad.hasPointerCapture(e.pointerId))pm(e)});
 const up=()=>{jx=jy=0;kn.style.transform=''};pad.addEventListener('pointerup',up);pad.addEventListener('pointercancel',up);
+let lookPointer=null,lookX=0,lookY=0;const gameCanvas=$('c');gameCanvas.style.touchAction='none';
+// In walk mode, drag anywhere on the open world (not the joystick/UI) to orbit the camera.
+gameCanvas.addEventListener('pointerdown',e=>{if(mode==='walk'&&!WK.busy&&e.clientX>innerWidth*.24&&e.clientX<innerWidth*.88&&e.clientY<innerHeight*.88){e.preventDefault();lookPointer=e.pointerId;lookX=e.clientX;lookY=e.clientY;gameCanvas.setPointerCapture(e.pointerId)}});
+gameCanvas.addEventListener('pointermove',e=>{if(lookPointer!==e.pointerId||mode!=='walk')return;e.preventDefault();const dx=e.clientX-lookX,dy=e.clientY-lookY;lookX=e.clientX;lookY=e.clientY;WK.camYaw=cl(WK.camYaw-dx*.008,-1.35,1.35);WK.camPitch=cl(WK.camPitch+dy*.014,-.65,.8)});
+const endLook=e=>{if(lookPointer===e.pointerId)lookPointer=null};gameCanvas.addEventListener('pointerup',endLook);gameCanvas.addEventListener('pointercancel',endLook);
+
 $('sh').addEventListener('pointerdown',()=>act(1));$('ps').addEventListener('pointerdown',()=>act(0));$('th').addEventListener('pointerdown',()=>act((sim.owner>=0&&sim.p[sim.owner].t===0)?4:5));$('lb').addEventListener('pointerdown',()=>act((sim.owner>=0&&sim.p[sim.owner].t===0)?2:6));
 $('ia').addEventListener('pointerdown',e=>{e.preventDefault();doInteract()});$('mapbtn').addEventListener('pointerdown',e=>{e.preventDefault();if(mode==='walk'&&!WK.busy)openMap();else if(mode==='walk'&&$('mapoverlay').style.display==='flex')closeMap()});
 addEventListener('keydown',e=>{K[e.code]=1;if(mode==='walk'){if(e.code==='KeyE'||e.code==='Enter')doInteract();return}if(e.code==='Space')act(1);if(e.code==='KeyE')act(0);if(e.code==='KeyQ')act(2);if(e.code==='KeyR')act(4);if(e.code==='KeyF')act(3)});addEventListener('keyup',e=>K[e.code]=0);
@@ -326,27 +340,26 @@ P.forEach((p,i)=>{p.m.visible=true;const n=i%Sim.N;p.x0=-15+(n*3);setP(p,cl((n-5
 function shakeStart(){mode='shake';tt=0;cap('Captains and officials · pre-match handshakes');P.forEach(p=>setP(p,p.x0,p.t?1.3:-1.3,Math.PI/2));cam.position.set(0,10,39);cam.lookAt(0,1,0)}
 function toKick(){mode='wait';cap('');fade(1);setTimeout(()=>{kickoff();fade(0)},600)}
 /* ---------- walkable tunnel + dressing room ---------- */
-const WK={x:0,z:0,a:0,vx:0,vz:0,ph:0,kind:'pre',talked:false,lock:false,busy:false,exiting:false,msg:0,lk:new T.Vector3()};
+const WK={x:0,z:0,a:0,vx:0,vz:0,ph:0,kind:'pre',talked:false,lock:false,busy:false,exiting:false,msg:0,lk:new T.Vector3(),target:null,camYaw:0,camPitch:0};
 function inside(x,z){
- // Collision volumes for the bus, crowd-control rails, counters and lift cores.
- const blocks=[[-28,-126,9.2,3.0],[-12,-113,1.0,13.2],[12,-113,1.0,13.2],[-17,-94,2.8,2.0],[-17,-78,2.8,2.0],[-17,-62,2.8,2.0],[17,-94,2.8,2.0],[17,-78,2.8,2.0],[17,-62,2.8,2.0],[-20,-48,2.1,2.1],[20,-48,2.1,2.1]];
+ const blocks=[[-28,-126,7.2,2.6],[-12,-113,.75,9],[12,-113,.75,9],[-17,-94,1.8,1.2],[17,-94,1.8,1.2],[-17,-78,1.8,1.2],[17,-78,1.8,1.2],[-17,-62,1.8,1.2],[-20,-48,1.5,1.5],[20,-48,1.5,1.5]];
  if(blocks.some(([bx,bz,rx,rz])=>Math.abs(x-bx)<rx&&Math.abs(z-bz)<rz))return false;
- // The previous version had contradictory Z-range checks here, creating an invisible wall
- // at the public-concourse entrance. These ranges now overlap to make a continuous route.
- if(!WK.lock&&x>-55&&x<55&&z>-36.8&&z<35.5)return true; // pitch perimeter
- if(WK.kind==='pre'&&z<=-94&&z>-151&&x>-52&&x<52)return true; // arrival plaza
- if(Math.abs(x)<21.8&&z>-110&&z<=-63.4)return true; // main public concourse
- if(Math.abs(x)<3.25&&z>-63.4&&z<=-36.6){
-   // The players-only tunnel only opens after the player uses the door interaction.
-   return WK.kind==='half'||WK.access;
- }
- // Half-time return route from the pitch through the tunnel and concourse.
- if(WK.kind==='half'&&Math.abs(x)<21.8&&z<=-36.6&&z>-110)return true;
- return false
+ // Exterior plaza and wide, continuous public concourse. Keep the centre lane open.
+ if(WK.kind==='pre'&&z<=-94&&z>=-151&&x>=-52&&x<=52)return true;
+ if(z>-111&&z<=-72&&x>=-27&&x<=27)return true;
+ // The east and west public galleries connect the concourse to the fan centre and lifts.
+ if(z>-108&&z<=-74&&Math.abs(x)>=19&&Math.abs(x)<=25)return true;
+ // Public approach to the staffed players-only door; crossing it still requires accreditation.
+ if(z>-72&&z<=-63.4&&Math.abs(x)<4.5)return true;
+ if(WK.access&&Math.abs(x)<14&&z>-86&&z<=-36.6)return true;
+ if(Math.abs(x)<5.5&&z>-72&&z<=-36.6)return WK.kind==='half'||WK.access;
+ if(!WK.lock&&x>-55&&x<55&&z>-36.8&&z<35.5)return true;
+ if(WK.kind==='half'&&Math.abs(x)<27&&z<=-36.6&&z>-111)return true;
+ return false;
 }
 function openDlg(txt,ch){$('dtx').textContent=txt;const c=$('dch');c.innerHTML='';ch.forEach(([l,fn])=>{const b=document.createElement('button');b.textContent=l;b.onclick=fn;c.appendChild(b)});$('dlg').style.display='flex';WK.busy=true}
 function closeDlg(){$('dlg').style.display='none';WK.busy=false}
-function coachTalk(){if(WK.kind==='pre'&&!WK.security){openDlg('The team liaison stops you at the dressing-room entrance. Please pass the accreditation checkpoint on the public concourse first.',[['Understood',closeDlg]]);return}if(WK.talked){openDlg('Gaffer: "Go on then. Out you go."',[['Okay',closeDlg]]);return}
+function coachTalk(){if(WK.kind==='pre'&&!WK.access){openDlg('The team liaison stops you at the dressing-room entrance. Please pass the accreditation checkpoint on the public concourse first.',[['Understood',closeDlg]]);return}if(WK.talked){openDlg('Gaffer: "Go on then. Out you go."',[['Okay',closeDlg]]);return}
 const q=WK.kind==='pre'?'Gaffer: "Big night, lad. How do you want us to play it?"':'Gaffer: "Talk to me. What do we need for the second half?"';
 const choose=m=>{st.m[m]=m==='op'?.92:m==='sp'?1.08:1.18;WK.talked=true;WK.lock=false;openDlg('Gaffer: "Right. Go out there and show them."',[["Let's go",()=>{closeDlg();say(WK.kind==='pre'?'Head out through the tunnel':'Head back out to the pitch',2800)}]])};
 openDlg(q,[['Motivate',()=>choose('sp')],['Demand more',()=>choose('pw')],['Stay calm',()=>choose('op')]])}
@@ -355,12 +368,24 @@ const INT=[
  {x:0,z:-112,r:7,label:'Security check',fn:()=>showSecurityCheck()},
  {x:0,z:-102,r:4.2,label:'Stadium map',fn:()=>openMap()},
  {x:-17,z:-94,r:3.8,label:'Food counter',fn:()=>openDlg('MATCHDAY CONCESSIONS  •  The seller is serving supporters. Grab a quick drink or snack before heading toward the players’ entrance.',[['Buy water · £2',()=>{closeDlg();say('Water purchased. The seller nods and passes it over.',2300)}],['Not now',closeDlg]])},
+ {x:-22,z:-88,r:4.2,label:'Fan centre',fn:()=>openDlg('FT90 FAN CENTRE · Supporters watch pre-match coverage, meet other fans and browse matchday displays. A steward can direct you to the dressing-room route.',[['Look around',()=>{closeDlg();say('You explore the fan centre.',1800)}],['Continue',closeDlg]])},
+ {x:22,z:-91,r:4.2,label:'Lift lobby',fn:()=>openDlg('LIFT LOBBY · Accessible lift and destination signage. Upper-floor travel is represented visually but not yet simulated.',[['Back to concourse',closeDlg]])},
+ {x:22,z:-105,r:4.2,label:'Escalators & stairs',fn:()=>openDlg('UPPER CONCOURSE · Follow signs for seating, family facilities and the upper concourse. These routes are marked, but vertical floor travel remains a future feature.',[['Continue',closeDlg]])},
+ {x:-22,z:-75,r:4.2,label:'Fan megastore',fn:()=>openDlg('FT90 MEGASTORE · Shirts, scarves and matchday souvenirs are on display while staff serve supporters.',[['Browse',()=>{closeDlg();say('You browse the FT90 collection.',1800)}],['Leave',closeDlg]])},
  {x:17,z:-78,r:3.8,label:'Merchandise',fn:()=>openDlg('OFFICIAL FT90 STORE  •  Scarves, shirts and matchday souvenirs are on display. A family is browsing beside you.',[['Buy a scarf · £12',()=>{closeDlg();say('FT90 scarf added to your matchday bag.',2200)}],['Keep moving',closeDlg]])},
  {x:0,z:-67,r:3.4,label:'Players-only door',fn:()=>{if(!WK.security){openDlg('ACCESS DENIED  •  Your accreditation must be checked at the security checkpoint on the public concourse first.',[['Understood',closeDlg]])}else{WK.access=true;openDlg('PLAYERS-ONLY ACCESS  •  Your accreditation is scanned. Beyond this door are the team corridor, dressing room and tunnel. Follow the blue signs.',[['Enter',closeDlg]])}}},
  {x:0,z:-80,r:3.8,label:'Talk',fn:coachTalk},{x:7,z:-84,r:3.8,label:'Tactics',fn:openTactics},{x:11.5,z:-70,r:3.2,label:'Locker',fn:()=>say('Your locker. Number 10. Your boots and kit are ready.',2400)},
  ...RM.map(o=>({x:o.x,z:o.z,r:2.3,label:'Chat',fn:()=>say(o.name+': "'+o.line+'"',2800)}))];
 function nearInt(){let best=null,bd=1e9;for(const it of INT){const d=Math.hypot(it.x-WK.x,it.z-WK.z);if(d<it.r&&d<bd){bd=d;best=it}}return best}
-function openMap(){const overlay=$('mapoverlay');if(overlay){overlay.style.display='flex';WK.busy=true;const stage=WK.z<-115?1:WK.z<-94?2:WK.z<-63?3:4;overlay.querySelectorAll('.mapnode').forEach((n,i)=>{n.classList.toggle('current',i+1===stage);n.classList.toggle('done',i+1<stage)});}}
+function openMap(){
+ const overlay=$('mapoverlay');if(!overlay)return;overlay.style.display='flex';WK.busy=true;
+ const stage=WK.z<-115?1:WK.z<-94?2:WK.z<-70?3:4;
+ overlay.querySelectorAll('.mapnode').forEach((n,i)=>{
+  n.classList.toggle('current',i+1===stage);n.classList.toggle('done',i+1<stage);
+  n.onclick=()=>{const pts=[{x:0,z:-112},{x:0,z:-99},{x:0,z:-80},{x:0,z:-48}];WK.target=pts[i];closeMap();say('WAYPOINT SET · '+n.querySelector('b').textContent+' · Follow the lit floor markers and steward directions.',2600)};
+ });
+ const note=overlay.querySelector('.mapnote');if(note)note.textContent='Route: arrival plaza → staffed security → public concourse, concessions and fan centre → accredited players corridor → dressing room → tunnel. Tap a destination for a guided waypoint. Green = public; blue = players-only.';
+}
 function closeMap(){const overlay=$('mapoverlay');if(overlay)overlay.style.display='none';WK.busy=false}
 $('mapclose').addEventListener('pointerdown',e=>{e.preventDefault();closeMap()});
 function walkObjective(){if(WK.kind==='half')return WK.z>-63?'Return through the tunnel to the pitch':'Find the manager in the dressing room';if(WK.z<-115)return 'OBJECTIVE 1/4 · Walk from the team bus through the supporter arrival plaza';if(WK.z<-94)return WK.security?'OBJECTIVE 2/4 · Follow the green signs through the main concourse':'OBJECTIVE 2/4 · Stop at SECURITY and verify your accreditation';if(WK.z<-63)return WK.talked?'OBJECTIVE 4/4 · Follow the players’ tunnel to the pitch':'OBJECTIVE 3/4 · Find the dressing room and speak to the manager';return 'OBJECTIVE · Head out to the pitch for the team walkout'}
@@ -372,13 +397,19 @@ if(kind==='pre'){ext.visible=true;WK.x=-39;WK.z=-130;WK.a=Math.PI/2;P.forEach(p=
 else{const q=u||P[0];WK.x=cl(q.p.x,-50,50);WK.z=cl(q.p.y,-34,33);WK.a=-Math.PI/2;q.m.visible=false;say('Half time. Walk to the tunnel and into the dressing room',4500)}
 cam.position.set(WK.x*.7,9,WK.z+13);walkCam(0,true)}
 function walkCam(dt,snap){const z=WK.z;let cx,cy,cz,lx,ly,lz;if(WK.kind==='pre'&&z<-91){cx=WK.x*.72;cy=5.4;cz=z-10;lx=WK.x*.7;ly=1.8;lz=z+10}else if(z>-36){cx=WK.x*.7;cy=7.4;cz=z+11;lx=WK.x;ly=1;lz=z-3}else{cx=WK.x*.5;cy=7.4;cz=z+9;lx=WK.x*.8;ly=.6;lz=z-2.5}
-const k=snap?1:Math.min(1,dt*3.5);cam.position.x=lerp(cam.position.x,cx,k);cam.position.y=lerp(cam.position.y,cy,k);cam.position.z=lerp(cam.position.z,cz,k);
-WK.lk.x=lerp(snap?lx:WK.lk.x,lx,k);WK.lk.y=lerp(snap?ly:WK.lk.y,ly,k);WK.lk.z=lerp(snap?lz:WK.lk.z,lz,k);cam.lookAt(WK.lk)}
+const k=snap?1:Math.min(1,dt*3.5);cx+=Math.sin(WK.camYaw)*10;cz+=Math.cos(WK.camYaw)*10;ly+=WK.camPitch*5;
+cam.position.x=lerp(cam.position.x,cx,k);cam.position.y=lerp(cam.position.y,cy,k);cam.position.z=lerp(cam.position.z,cz,k);
+WK.lk.x=lerp(snap?lx:WK.lk.x,lx+Math.sin(WK.camYaw)*12,k);WK.lk.y=lerp(snap?ly:WK.lk.y,ly,k);WK.lk.z=lerp(snap?lz:WK.lk.z,lz-Math.cos(WK.camYaw)*4,k);cam.lookAt(WK.lk)}
 function exitWalk(){if(WK.exiting)return;WK.exiting=true;fade(1);setTimeout(()=>{U.visible=false;HIDE.forEach(o=>o.visible=true);housing.visible=true;showWalkUI(false);ball.visible=true;mark.visible=true;RF.visible=true;
 if(WK.kind==='pre')startLineup();else kickoff();fade(0)},650)}
 function walkTick(dt){const now=performance.now()/1000;
 if(!WK.busy&&!st.pause){const ix=jx+(K.KeyD||K.ArrowRight?1:0)-(K.KeyA||K.ArrowLeft?1:0),iz=-jy+(K.KeyS||K.ArrowDown?1:0)-(K.KeyW||K.ArrowUp?1:0),m=Math.hypot(ix,iz),nx=m>1?ix/m:ix,nz=m>1?iz/m:iz,top=(Math.hypot(jx,jy)>.91||K.ShiftLeft)?6.4:4.4;
 WK.vx=lerp(WK.vx,nx*top,Math.min(1,dt*9));WK.vz=lerp(WK.vz,nz*top,Math.min(1,dt*9))}else{WK.vx*=.8;WK.vz*=.8}
+if(WK.target&&!WK.busy){
+ const dx=WK.target.x-WK.x,dz=WK.target.z-WK.z,d=Math.hypot(dx,dz);
+ if(d<2.2){WK.target=null;say('Waypoint reached.',1500)}
+ else if(Math.hypot(jx,jy)<.12&&!K.KeyW&&!K.KeyA&&!K.KeyS&&!K.KeyD&&!K.ArrowUp&&!K.ArrowDown&&!K.ArrowLeft&&!K.ArrowRight){WK.vx=lerp(WK.vx,dx/d*2,Math.min(1,dt*1.4));WK.vz=lerp(WK.vz,dz/d*2,Math.min(1,dt*1.4))}
+}
 const ax=WK.x+WK.vx*dt,az=WK.z+WK.vz*dt;
 // Stop at the checkpoint and open accreditation automatically so mobile users cannot miss the interaction prompt.
 if(WK.kind==='pre'&&!WK.security&&WK.x>-8&&WK.x<8&&WK.z<=-115&&az>-115){WK.z=-115;WK.vz=0;showSecurityCheck()}
@@ -394,7 +425,7 @@ if(!WK.exiting&&WK.z>-35.4&&(WK.kind!=='pre'||WK.talked))exitWalk();
 mark.position.set(WK.x,4.2,WK.z);walkCam(dt,false)}
 let last=performance.now();
 function loop(n){const dt=Math.min(.05,(n-last)/1000);last=n;tt+=dt;ca*=.985;crowdA.position.y=Math.max(0,Math.sin(n/230))*.25*(1+ca);crowdB.position.y=Math.max(0,Math.sin(n/230+2.1))*.25*(1+ca);
-if(mode==='walk'){walkTick(dt);crowdPeople.forEach((o,i)=>{const t=n/1000+o.phase;o.m.pose(o.pose,t);if(o.pose==='wave'){o.m.J.arms[0].rotation.z=2.2+Math.sin(t*4)*.35;o.m.J.arms[1].rotation.z=2.2+Math.cos(t*4)*.35}else if(o.pose==='talk'){o.m.J.hd.rotation.y=Math.sin(t*1.7)*.13;o.m.J.arms[1].rotation.z=.65+Math.max(0,Math.sin(t*2+i))*.55}});worldPeople.forEach((o,i)=>{const t=n/1000+o.phase;o.m.pose(o.pose,t);if(o.pose==='talk'){o.m.J.hd.rotation.y=Math.sin(t*1.4)*.15;o.m.J.arms[0].rotation.z=.4+Math.max(0,Math.sin(t*1.8+i))*.45}});R.render(S,cam)}
+if(mode==='walk'){walkTick(dt);crowdPeople.forEach((o,i)=>{const t=n/1000+o.phase;o.m.pose(o.pose,t);if(o.pose==='wave'){o.m.J.arms[0].rotation.z=2.2+Math.sin(t*4)*.35;o.m.J.arms[1].rotation.z=2.2+Math.cos(t*4)*.35}else if(o.pose==='talk'){o.m.J.hd.rotation.y=Math.sin(t*1.7)*.13;o.m.J.arms[1].rotation.z=.65+Math.max(0,Math.sin(t*2+i))*.55}});worldPeople.forEach((o,i)=>{const t=n/1000+o.phase;o.m.pose(o.pose,t);if(o.pose==='talk'){o.m.J.hd.rotation.y=Math.sin(t*1.4)*.15;o.m.J.arms[0].rotation.z=.4+Math.max(0,Math.sin(t*1.8+i))*.45}});securityStaff.forEach((o,i)=>{const t=n/1000+i;o.m.J.hd.rotation.y=Math.sin(t*1.1)*.16;o.m.J.arms[1].rotation.z=.55+Math.max(0,Math.sin(t*1.7))*.45});R.render(S,cam)}
 else if(mode==='lineup'){P.forEach(p=>walk(p,p.x0,p.t?-29.8:-33.0,3.2,dt));if(tt>7){cap('Starting line-ups');shakeStart()}cam.position.x=lerp(cam.position.x,0,Math.min(1,dt*1.2));cam.position.y=lerp(cam.position.y,10.5,Math.min(1,dt*1.2));cam.position.z=lerp(cam.position.z,49,Math.min(1,dt*1.2));cam.lookAt(0,1,-20);R.render(S,cam)}
 else if(mode==='shake'){P.forEach(p=>walk(p,p.x0+(p.t?-4:4),p.t?1.3:-1.3,1.4,dt));if(tt>3.6)toKick();R.render(S,cam)}
 else if(mode==='wait')R.render(S,cam);

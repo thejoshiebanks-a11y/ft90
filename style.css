@@ -60,3 +60,16 @@ button:focus, button:active, .b:focus, .b:active { outline: none; -webkit-tap-hi
 .mapcard{width:min(92vw,540px);max-height:90dvh;overflow:auto;border:1px solid rgba(127,229,205,.35);border-radius:18px;background:linear-gradient(155deg,#142338,#07111e 70%);color:#eef8ff;padding:18px;box-shadow:0 22px 70px #0009;font-family:system-ui,sans-serif}
 .maphead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}.maphead small{color:#70e5c3;font-weight:800;font-size:10px;letter-spacing:.14em}.maphead h2{margin:4px 0 0;font-size:24px}.maphead button{background:#24354a;color:white;border:1px solid #496176;border-radius:8px;padding:10px;font-weight:800;font-size:11px;touch-action:manipulation}
 .maproute{display:flex;flex-direction:column;align-items:stretch}.mapnode{padding:12px 14px;border:1px solid #33475c;border-radius:11px;background:#101d2c;position:relative}.mapnode b{display:block;font-size:12px;letter-spacing:.045em}.mapnode small{display:block;color:#a8b8c8;font-size:11px;margin-top:4px}.mapnode.current{border-color:#ffda75;background:#2b2a20;box-shadow:0 0 0 2px #ffda7524}.mapnode.current b:after{content:'  · YOU ARE HERE';color:#ffda75;font-size:9px}.mapnode.done{border-color:#238b70;background:#102a29}.mapline{height:18px;width:3px;background:#43d7ad;margin-left:25px}.mapnode:nth-of-type(7){border-color:#467fd8}.maplegend{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;color:#b8c8d8;font-size:10px}.maplegend span{display:flex;align-items:center;gap:6px}.maplegend i{display:inline-block;width:9px;height:9px;border-radius:3px}.maplegend .green{background:#43d7ad}.maplegend .blue{background:#467fd8}.mapnote{margin:14px 0 0;color:#aebdca;font-size:11px;line-height:1.5}
+
+/* FT90 v10: mobile world look controls and reliable touch interaction */
+html,body,#c,canvas,button,.b,#pad,#kn,#ia,#mapbtn,#dlg,#mapoverlay,#walkobj,#sb,#msg,#cp,#rad,#stm,#cfx{
+ -webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important;
+ -webkit-tap-highlight-color:transparent!important;
+}
+html,body{overscroll-behavior:none;touch-action:none}
+#c{touch-action:none;cursor:grab}
+#pad{touch-action:none;pointer-events:auto}
+#kn{pointer-events:none}
+button,.b,#ia,#mapbtn{touch-action:manipulation}
+#mapoverlay .mapnode{cursor:pointer;touch-action:manipulation}
+#mapoverlay .mapnode:active{transform:scale(.99)}
