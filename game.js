@@ -349,7 +349,7 @@ const choose=m=>{st.m[m]=m==='op'?.92:m==='sp'?1.08:1.18;WK.talked=true;WK.lock=
 openDlg(q,[['Motivate',()=>choose('sp')],['Demand more',()=>choose('pw')],['Stay calm',()=>choose('op')]])}
 function openTactics(){st.pause=true;$('pm').classList.add('on')}
 const INT=[
- {x:0,z:-112,r:4.5,label:'Security check',fn:()=>openDlg('SECURITY CHECKPOINT  •  A steward checks your accreditation and points you toward the players’ entrance. Public concourse access ends beyond the marked doors.',[['Show accreditation',()=>{WK.security=true;closeDlg();say('Accreditation checked. Follow the green route to PLAYERS / DRESSING ROOMS.',3200)}]])},
+ {x:0,z:-112,r:7,label:'Security check',fn:()=>showSecurityCheck()},
  {x:0,z:-102,r:4.2,label:'Stadium map',fn:()=>openMap()},
  {x:-17,z:-94,r:3.8,label:'Food counter',fn:()=>openDlg('MATCHDAY CONCESSIONS  •  The seller is serving supporters. Grab a quick drink or snack before heading toward the players’ entrance.',[['Buy water · £2',()=>{closeDlg();say('Water purchased. The seller nods and passes it over.',2300)}],['Not now',closeDlg]])},
  {x:17,z:-78,r:3.8,label:'Merchandise',fn:()=>openDlg('OFFICIAL FT90 STORE  •  Scarves, shirts and matchday souvenirs are on display. A family is browsing beside you.',[['Buy a scarf · £12',()=>{closeDlg();say('FT90 scarf added to your matchday bag.',2200)}],['Keep moving',closeDlg]])},
@@ -360,7 +360,8 @@ function nearInt(){let best=null,bd=1e9;for(const it of INT){const d=Math.hypot(
 function openMap(){const overlay=$('mapoverlay');if(overlay){overlay.style.display='flex';WK.busy=true;const stage=WK.z<-115?1:WK.z<-94?2:WK.z<-63?3:4;overlay.querySelectorAll('.mapnode').forEach((n,i)=>{n.classList.toggle('current',i+1===stage);n.classList.toggle('done',i+1<stage)});}}
 function closeMap(){const overlay=$('mapoverlay');if(overlay)overlay.style.display='none';WK.busy=false}
 $('mapclose').addEventListener('pointerdown',e=>{e.preventDefault();closeMap()});
-function walkObjective(){if(WK.kind==='half')return WK.z>-63?'Return through the tunnel to the pitch':'Find the manager in the dressing room';if(WK.z<-115)return 'OBJECTIVE 1/4 · Walk from the team bus through the supporter arrival plaza';if(WK.z<-94)return 'OBJECTIVE 2/4 · Pass security and enter the main concourse';if(WK.z<-63)return WK.talked?'OBJECTIVE 4/4 · Follow the players’ tunnel to the pitch':'OBJECTIVE 3/4 · Find the dressing room and speak to the manager';return 'OBJECTIVE · Head out to the pitch for the team walkout'}
+function walkObjective(){if(WK.kind==='half')return WK.z>-63?'Return through the tunnel to the pitch':'Find the manager in the dressing room';if(WK.z<-115)return 'OBJECTIVE 1/4 · Walk from the team bus through the supporter arrival plaza';if(WK.z<-94)return WK.security?'OBJECTIVE 2/4 · Follow the green signs through the main concourse':'OBJECTIVE 2/4 · Stop at SECURITY and verify your accreditation';if(WK.z<-63)return WK.talked?'OBJECTIVE 4/4 · Follow the players’ tunnel to the pitch':'OBJECTIVE 3/4 · Find the dressing room and speak to the manager';return 'OBJECTIVE · Head out to the pitch for the team walkout'}
+function showSecurityCheck(){if(WK.security){say('Accreditation verified. Follow the green signs to the players-only door.',2400);return}openDlg('FT90 SECURITY CHECKPOINT\n\nA steward needs to verify your player accreditation before you can enter the main concourse. Tap SHOW ACCREDITATION to continue.',[['Show accreditation',()=>{WK.security=true;closeDlg();say('✓ ACCREDITATION VERIFIED — continue along the green route to PLAYERS / DRESSING ROOMS.',3600)}],['Not yet',closeDlg]])}
 function doInteract(){if(WK.busy||st.pause)return;const it=nearInt();if(it)it.fn()}
 function startWalk(kind){mode='walk';tt=0;WK.kind=kind;WK.talked=false;WK.lock=false;WK.busy=false;WK.exiting=false;WK.security=false;WK.access=false;WK.vx=WK.vz=0;
 HIDE.forEach(o=>o.visible=false);housing.visible=false;U.visible=true;mark.visible=false;showWalkUI(true);rs();
@@ -375,7 +376,10 @@ if(WK.kind==='pre')startLineup();else kickoff();fade(0)},650)}
 function walkTick(dt){const now=performance.now()/1000;
 if(!WK.busy&&!st.pause){const ix=jx+(K.KeyD||K.ArrowRight?1:0)-(K.KeyA||K.ArrowLeft?1:0),iz=-jy+(K.KeyS||K.ArrowDown?1:0)-(K.KeyW||K.ArrowUp?1:0),m=Math.hypot(ix,iz),nx=m>1?ix/m:ix,nz=m>1?iz/m:iz,top=(Math.hypot(jx,jy)>.91||K.ShiftLeft)?6.4:4.4;
 WK.vx=lerp(WK.vx,nx*top,Math.min(1,dt*9));WK.vz=lerp(WK.vz,nz*top,Math.min(1,dt*9))}else{WK.vx*=.8;WK.vz*=.8}
-const ax=WK.x+WK.vx*dt,az=WK.z+WK.vz*dt;if(inside(ax,WK.z))WK.x=ax;else WK.vx=0;if(inside(WK.x,az))WK.z=az;else WK.vz=0;
+const ax=WK.x+WK.vx*dt,az=WK.z+WK.vz*dt;
+// Stop at the checkpoint and open accreditation automatically so mobile users cannot miss the interaction prompt.
+if(WK.kind==='pre'&&!WK.security&&WK.x>-8&&WK.x<8&&WK.z<=-115&&az>-115){WK.z=-115;WK.vz=0;showSecurityCheck()}
+if(inside(ax,WK.z))WK.x=ax;else WK.vx=0;if(!WK.busy){if(inside(WK.x,az))WK.z=az;else WK.vz=0}else{WK.vx*=.5;WK.vz=0;}
 if(WK.kind==='half'&&!WK.lock&&!WK.talked&&WK.z<-39)WK.lock=true;
 if(WK.lock&&!WK.talked&&WK.z>-38.6&&WK.vz>.5&&performance.now()>WK.msg){say('The gaffer wants a word first.',2000);WK.msg=performance.now()+3000}
 const v=Math.hypot(WK.vx,WK.vz);if(v>.4)WK.a=turnA(WK.a,Math.atan2(WK.vz,WK.vx),dt*12);WK.ph+=v*dt*1.6;
