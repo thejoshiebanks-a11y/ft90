@@ -1,0 +1,43 @@
+:root{--bg:#0b1220;--ink:#f2f5fa;--mute:#8fa6c7;--acc:#1d9e75;--hot:#e24b4a;--pan:#16233a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:'Barlow Condensed',system-ui,sans-serif;position:relative;overflow:hidden;touch-action:none;user-select:none}
+canvas{position:absolute;inset:0;width:100%;height:100%}
+#sb{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:var(--pan);padding:4px 16px;border-radius:6px;font-size:22px;font-weight:700;display:flex;gap:12px;white-space:nowrap}
+#sb small{font-size:15px;color:var(--mute);align-self:center}
+#msg{position:absolute;top:30%;width:100%;text-align:center;font-size:56px;font-weight:700;display:none}
+.ov{position:absolute;inset:0;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:16px}
+.ov.on{display:flex}
+h1{font-size:52px;margin:0;font-weight:700}
+p{margin:0;color:var(--mute);font-size:18px;max-width:420px}
+button{font:700 20px 'Barlow Condensed',system-ui,sans-serif;background:var(--acc);color:#fff;border:0;border-radius:8px;padding:10px 22px}
+button.s{background:#233654}
+#pad{position:absolute;left:18px;bottom:calc(18px + env(safe-area-inset-bottom,0px));width:120px;height:120px;border-radius:50%;background:#ffffff22;display:none}
+#kn{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px;border-radius:50%;background:#ffffffaa}
+.b{position:absolute;bottom:calc(24px + env(safe-area-inset-bottom,0px));border-radius:50%;display:none;align-items:center;justify-content:center;font-size:18px;font-weight:700}
+#sh{right:20px;width:76px;height:76px;background:var(--hot)}#ps{right:108px;width:60px;height:60px;background:#185fa5;bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+#ht{background:transparent;pointer-events:none;justify-content:flex-end}
+#cap{display:none;font-size:30px;font-weight:700;text-shadow:0 2px 6px #000;padding-bottom:12%}
+#room{display:none;pointer-events:auto;margin-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+#room .k{background:#0b1220dd;border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;align-items:center}
+#pz{position:absolute;top:10px;right:12px;width:38px;height:38px;border-radius:8px;background:var(--pan);display:none;align-items:center;justify-content:center;font-size:20px;font-weight:700}
+#stm{position:absolute;top:50px;left:50%;transform:translateX(-50%);width:120px;height:6px;border-radius:3px;background:#ffffff33;display:none}#stf{display:block;height:100%;width:100%;background:#fac775;border-radius:3px}
+#cp{position:absolute;bottom:14%;width:100%;text-align:center;font-size:30px;font-weight:700;text-shadow:0 2px 6px #000;pointer-events:none}
+#fd{position:absolute;inset:0;background:#000;opacity:0;transition:opacity .5s;pointer-events:none}
+#lb,#sk,#sp{font-size:15px}#lb{right:20px;bottom:calc(112px + env(safe-area-inset-bottom,0px));width:60px;height:60px;background:#8e44ad}
+#sk{right:92px;bottom:calc(96px + env(safe-area-inset-bottom,0px));width:54px;height:54px;background:#d68910}
+#sp{right:178px;bottom:calc(20px + env(safe-area-inset-bottom,0px));width:56px;height:56px;background:#2c8a5a}
+#st{background:#000}
+
+#th{font-size:15px;right:164px;bottom:calc(84px + env(safe-area-inset-bottom,0px));width:56px;height:56px;background:#16a085}
+
+#dlg{position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(92%,540px);box-sizing:border-box;background:#0b1220ee;border:1px solid #2a3b5c;border-radius:12px;padding:14px;display:none;flex-direction:column;gap:10px;align-items:center;z-index:5}
+#dtx{color:var(--ink);font-size:22px;max-width:none}
+#dch{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+#ia{right:24px;bottom:calc(34px + env(safe-area-inset-bottom,0px));min-width:96px;height:72px;padding:0 18px;border-radius:36px;background:#f1c40f;color:#0b1b3a;font-size:22px;box-shadow:0 4px 14px #0008;z-index:4}
+#cfx{position:absolute;left:50%;top:24%;width:64px;height:92px;margin-left:-32px;border-radius:7px;box-shadow:0 6px 22px #000a;display:none;transform:rotate(-8deg);pointer-events:none;z-index:4}
+#rad{position:absolute;top:auto;right:auto;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom,0px));width:150px;height:92px;border-radius:6px;display:none;pointer-events:none}
+#fs{line-height:1.5;font-size:20px}
+
+/* FT90 gameplay update: dedicated player switching and aerial control */
+#sw,#hd{width:54px;height:54px;font-size:14px;bottom:calc(178px + env(safe-area-inset-bottom,0px));box-shadow:0 3px 12px #0006}#sw{right:82px;background:#344d73}#hd{right:20px;background:#b87817;color:#101827}
+@media (orientation:landscape) and (max-height:520px){#pad{width:106px;height:106px;left:14px;bottom:calc(12px + env(safe-area-inset-bottom,0px))}#kn{width:40px;height:40px;margin:-20px}#sh{width:66px;height:66px;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px))}#ps{right:88px;bottom:calc(12px + env(safe-area-inset-bottom,0px));width:54px;height:54px}#sp{right:152px;bottom:calc(14px + env(safe-area-inset-bottom,0px));width:50px;height:50px}#lb{right:14px;bottom:calc(88px + env(safe-area-inset-bottom,0px));width:52px;height:52px}#sk{right:74px;bottom:calc(82px + env(safe-area-inset-bottom,0px));width:48px;height:48px}#th{right:132px;bottom:calc(76px + env(safe-area-inset-bottom,0px));width:50px;height:50px}#sw,#hd{bottom:calc(146px + env(safe-area-inset-bottom,0px));width:46px;height:46px;font-size:12px}#sw{right:66px}#hd{right:14px}#sb{font-size:19px;padding:3px 12px}#rad{width:130px;height:78px}}
