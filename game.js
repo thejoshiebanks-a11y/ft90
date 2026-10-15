@@ -286,12 +286,12 @@ pad.style.touchAction='none';pad.addEventListener('pointerdown',e=>{e.preventDef
 const up=()=>{jx=jy=0;kn.style.transform=''};pad.addEventListener('pointerup',up);pad.addEventListener('pointercancel',up);
 let lookPointer=null,lookX=0,lookY=0;const gameCanvas=$('c');gameCanvas.style.touchAction='none';
 // In walk mode, drag anywhere on the open world (not the joystick/UI) to orbit the camera.
-gameCanvas.addEventListener('pointerdown',e=>{if(mode==='walk'&&!WK.busy&&e.clientX>innerWidth*.24&&e.clientX<innerWidth*.88&&e.clientY<innerHeight*.88){e.preventDefault();lookPointer=e.pointerId;lookX=e.clientX;lookY=e.clientY;gameCanvas.setPointerCapture(e.pointerId)}});
-gameCanvas.addEventListener('pointermove',e=>{if(lookPointer!==e.pointerId||mode!=='walk')return;e.preventDefault();const dx=e.clientX-lookX,dy=e.clientY-lookY;lookX=e.clientX;lookY=e.clientY;WK.camYaw=cl(WK.camYaw-dx*.008,-1.35,1.35);WK.camPitch=cl(WK.camPitch+dy*.014,-.65,.8)});
+gameCanvas.addEventListener('pointerdown',e=>{if(mode==='walk'&&!WK.busy&&e.clientX>innerWidth*.22&&e.clientY>innerHeight*.12&&!(e.clientX>innerWidth*.8&&e.clientY>innerHeight*.6)){e.preventDefault();lookPointer=e.pointerId;lookX=e.clientX;lookY=e.clientY;gameCanvas.setPointerCapture(e.pointerId)}});
+gameCanvas.addEventListener('pointermove',e=>{if(lookPointer!==e.pointerId||mode!=='walk')return;e.preventDefault();const dx=e.clientX-lookX,dy=e.clientY-lookY;lookX=e.clientX;lookY=e.clientY;WK.cyaw-=dx*.0065;WK.camPitch=cl(WK.camPitch-dy*.004,-.55,.7)});
 const endLook=e=>{if(lookPointer===e.pointerId)lookPointer=null};gameCanvas.addEventListener('pointerup',endLook);gameCanvas.addEventListener('pointercancel',endLook);
 
 $('sh').addEventListener('pointerdown',()=>act(1));$('ps').addEventListener('pointerdown',()=>act(0));$('th').addEventListener('pointerdown',()=>act((sim.owner>=0&&sim.p[sim.owner].t===0)?4:5));$('lb').addEventListener('pointerdown',()=>act((sim.owner>=0&&sim.p[sim.owner].t===0)?2:6));
-$('ia').addEventListener('pointerdown',e=>{e.preventDefault();doInteract()});$('mapbtn').addEventListener('pointerdown',e=>{e.preventDefault();if(mode==='walk'&&!WK.busy)openMap();else if(mode==='walk'&&$('mapoverlay').style.display==='flex')closeMap()});
+$('ia').addEventListener('pointerdown',e=>{e.preventDefault();doInteract()});$('viewbtn').addEventListener('pointerdown',e=>{e.preventDefault();if(mode!=='walk'||WK.busy)return;WK.view=WK.view?0:1;$('viewbtn').textContent=WK.view?'VIEW: 1ST PERSON':'VIEW: 3RD PERSON';walkCam(0,true)});$('mapbtn').addEventListener('pointerdown',e=>{e.preventDefault();if(mode==='walk'&&!WK.busy)openMap();else if(mode==='walk'&&$('mapoverlay').style.display==='flex')closeMap()});
 addEventListener('keydown',e=>{K[e.code]=1;if(mode==='walk'){if(e.code==='KeyE'||e.code==='Enter')doInteract();return}if(e.code==='Space')act(1);if(e.code==='KeyE')act(0);if(e.code==='KeyQ')act(2);if(e.code==='KeyR')act(4);if(e.code==='KeyF')act(3)});addEventListener('keyup',e=>K[e.code]=0);
 function upd(){$('sc').textContent=st.sc[0]+' - '+st.sc[1];$('tm').textContent=Math.min(90,Math.floor(st.min))+"'"}
 function goal(t){ca=3;st.sc[t]++;st.run=false;owner=null;banner('Goal! '+(t?'City':'United'));upd();setTimeout(()=>{banner('');reset();st.run=true},2000)}
@@ -329,7 +329,7 @@ $('cmb').onclick=()=>{cm=(cm+1)%3;$('cmb').textContent='Camera: '+CN[cm];rs();};
 $('pz').onclick=()=>{st.pause=true;$('pm').classList.add('on')};$('rsm').onclick=()=>{st.pause=false;$('pm').classList.remove('on')};
 let atk=true;function ctx(){const a=sim.owner>=0?sim.p[sim.owner].t===0:(sim.lastT===0);if(a===atk&&ctx.d)return;atk=a;ctx.d=1;$('ps').textContent=a?'Pass':'Pressure';$('sh').textContent=a?'Shoot':'Tackle';$('th').textContent=a?'Through':'Switch';$('lb').textContent=a?'Cross':'Clear'}
 function ui(on){const d=on?'block':'none',f=on?'flex':'none';$('pad').style.display=d;document.querySelectorAll('.b').forEach(e=>e.style.display=f);$('pz').style.display=f;$('stm').style.display=d;$('rad').style.display=d;$('ia').style.display='none'}
-function showWalkUI(on){$('pad').style.display=on?'block':'none';$('sc').parentNode.style.display=on?'none':'flex';$('ia').style.display='none';$('rad').style.display='none';$('mapbtn').style.display=on?'block':'none';$('walkobj').style.display=on?'block':'none';if(!on)$('cp').textContent=''}
+function showWalkUI(on){$('pad').style.display=on?'block':'none';$('sc').parentNode.style.display=on?'none':'flex';$('ia').style.display='none';$('rad').style.display='none';$('mapbtn').style.display=on?'block':'none';$('viewbtn').style.display=on?'block':'none';$('walkobj').style.display=on?'block':'none';if(!on)$('cp').textContent=''}
 /* ---------- ceremony helpers (lineup, handshakes, kickoff) ---------- */
 function setP(p,x,z,a){p.p.set(x,z);p.a=a;p.v.set(0,0);p.m.position.set(x,0,z);p.m.rotation.set(0,-a,0);p.m.anim(0,0)}
 function walk(p,tx,tz,spd,dt){const dx=tx-p.p.x,dz=tz-p.p.y,d=Math.hypot(dx,dz);if(d>.3){p.p.x+=dx/d*spd*dt;p.p.y+=dz/d*spd*dt;p.a=Math.atan2(dz,dx);p.ph+=dt*spd*1.6;p.m.anim(Math.min(spd,8),p.ph)}else p.m.anim(0,0);p.m.position.set(p.p.x,0,p.p.y);p.m.rotation.y=-p.a}
@@ -350,7 +350,7 @@ function lineupTick(dt){
 function shakeStart(){mode='shake';tt=0;ESC.forEach(k=>k.visible=false);ball.position.set(0,.22,0);cap('Captains and officials · pre-match handshakes');P.forEach(p=>setP(p,p.x0,p.t?1.3:-1.3,Math.PI/2));cam.position.set(0,10,39);cam.lookAt(0,1,0)}
 function toKick(){mode='wait';cap('');fade(1);setTimeout(()=>{kickoff();fade(0)},600)}
 /* ---------- walkable tunnel + dressing room ---------- */
-const WK={x:0,z:0,a:0,vx:0,vz:0,ph:0,kind:'pre',talked:false,lock:false,busy:false,exiting:false,msg:0,lk:new T.Vector3(),target:null,camYaw:0,camPitch:0,ri:0};
+const WK={x:0,z:0,a:0,vx:0,vz:0,ph:0,kind:'pre',talked:false,lock:false,busy:false,exiting:false,msg:0,lk:new T.Vector3(),target:null,camYaw:0,camPitch:0,ri:0,cyaw:0,view:0};
 /* ======================================================================
    FT90 MATCHDAY WORLD v2
    Night sky, high-tech entrance gate, Grand Atrium (mall), escalator + lifts,
@@ -480,7 +480,7 @@ for(let i=0;i<5;i++)sign(['UNITED','FT90','ONE CLUB','THE GAME NEVER ENDS','MATC
 sign('PLAYERS ENTRANCE · DRESSING ROOM →',-8,3.3,-97.3,12,1.1,N,'#0a2640','#7fd8ff');
 sign('MANAGER & PLAYERS',0,3.2,-89,4.4,.9,N,'#0a2640','#7fd8ff');
 Lb(-66,-63,0,1,-111.5,-109,0x30363f);BLK.push([-64.5,-110.2,1.6,1.4]);Lb(-20,-14,0,1.4,-102.9,-101.8,0x20283a);BLK.push([-17,-102.4,3.2,.7]);
-const pdoor=[-1,1].map(s=>{const d=new T.Mesh(new T.BoxGeometry(1.5,3.4,.5),new T.MeshLambertMaterial({color:0x14203a}));d.position.set(-30+s*.75,1.7,-100);ext.add(d);return{m:d,s}});Eb(-31.8,-28.2,3.4,3.6,-100.3,-99.7,0x3dffb0);sign('PLAYERS ONLY',-30,2.8,-102.8,3.2,.6,N,'#0a2640','#ff7a7a');BLK.push([-30,-100,.3,3]);
+const pdoor=[-1,1].map(s=>{const d=new T.Mesh(new T.BoxGeometry(1.5,3.4,.5),new T.MeshLambertMaterial({color:0x14203a}));d.position.set(-30+s*.75,1.7,-100);ext.add(d);return{m:d,s}});Eb(-31.8,-28.2,3.4,3.6,-100.3,-99.7,0x3dffb0);sign('PLAYERS ONLY',-30,2.8,-102.8,3.2,.6,N,'#0a2640','#ff7a7a');
 /* ---- batched geometry done ---- */
 WB.flush();
 /* ---- instanced body crowds: torso, head, hair, legs, arms, flags, bags in a few draw calls ---- */
@@ -657,16 +657,17 @@ function startWalk(kind){mode='walk';tt=0;WK.kind=kind;WK.talked=false;WK.lock=f
 HIDE.forEach(o=>o.visible=false);housing.visible=false;U.visible=true;mark.visible=false;showWalkUI(true);rs();
 if(kind==='pre'){ext.visible=true;WK.x=-41;WK.z=-292;WK.a=Math.PI/2;WK.ri=0;P.forEach(p=>p.m.visible=false);RF.visible=false;ball.visible=false;say('Team bus arrived. Walk through the chanting supporters, pass security, cross the atrium and find the dressing room.',6500)}
 else{const q=u||P[0];WK.x=cl(q.p.x,-50,50);WK.z=cl(q.p.y,-34,33);WK.a=-Math.PI/2;q.m.visible=false;say('Half time. Walk to the tunnel and into the dressing room',4500)}
-cam.position.set(WK.x,8,kind==='pre'?WK.z-13:WK.z+13);walkCam(0,true)}
-function walkCam(dt,snap){const z=WK.z,x=WK.x,gh=gy(x,z);let cx,cy,cz,lx,ly,lz;
- if(WK.kind==='pre'){
-  if(z>-36){cx=x*.7;cy=7.4;cz=z+11;lx=x;ly=1;lz=z-3}
-  else if(z>-140){cx=x;cy=gh+(gh>.3?6.6:7.6);cz=z-(z>-86?6.5:7);lx=x;ly=gh+.8;lz=z+3.5;if(z>-86){cy=9.5}}
-  else{cx=x*.82;cy=gh+5.4;cz=z-10;lx=x*.9;ly=gh+1.8;lz=z+10;if(z>-247&&z<-200)cz=Math.max(cz,-247.4)}}
- else if(z>-36){cx=WK.x*.7;cy=7.4;cz=z+11;lx=WK.x;ly=1;lz=z-3}else{cx=WK.x*.5;cy=7.4;cz=z+9;lx=WK.x*.8;ly=.6;lz=z-2.5}
-const k=snap?1:Math.min(1,dt*3.5);cx+=Math.sin(WK.camYaw)*10;cz+=Math.cos(WK.camYaw)*10;ly+=WK.camPitch*5;
-cam.position.x=lerp(cam.position.x,cx,k);cam.position.y=lerp(cam.position.y,cy,k);cam.position.z=lerp(cam.position.z,cz,k);
-WK.lk.x=lerp(snap?lx:WK.lk.x,lx+Math.sin(WK.camYaw)*12,k);WK.lk.y=lerp(snap?ly:WK.lk.y,ly,k);WK.lk.z=lerp(snap?lz:WK.lk.z,lz-Math.cos(WK.camYaw)*4,k);cam.lookAt(WK.lk)}
+WK.cyaw=kind==='pre'?0:Math.PI;WK.camPitch=0;WK.view=0;$('viewbtn').textContent='VIEW: 3RD PERSON';walkCam(0,true)}
+function camOK(x,z){const ax=WK.access,sc=WK.security;WK.access=true;WK.security=true;const r=inside(x,z);WK.access=ax;WK.security=sc;return r}
+function walkCam(dt,snap){const px=WK.x,pz=WK.z,gh=gy(px,pz),yaw=WK.cyaw,p=WK.camPitch,fx=Math.sin(yaw),fz=Math.cos(yaw);
+ const want=WK.view===1?68:52;if(Math.abs(cam.fov-want)>.1){cam.fov=want;cam.updateProjectionMatrix()}
+ if(WK.view===1){U.visible=false;const c=Math.cos(p);cam.position.set(px+fx*.3,gh+1.62,pz+fz*.3);cam.lookAt(px+fx*.3+fx*c*10,gh+1.62+Math.sin(p)*10,pz+fz*.3+fz*c*10);return}
+ U.visible=true;const tight=(WK.kind==='pre'&&pz>-140&&pz<-36)||(WK.kind==='half'&&pz<-36);
+ let d=tight?4.4:7,h=(tight?2.3:3.3)+p*3;if(h<1.2)h=1.2;
+ while(d>1.3&&!camOK(px-fx*d,pz-fz*d))d-=.5;
+ const k=snap?1:Math.min(1,dt*9),tx=px-fx*d,tz=pz-fz*d,ty=gh+h;
+ cam.position.x=lerp(snap?tx:cam.position.x,tx,k);cam.position.y=lerp(snap?ty:cam.position.y,ty,k);cam.position.z=lerp(snap?tz:cam.position.z,tz,k);
+ const lx=px+fx*3,ly=gh+1.25+p*2.6,lz=pz+fz*3;WK.lk.x=lerp(snap?lx:WK.lk.x,lx,k);WK.lk.y=lerp(snap?ly:WK.lk.y,ly,k);WK.lk.z=lerp(snap?lz:WK.lk.z,lz,k);cam.lookAt(WK.lk)}
 function exitWalk(){if(WK.exiting)return;WK.exiting=true;fade(1);setTimeout(()=>{U.visible=false;HIDE.forEach(o=>o.visible=true);housing.visible=true;showWalkUI(false);ball.visible=true;mark.visible=true;RF.visible=true;
 if(WK.kind==='pre')startLineup();else kickoff();fade(0)},650)}
 function walkTick(dt){const now=performance.now()/1000;
