@@ -328,16 +328,19 @@ function toKick(){mode='wait';cap('');fade(1);setTimeout(()=>{kickoff();fade(0)}
 /* ---------- walkable tunnel + dressing room ---------- */
 const WK={x:0,z:0,a:0,vx:0,vz:0,ph:0,kind:'pre',talked:false,lock:false,busy:false,exiting:false,msg:0,lk:new T.Vector3()};
 function inside(x,z){
- // Collision volumes for the coach, crowd-control rails, concession counters and lift cores.
+ // Collision volumes for the bus, crowd-control rails, counters and lift cores.
  const blocks=[[-28,-126,9.2,3.0],[-12,-113,1.0,13.2],[12,-113,1.0,13.2],[-17,-94,2.8,2.0],[-17,-78,2.8,2.0],[-17,-62,2.8,2.0],[17,-94,2.8,2.0],[17,-78,2.8,2.0],[17,-62,2.8,2.0],[-20,-48,2.1,2.1],[20,-48,2.1,2.1]];
  if(blocks.some(([bx,bz,rx,rz])=>Math.abs(x-bx)<rx&&Math.abs(z-bz)<rz))return false;
- // Connected walkable network: arrival plaza -> public concourse -> dressing-room branch -> players' tunnel -> pitch.
- if(!WK.lock&&x>-55&&x<55&&z>-36.8&&z<35.5)return true;
- if(WK.kind==='pre'&&z<=-94&&z>-151&&x>-52&&x<52)return true;
- if(Math.abs(x)<21.8&&z<=-94&&z>-63.4)return true;
- if(Math.abs(x)<12.5&&z<=-85.2&&z>-63.4)return true;
- if(Math.abs(x)<3.25&&z<=-36.6&&z>-63.4)return true;
- // Half-time uses the same interior circulation, but starts from the pitch side.
+ // The previous version had contradictory Z-range checks here, creating an invisible wall
+ // at the public-concourse entrance. These ranges now overlap to make a continuous route.
+ if(!WK.lock&&x>-55&&x<55&&z>-36.8&&z<35.5)return true; // pitch perimeter
+ if(WK.kind==='pre'&&z<=-94&&z>-151&&x>-52&&x<52)return true; // arrival plaza
+ if(Math.abs(x)<21.8&&z>-110&&z<=-63.4)return true; // main public concourse
+ if(Math.abs(x)<3.25&&z>-63.4&&z<=-36.6){
+   // The players-only tunnel only opens after the player uses the door interaction.
+   return WK.kind==='half'||WK.access;
+ }
+ // Half-time return route from the pitch through the tunnel and concourse.
  if(WK.kind==='half'&&Math.abs(x)<21.8&&z<=-36.6&&z>-110)return true;
  return false
 }
