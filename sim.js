@@ -19,12 +19,15 @@ for(const p of S.p){if(p.off)continue;if(p.t===team){p.x=team===0?Math.min(p.x,-
 const taker=S.p[team*N+9],support=S.p[team*N+10];taker.x=team===0?-.72:.72;taker.z=0;taker.vx=taker.vz=0;taker.a=team===0?0:Math.PI;support.x=team===0?-4:4;support.z=team===0?2.4:-2.4;support.vx=support.vz=0;
 const b=S.ball;b.x=0;b.y=.22;b.z=0;b.vx=b.vy=b.vz=0;S.owner=-1;S.rs=null;S.thru=null;S.cross=null;S.rcv=-1;S.lastT=team;S.kickoff={team,taker:taker.id};S.user=taker.id}
 function pickUser(S,force){const b=S.ball,P=S.p;
-if(!force&&S.lock>S.time&&S.user>=0&&!P[S.user].off)return S.user;
+const ok=i=>i>=0&&P[i]&&P[i].t===0&&!P[i].gk&&!P[i].off;
 if(S.owner>=0&&P[S.owner].t===0&&!P[S.owner].gk)return S.owner;
-if(S.owner<0&&S.rcv>=0&&P[S.rcv].t===0&&!P[S.rcv].gk)return S.rcv;
+if(!force&&S.lock>S.time&&ok(S.user))return S.user;
+const cur=ok(S.user)?S.user:-1;
+/* Own pass in flight: stay on the passer until the ball is nearly at the receiver, then hand over once. */
+if(S.owner<0&&ok(S.rcv)){const r=P[S.rcv];if(cur<0||hyp(r.x-b.x,r.z-b.z)<4.5)return S.rcv;return cur}
 const px=b.x+b.vx*.25,pz=b.z+b.vz*.25;let best=-1,bd=1e9;
 for(const p of P){if(p.t||p.gk||p.off)continue;const d=hyp(p.x-px,p.z-pz);if(d<bd){bd=d;best=p.id}}
-if(!force&&S.user>=0&&!P[S.user].gk&&P[S.user].t===0&&hyp(P[S.user].x-px,P[S.user].z-pz)<bd+2.5)return S.user;return best}
+if(!force&&cur>=0&&hyp(P[cur].x-px,P[cur].z-pz)<bd+7)return cur;return best}
 function manualSwitch(S){const b=S.ball,i=S.inp,m=hyp(i.ix,i.iz);let best=-1,bs=1e9;
 for(const p of S.p){if(p.t||p.gk||p.off||p.id===S.user)continue;let sc=hyp(p.x-b.x,p.z-b.z);
 if(m>.3){const dx=p.x-S.p[S.user].x,dz=p.z-S.p[S.user].z,d=hyp(dx,dz)||1;sc+=(1-(dx*i.ix+dz*i.iz)/(d*m))*14}
@@ -49,14 +52,15 @@ if(user&&!pen){const m=hyp(inp.ix,inp.iz),l=hyp(dx,dz);if(m>.3){if((inp.ix*dx+in
 else if((Math.cos(p.a)*dx+Math.sin(p.a)*dz)/l<.5){dx=Math.cos(p.a);dz=Math.sin(p.a)}}
 else if(!user){const e=(S.rng()-.5)*.3*(1.5-(p.t?S.diff:1)),c=Math.cos(e),s=Math.sin(e);const x=dx*c-dz*s;dz=dx*s+dz*c;dx=x}
 kick(S,p,dx,dz,pen?(user?23:22):(user?23*S.mood.pw:20+S.rng()*3),pen?0.8+S.rng()*1.1:0.7+S.rng()*2);if(pen)S.pg={z:S.rng()<.3?tz:(S.rng()<.5?-2.6:2.6),t:S.time};S.st.shots[p.t]++}
-function passTo(S,p,q,user){const d0=hyp(q.x-p.x,q.z-p.z);let tx=q.x+q.vx*Math.min(.6,d0/25),tz=q.z+q.vz*Math.min(.6,d0/25);
+function lead(p,q,k,c){let d=hyp(q.x-p.x,q.z-p.z),t=0,tx=q.x,tz=q.z;for(let i=0;i<4;i++){const sp=cl(d*k+c,9,21);t=Math.min(1.5,d/(sp*.82));tx=q.x+q.vx*t;tz=q.z+q.vz*t;d=hyp(tx-p.x,tz-p.z)}return[tx,tz]}
+function passTo(S,p,q,user){const ld=lead(p,q,.88,5.5);let tx=ld[0],tz=ld[1];
 let dx=tx-p.x,dz=tz-p.z;if(!user){const e=(S.rng()-.5)*.22*(1.4-(p.t?S.diff:1)),c=Math.cos(e),s=Math.sin(e),x=dx*c-dz*s;dz=dx*s+dz*c;dx=x}
 kick(S,p,dx,dz,cl(hyp(dx,dz)*0.88+5.5,9,20),0);S.rcv=q.id;S.st.passes[p.t]++}
 function userPass(S,p){const inp=S.inp,m=hyp(inp.ix,inp.iz),fx=m>.3?inp.ix/m:Math.cos(p.a),fz=m>.3?inp.iz/m:Math.sin(p.a);
 let best=null,bs=-9;for(const q of S.p){if(q===p||q.t!==p.t||q.gk||q.off)continue;const dx=q.x-p.x,dz=q.z-p.z,d=hyp(dx,dz);if(d<2.5)continue;
 const c=(dx*fx+dz*fz)/d,sc=c-d*.012-(blocked(S,p,q.x,q.z)?0.85:0);if(c>.4&&sc>bs){bs=sc;best=q}}
 if(best)passTo(S,p,best,true);else{kick(S,p,fx,fz,16,0);S.st.passes[p.t]++}}
-function throughTo(S,p,q,user){const dir=p.t?-1:1,tx=cl(q.x+dir*12,-L+4,L-4),tz=cl(q.z*.8,-W+8,W-8);let dx=tx-p.x,dz=tz-p.z;
+function throughTo(S,p,q,user){const dir=p.t?-1:1,tx=cl(q.x+q.vx*.9+dir*10,-L+4,L-4),tz=cl(q.z+q.vz*.5,-W+6,W-6);let dx=tx-p.x,dz=tz-p.z;
 if(!user){const e=(S.rng()-.5)*.2*(1.4-(p.t?S.diff:1)),c=Math.cos(e),sn=Math.sin(e),x=dx*c-dz*sn;dz=dx*sn+dz*c;dx=x}
 kick(S,p,dx,dz,cl(hyp(dx,dz)*0.9+5.5,10,21),0);S.rcv=q.id;S.thru={x:tx,z:tz,t:S.time+1.8,id:q.id};S.st.passes[p.t]++}
 function userThrough(S,p){const inp=S.inp,m=hyp(inp.ix,inp.iz),dir=p.t?-1:1,fx=m>.3?inp.ix/m:dir,fz=m>.3?inp.iz/m:0;let best=null,bs=-9;
@@ -141,7 +145,7 @@ setPiece(S,box?'pen':'free',o.t,box?dir*(L-11):o.x,box?0:o.z,false,o)}
 function step(S,dt,inp){
 S.ev.length=0;if(inp)S.inp=inp;S.time+=dt;
 const P=S.p,b=S.ball;if(S.kickoff)return;let own=S.owner>=0?P[S.owner]:null;
-if(!S.botUser)S.user=pickUser(S);
+if(!S.botUser){const nu=pickUser(S);if(nu!==S.user&&S.user>=0)S.lock=Math.max(S.lock,S.time+.9);S.user=nu}
 S.ol=[0,1].map(t=>{const dir=t?-1:1,ds=P.filter(q=>q.t!==t&&!q.off).map(q=>q.x*dir).sort((a,c)=>c-a);return Math.max(ds[1]===undefined?0:ds[1],0)});
 const ch=[chasers(S,0),chasers(S,1)],isU=p=>!S.botUser&&p.id===S.user;
 for(const p of P){if(p.off)continue;p.cd-=dt;p.imm-=dt;p.dv-=dt;p.lunge-=dt;p.jp-=dt;let wx=0,wz=0;
@@ -160,7 +164,7 @@ else{b.vy-=25*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;b.z+=b.vz*dt;
 if(b.y<.45){b.y=.22;b.vy=b.vy<-3?-b.vy*.45:0}
 if(b.y<.25){const k=hyp(b.vx,b.vz)>10?.52:.82,f=Math.max(0,1-k*dt);b.vx*=f;b.vz*=f}
 const hs=hyp(b.vx,b.vz);let pick=null,pd=1e9;
-for(const q of P){if(q.cd>0||q.off)continue;const d=hyp(q.x-b.x,q.z-b.z),r=q.gk?(q.dv>0?2.4:1.45):1.05;
+for(const q of P){if(q.cd>0||q.off)continue;const d=hyp(q.x-b.x,q.z-b.z),r=q.gk?(q.dv>0?2.4:1.45):(q.id===S.rcv?1.7:1.05);
 if(d<r&&b.y<(q.gk?2.9:2.3)&&(q.gk||hs<22)&&d<pd&&!(q.gk&&hs>20&&S.roll>.6-.2*(d/r))){pd=d;pick=q}}
 if(pick){const q=pick;
 if(S.offs){const f=S.offs;if(q.t!==f.t)S.offs=null;else if(!q.gk&&S.time-f.at<4&&S.lastT===q.t&&f.ids.includes(q.id)){S.st.offsides[q.t]++;S.ev.push({type:'offside',t:q.t,id:q.id});setPiece(S,'free',1-q.t,q.x,q.z,true);return}}
