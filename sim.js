@@ -294,13 +294,19 @@ if(box)S.st.pens[o.t]++;
 S.ev.push({type:'foul',t:q.t,id:q.id,vid:o.id,card,pen:box});
 setPiece(S,box?'pen':'free',o.t,box?dir*(L-11):o.x,box?0:o.z,false,o)}
 /* ---------------- main step ---------------- */
-function startKick(S,k){const P=S.p;const taker=P[S.kickoff.taker];if(!taker)return;S.user=taker.id;S.owner=taker.id;S.kickoff=null;taker.hold=0;
+function startKick(S,k){const P=S.p;const taker=P[S.kickoff?S.kickoff.taker:S.user];if(!taker)return;S.user=taker.id;S.owner=taker.id;S.kickoff=null;taker.hold=0;taker.imm=0.4;
 if(S.botUser||taker.t===1||k===undefined){const o=passOptions(S,taker);const q=(o.find(e=>e.q.id!==taker.id)||{}).q;if(q)passTo(S,taker,q,false);else userPass(S,taker);return}
 if(k===1)shoot(S,taker,true);else if(k===2)lob(S,taker,true);else if(k===4)userThrough(S,taker);else userPass(S,taker)}
 function step(S,dt,inp){
 S.ev.length=0;if(inp)S.inp=inp;S.time+=dt;
 const P=S.p,b=S.ball;
-if(S.kickoff){if(S.time-S.kickoff.at>1.2||S.botUser||S.kickoff.team===1)startKick(S);return}
+if(S.kickoff){
+ if(S.time-S.kickoff.at>0.8||S.botUser||S.kickoff.team===1){
+  startKick(S);
+  S.kickoff=null;
+ }
+ return;
+}
 let own=S.owner>=0?P[S.owner]:null;
 if(!S.botUser){const nu=pickUser(S);if(nu!==S.user&&S.user>=0)S.lock=Math.max(S.lock,S.time+.9);S.user=nu}
 S.ol=[0,1].map(t=>{const dir=t?-1:1,ds=P.filter(q=>q.t!==t&&!q.off).map(q=>q.x*dir).sort((a,c)=>c-a);return Math.max(ds[1]===undefined?0:ds[1],0)});

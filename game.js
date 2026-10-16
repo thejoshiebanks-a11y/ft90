@@ -734,30 +734,24 @@ if(u&&sim.owner===u.id&&Math.hypot(INP.ix,INP.iz)>.25){
  passLine.scale.set(1,len,1);passLine.rotation.z=-ang;passLine.visible=true;
 }else passLine.visible=false;
 if(cm===0){
- // 1ST PERSON on controlled player
+ // 1ST PERSON hard-locked to controlled player
  const px=u?u.p.x:b.x,pz=u?u.p.y:b.z,pa=u?u.a:0;
  const back=Math.sin(pa),fwd=Math.cos(pa);
- cam.position.set(px+fwd*0.15,1.65,pz+back*0.15);
- cam.lookAt(px+fwd*4,1.4,pz+back*4);
+ cam.position.set(px+fwd*0.12,1.62,pz+back*0.12);
+ cam.lookAt(px+fwd*5,1.35,pz+back*5);
 }else if(cm===2){
- // STADIUM view: wide tele camera from inside the bowl (shows roof, stands and the whole pitch).
+ // STADIUM view
  const lead=cl(bv.x*.35,-8,8),bx=cl((b.x+lead)*(w?.78:.62),-(w?44:36),w?44:36);camTrackX+=(bx-camTrackX)*Math.min(1,dt*1.9);
  camTrackZ+=(cl(b.z,-36,36)-camTrackZ)*Math.min(1,dt*1.4);
  cam.position.set(camTrackX,w?27:17,w?68:58);
  cam.lookAt(camTrackX*.93,0,w?-3+camTrackZ*.3:-8+camTrackZ*.5);
 }else{
- // Player cam (3rd person): tight behind controlled player, low angle, ball-aware lead.
+ // 3RD PERSON hard-locked behind controlled player (no ball tracking)
  const px=u?u.p.x:b.x,pz=u?u.p.y:b.z,pa=u?u.a:0;
  const back=Math.sin(pa),fwd=Math.cos(pa);
- const dist=w?6.2:5.0,height=w?2.6:2.1;
- const leadX=px+fwd*2.2+cl(bv.x*.12,-1.5,1.5),leadZ=pz+back*2.2+cl(bv.z*.08,-1,1);
- camTrackX+=(leadX-camTrackX)*Math.min(1,dt*4.5);
- camTrackZ+=(leadZ-camTrackZ)*Math.min(1,dt*4.5);
- const cx=camTrackX-fwd*dist,cz=camTrackZ-back*dist,cy=height;
- cam.position.x+=(cx-cam.position.x)*Math.min(1,dt*3.5);
- cam.position.y+=(cy-cam.position.y)*Math.min(1,dt*3.0);
- cam.position.z+=(cz-cam.position.z)*Math.min(1,dt*3.5);
- cam.lookAt(camTrackX+fwd*7,1.15,camTrackZ+back*7);
+ const dist=5.4,height=2.15;
+ cam.position.set(px-fwd*dist,height,pz-back*dist);
+ cam.lookAt(px+fwd*6.5,1.2,pz+back*6.5);
 }
 if(!isFinite(cam.position.x+cam.position.y+cam.position.z)){camTrackX=0;camTrackZ=0;cam.position.set(0,19,56.5)}
 R.render(S,cam)}
