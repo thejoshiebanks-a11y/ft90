@@ -15,9 +15,6 @@ button.s{background:#233654}
 #kn{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px;border-radius:50%;background:#ffffffaa}
 .b{position:absolute;bottom:calc(24px + env(safe-area-inset-bottom,0px));border-radius:50%;display:none;align-items:center;justify-content:center;font-size:18px;font-weight:700}
 #sh{right:20px;width:68px;height:68px;background:var(--hot)}#ps{right:96px;width:58px;height:58px;background:#185fa5;bottom:calc(18px + env(safe-area-inset-bottom,0px))}
-#lb{right:30px;bottom:calc(104px + env(safe-area-inset-bottom,0px));width:58px;height:58px;background:#8e44ad;font-size:14px}
-#th{right:104px;bottom:calc(94px + env(safe-area-inset-bottom,0px));width:58px;height:58px;background:#147d70;font-size:13px}
-#sk{right:172px;bottom:calc(24px + env(safe-area-inset-bottom,0px));width:58px;height:58px;background:#e67e22;font-size:13px}
 #ht{background:transparent;pointer-events:none;justify-content:flex-end}
 #cap{display:none;font-size:30px;font-weight:700;text-shadow:0 2px 6px #000;padding-bottom:12%}
 #room{display:none;pointer-events:auto;margin-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
@@ -26,7 +23,7 @@ button.s{background:#233654}
 #stm{position:absolute;top:50px;left:50%;transform:translateX(-50%);width:120px;height:6px;border-radius:3px;background:#ffffff33;display:none}#stf{display:block;height:100%;width:100%;background:#fac775;border-radius:3px}
 #cp{position:absolute;bottom:14%;width:100%;text-align:center;font-size:30px;font-weight:700;text-shadow:0 2px 6px #000;pointer-events:none}
 #fd{position:absolute;inset:0;background:#000;opacity:0;transition:opacity .5s;pointer-events:none}
-#sk{right:172px;bottom:calc(24px + env(safe-area-inset-bottom,0px));width:58px;height:58px;background:#e67e22;font-size:13px}
+#lb{right:30px;bottom:calc(104px + env(safe-area-inset-bottom,0px));width:58px;height:58px;background:#8e44ad;font-size:14px}
 #th{right:104px;bottom:calc(94px + env(safe-area-inset-bottom,0px));width:58px;height:58px;background:#147d70;font-size:13px}
 #st{background:#000}
 
@@ -89,3 +86,10 @@ canvas,button,.b,#ia,#pad{-webkit-user-drag:none}body{overscroll-behavior:none}
 
 #viewbtn{display:none;position:fixed;z-index:20;right:calc(env(safe-area-inset-right,0px) + 142px);top:calc(env(safe-area-inset-top,0px) + 12px);border:1px solid rgba(255,210,63,.85);border-radius:9px;background:rgba(7,24,39,.94);color:#ffe9a0;padding:11px 13px;font:800 11px system-ui,sans-serif;letter-spacing:.06em;touch-action:manipulation}
 #viewbtn:active{transform:scale(.97)}
+
+#sk{right:104px;bottom:calc(158px + env(safe-area-inset-bottom,0px));width:48px;height:48px;background:#b9770e;font-size:12px}
+#chg{position:absolute;right:18px;bottom:calc(224px + env(safe-area-inset-bottom,0px));width:132px;height:8px;border-radius:4px;background:#ffffff33;display:none;pointer-events:none}
+#chgf{display:block;height:100%;width:0;background:linear-gradient(90deg,#6fe3ff,#66ff99,#ffa84d);border-radius:4px}
+#roles{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:8px 0}
+#roles button{padding:8px 12px;border-radius:8px;border:1px solid #ffffff55;background:#ffffff14;color:#fff;font:700 13px system-ui,sans-serif}
+#roles button.on{background:var(--hot);border-color:#fff}
