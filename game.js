@@ -2,7 +2,7 @@ const T=THREE,$=id=>document.getElementById(id),cl=(v,a,b)=>Math.max(a,Math.min(
 const R=new T.WebGLRenderer({canvas:$('c'),antialias:true});R.setPixelRatio(Math.min(devicePixelRatio,2));R.shadowMap.enabled=true;
 const S=new T.Scene();S.background=new T.Color(0x16254a);S.fog=new T.Fog(0x0b1220,170,400);
 const cam=new T.PerspectiveCamera(50,1,.1,500);
-function rs(){const w=document.body.clientWidth,h=document.body.clientHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.fov=w<h?(typeof mode!=='undefined'&&mode==='walk'?55:52):(typeof mode!=='undefined'&&mode==='walk'?50:(typeof cm!=='undefined'&&cm===0?38:(typeof cm!=='undefined'&&cm===1?50:46)));cam.updateProjectionMatrix()}
+function rs(){const w=document.body.clientWidth,h=document.body.clientHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.fov=w<h?(typeof mode!=='undefined'&&mode==='walk'?55:52):(typeof mode!=='undefined'&&mode==='walk'?50:(typeof cm!=='undefined'&&cm===0?36:(typeof cm!=='undefined'&&cm===1?50:46)));cam.updateProjectionMatrix()}
 addEventListener('resize',rs);
 S.add(new T.HemisphereLight(0xbfd4ff,0x1a3a1a,.8));
 const sun=new T.DirectionalLight(0xffffff,.9);sun.position.set(-30,60,30);sun.castShadow=true;
@@ -727,7 +727,7 @@ if(cm===0){
  // DEFAULT (eFootball-style): high, tight, steeply pitched camera that follows the ball closely and keeps the action large.
  const sp=Math.hypot(bv.x,bv.z),fxT=cl(b.x*.88+cl(bv.x*.22,-6,6),-46,46),fzT=cl(b.z*.88+cl(bv.z*.15,-3,3),-30,30);
  camTrackX+=(fxT-camTrackX)*Math.min(1,dt*2.8);camTrackZ+=(fzT-camTrackZ)*Math.min(1,dt*2.2);
- const H=(w?36:25)+Math.min(5,sp*.18),D=(w?30:20)+Math.min(4,sp*.14);
+ const H=(w?36:27)+Math.min(5,sp*.18),D=(w?30:17)+Math.min(4,sp*.14);
  const cz=Math.min(camTrackZ+D,w?60:43.5);
  cam.position.set(camTrackX,H,cz);
  cam.lookAt(camTrackX,0,camTrackZ-3);

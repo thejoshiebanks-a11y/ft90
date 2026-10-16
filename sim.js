@@ -137,7 +137,7 @@ if(p.gk){if(p.hold>1.15){const o=passOptions(S,p);const g=o.find(e=>!e.q.gk&&e.s
 p.thk-=dt;if(p.thk>0)return;p.thk=.14+S.rng()*.12+(1-df)*.3;
 const gdx=Math.abs(dir*L-p.x),near=nearOpp(S,p),pr=near.d;
 const ind=S.rs&&S.rs.ind;
-if(!ind&&p.hold>.12+(1-df)*.5){const xg=shotQ(S,p);if(xg>(pr<3.5?.09:.13)+S.rng()*.06){shoot(S,p,false);return}}
+if(!ind&&p.hold>.12+(1-df)*.5){const xg=shotQ(S,p);if(xg>(pr<3.5?.075:.105)+S.rng()*.05){shoot(S,p,false);return}}
 if(Math.abs(p.z)>15&&gdx<30&&p.hold>.35+(1-df)*.4&&S.rng()<.4){lob(S,p,false);return}
 const opts=passOptions(S,p),dr=dribbleOption(S,p);p.dx=dr.dx;p.dz=dr.dz;p.dclear=dr.clear;
 const pb=opts[0];
@@ -174,7 +174,8 @@ if(att){const k=p.role==='D'?.4:p.role==='M'?.58:.64;X=hX+cl(bX+30,0,60)*k;Z=hZ*
 else{const k=p.role==='D'?.34:p.role==='M'?.42:.3;X=hX+cl(bX+28,0,56)*k;
  if(p.role==='D')X=Math.min(X,Math.max(bX+2,-36));else if(p.role==='M')X=Math.min(X,Math.max(bX+9,-26));
  Z=hZ*.78+(b.z-hZ)*.32}
-return[cl(X*dir,-L+2,L-2),cl(Z,-W+2,W-2)]}
+const cX=p.role==='D'?(att?.08:.2):p.role==='M'?(att?.24:.32):(att?.04:.22),cZ=att?.3:.42;let wx=X*dir,wz=Z;wx+=(b.x-wx)*cX;wz+=(b.z-wz)*cZ;
+return[cl(wx,-L+2,L-2),cl(wz,-W+2,W-2)]}
 function aiMove(S,p,own){const dir=p.t?-1:1,b=S.ball,P=S.p,pl=S.plan[p.t],df=p.t?S.diff*S.mood.op:1;
 if(p.gk)return gkMove(S,p,own);
 const base=(p.role==='D'?6.5:p.role==='M'?6.8:7)*df*p.spd;let spd=base;

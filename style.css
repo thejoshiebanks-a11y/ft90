@@ -37,7 +37,7 @@ button.s{background:#233654}
 #fs{line-height:1.5;font-size:20px}
 
 /* FT90 v2: four contextual match actions, uncluttered mobile landscape controls */
-@media (orientation:landscape){#pad{width:112px;height:112px;left:16px;bottom:calc(14px + env(safe-area-inset-bottom,0px))}#kn{width:40px;height:40px;margin:-20px}.b.action{box-shadow:0 3px 10px #0005}#sb{font-size:19px;padding:3px 13px}#rad{width:128px;height:78px;opacity:.88}}
+@media (orientation:landscape){#pad{width:112px;height:112px;left:16px;bottom:calc(14px + env(safe-area-inset-bottom,0px))}#kn{width:40px;height:40px;margin:-20px}.b.action{box-shadow:0 3px 10px #0005}#sb{font-size:19px;padding:3px 13px}#rad{opacity:.82;width:104px;height:78px;opacity:.88}}
 
 /* FT90 v4: mobile browser selection/highlight suppression and reliable touch controls */
 html, body, canvas, #pad, #kn, .b, #rad, #sb, #msg, #cp, #stm, #cfx {
