@@ -2,7 +2,7 @@ const T=THREE,$=id=>document.getElementById(id),cl=(v,a,b)=>Math.max(a,Math.min(
 const R=new T.WebGLRenderer({canvas:$('c'),antialias:true});R.setPixelRatio(Math.min(devicePixelRatio,2));R.shadowMap.enabled=true;
 const S=new T.Scene();S.background=new T.Color(0x16254a);S.fog=new T.Fog(0x0b1220,170,400);
 const cam=new T.PerspectiveCamera(50,1,.1,500);
-function rs(){const w=document.body.clientWidth,h=document.body.clientHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.fov=w<h?55:(typeof mode!=='undefined'&&mode==='walk'?50:44);cam.updateProjectionMatrix()}
+function rs(){const w=document.body.clientWidth,h=document.body.clientHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.fov=w<h?(typeof mode!=='undefined'&&mode==='walk'?55:52):(typeof mode!=='undefined'&&mode==='walk'?50:(typeof cm!=='undefined'&&cm===0?40:(typeof cm!=='undefined'&&cm===1?50:46)));cam.updateProjectionMatrix()}
 addEventListener('resize',rs);
 S.add(new T.HemisphereLight(0xbfd4ff,0x1a3a1a,.8));
 const sun=new T.DirectionalLight(0xffffff,.9);sun.position.set(-30,60,30);sun.castShadow=true;
@@ -83,7 +83,7 @@ const h=new T.Mesh(new T.BoxGeometry(7,3.4,1),lampM);h.position.set(x,37,z);h.lo
 /* Inner-bowl identity, broadcast scoreboard, roof trusses and section wayfinding. */
 const screenTex=tex(768,300,g=>{g.fillStyle='#071226';g.fillRect(0,0,768,300);g.fillStyle='#143a70';g.fillRect(0,0,768,62);g.fillStyle='#fff';g.font='bold 48px sans-serif';g.textAlign='center';g.fillText('FT 90  ·  MATCHDAY',384,44);g.fillStyle='#f7f9fc';g.font='bold 108px sans-serif';g.fillText('UNITED  0 — 0  CITY',384,180);g.fillStyle='#62e6b2';g.font='bold 28px sans-serif';g.fillText('THE GAME NEVER ENDS',384,246)});
 const screenMat=new T.MeshBasicMaterial({map:screenTex,side:T.DoubleSide});
-[-1,1].forEach(sg=>{const screen=new T.Mesh(new T.PlaneGeometry(22,8),screenMat);screen.position.set(0,15.8,sg*45);screen.rotation.y=sg<0?0:Math.PI;S.add(screen);
+[-1,1].forEach(sg=>{const screen=new T.Mesh(new T.PlaneGeometry(22,8),screenMat);screen.position.set(0,sg>0?26:15.8,sg*45);screen.rotation.y=sg<0?0:Math.PI;S.add(screen);
 for(let x=-76;x<=76;x+=8){const beam=new T.Mesh(new T.BoxGeometry(.22,.22,18),steel);beam.position.set(x,20.4,sg*47);S.add(beam)}
 for(let x=-70;x<=70;x+=14){const banner=new T.Mesh(new T.PlaneGeometry(3.8,2.3),new T.MeshBasicMaterial({map:tex(256,128,g=>{g.fillStyle='#101a2e';g.fillRect(0,0,256,128);g.fillStyle=x%2?'#e8f0ff':'#e7c66b';g.font='bold 32px sans-serif';g.textAlign='center';g.fillText(x%2?'FT90':'MATCHDAY',128,75)}),side:T.DoubleSide}));banner.position.set(x,12.2,sg*55);banner.rotation.y=sg<0?0:Math.PI;S.add(banner)} });
 // A second inner LED ribbon and clearly marked section entrances add scale to the bowl.
@@ -167,6 +167,7 @@ if(mv<1)torso.rotation.z+=Math.sin(now*1.8+gp.ph0)*.014*(1-mv);
 if(st){if(st.gk&&st.dv<=0&&!(st.jp>0)&&v<3){legs[0].rotation.set(.14,0,.25);legs[1].rotation.set(-.14,0,.25);knees[0].rotation.z=knees[1].rotation.z=-.5;torso.rotation.z=-.3;arms[0].rotation.set(.8,0,.5);arms[1].rotation.set(-.8,0,.5);hip.position.y=.92}
 if(st.jp>0){gp.position.y=Math.sin(Math.min(1,1-st.jp/.5)*Math.PI)*.55;arms[0].rotation.z=arms[1].rotation.z=2.4;torso.rotation.z=.12}
 else if(st.dv>0){const pr=1-st.dv/.7;gp.position.y=Math.sin(Math.min(1,pr)*Math.PI)*.9;arms[0].rotation.set(0,0,2.7);arms[1].rotation.set(0,0,2.7);legs[0].rotation.z=.4;legs[1].rotation.z=-.4;knees[0].rotation.z=knees[1].rotation.z=-.2}
+else if(st.tkw>0){legs[1].rotation.z=1.1;knees[1].rotation.z=-.2;torso.rotation.z=-.12;arms[0].rotation.z=.8;arms[1].rotation.z=-.6}
 else if(st.lunge>0&&v>2.5){gp.rotation.z=1.15;gp.position.y=.42;legs[0].rotation.z=.25;legs[1].rotation.z=.05;knees[0].rotation.z=knees[1].rotation.z=-.1;torso.rotation.z=-.15;arms[0].rotation.set(0,0,-.9);arms[1].rotation.set(0,0,-.9)}
 else if(typeof sim!=='undefined'&&sim.time-st.kt<.42){const kp=(sim.time-st.kt)/.42,a=kp<.3?-1*(kp/.3):-1+2.7*Math.min(1,(kp-.3)/.35);legs[1].rotation.z=a;knees[1].rotation.z=kp<.3?-.9*(kp/.3):-.9+.9*Math.min(1,(kp-.3)/.25);arms[0].rotation.z=.9*(a>0?1:-a);arms[1].rotation.z=-.9;torso.rotation.z=kp<.3?.1:-.14;legs[0].rotation.z=-.1}}};
 gp.pose=(type,t)=>{gp.anim(0,0);const w=Math.sin(t*1.6+gp.ph0);
@@ -184,7 +185,7 @@ for(let side of [-1,1])for(let i=0;i<6;i++){const f=mk(pick(side<0?BLU:RED),S,{s
 for(let side of [-1,1])for(let i=0;i<4;i++){const f=mk(pick(side<0?BLU:RED),S,{shorts:0x20242e,skin:(i+2)%5,hair:i%5,hs:i%4,boot:0x171717});f.position.set(side*61,.92,-25+i*16.5);f.rotation.y=side<0?Math.PI/2:-Math.PI/2;bowlPeople.push({m:f,pose:i%2?'stretch':'talk',phase:i+side})}
 const P=[];for(let t=0;t<2;t++)for(let i=0;i<Sim.N;i++){const k=t?0xd8342f:0x2a7de1,gk=i===0?(t?0xf39c12:0x27ae60):k;
 P.push({m:mk(gk,S,{num:i+1,shorts:t?0xf2f2f2:0x0b1b3a,sock:gk,skin:(i*3+t)%5,hair:(i*2+t)%5,hs:(i+t*2)%5,gk:i===0,boot:i%3?0x111111:0xf5f5f5}),t,gk:i===0,p:new T.Vector2(),v:new T.Vector2(),a:0,ph:Math.random()*6,x0:0})}
-const ball=new T.Mesh(new T.SphereGeometry(.22,16,12),new T.MeshStandardMaterial({color:0xffffff}));ball.castShadow=true;S.add(ball);
+const ball=new T.Mesh(new T.SphereGeometry(.22,16,12),new T.MeshStandardMaterial({map:tex(128,64,(g,c)=>{g.fillStyle='#fff';g.fillRect(0,0,128,64);g.fillStyle='#1b1b1b';for(let i=0;i<8;i++)for(let j=0;j<3;j++){g.beginPath();g.arc(8+i*16+(j%2)*8,10+j*22,6,0,7);g.fill()}}),roughness:.55}));ball.castShadow=true;S.add(ball);
 const bv=new T.Vector3(),mark=new T.Mesh(new T.ConeGeometry(.35,.7,8),new T.MeshBasicMaterial({color:0xfac775}));mark.rotation.x=Math.PI;S.add(mark);
 /* ---------- walkable tunnel + dressing room (north side, beyond the stand) ---------- */
 const room=new T.Group();S.add(room);const HIDE=[],bm=c=>new T.MeshBasicMaterial({color:c});
@@ -270,14 +271,14 @@ for(const [x,z,c] of [[-22,-92,0x246a86],[22,-88,0x8b4b2d]]){const kiosk=new T.G
 
 let mode='play',tt=0,cm=0,sprint=false;
 const CM=[[34,92,0],[11,20,14],[43,112,0]],CN=['broadcast','player','wide'];
-let camTrackX=0,camTrackZ=0,camBX=0,camBZ=0,camFX=0,camFZ=0,NEARHIDE=null;
+let camTrackX=0,camTrackZ=0;
 const tn=t=>t?'City':'United',nm=id=>(id%11)+1,turnA=(a,b,m)=>{const d=((b-a+Math.PI*3)%(Math.PI*2))-Math.PI;return a+cl(d,-m,m)};
 const cap=t=>{$('cp').textContent=t},fade=f=>{$('fd').style.opacity=f?1:0};
 function say(t,ms){cap(t);clearTimeout(say.h);say.h=setTimeout(()=>cap(''),ms||1800)}
 function banner(t){const m=$('msg');m.textContent=t;m.style.display=t?'block':'none'}
 function sync(dt){sim.p.forEach((s,i)=>{const p=P[i],v=Math.hypot(s.vx,s.vz);p.p.set(s.x,s.z);p.v.set(s.vx,s.vz);p.a=s.a;p.ph+=v*dt*1.25;p.m.visible=!s.off;
 p.m.position.set(s.x,0,s.z);p.m.rotation.y=-s.a;p.m.rotation.x=s.dv>0?s.dd*(Math.cos(s.a)>0?1:-1)*Math.min(1.35,(1-s.dv/.7)*3):0;p.m.anim(v,p.ph,s)});
-const b=sim.ball;ball.position.set(b.x,b.y,b.z);bv.set(b.vx,b.vy,b.vz);owner=sim.owner>=0?P[sim.owner]:null;u=P[sim.user]||null}
+const b=sim.ball;const bsp=Math.hypot(b.vx,b.vz);if(bsp>.3&&dt>0){const ax=new T.Vector3(b.vz,0,-b.vx).normalize();ball.rotateOnWorldAxis(ax,bsp*dt/.22)}ball.position.set(b.x,b.y,b.z);bv.set(b.vx,b.vy,b.vz);owner=sim.owner>=0?P[sim.owner]:null;u=P[sim.user]||null}
 function reset(){Sim.reset(sim);sim.mood=st.m;sync(0)}
 function act(k){if(!st.run||st.pause||st.freeze>0)return;Sim.act(sim,k)}
 const pad=$('pad'),kn=$('kn');
@@ -568,7 +569,7 @@ function audioInit(){if(AU.c)return;try{const C=window.AudioContext||window.webk
  AU.c=c;AU.noise=g;AU.voice=vg;setInterval(chantBurst,2600)}catch(e){}}
 const CHANTS=['UNI-TED! UNI-TED!','WE ARE FT90!','OLE OLE OLE OLE!','COME ON YOU BLUES!','FT-NINETY! FT-NINETY!'];let chantI=0;
 function chantBurst(){if(!AU.c)return;if(AU.c.state==='suspended')AU.c.resume();const t0=AU.c.currentTime+.05,g=AU.voice.gain,lv=AU.lvl;if(lv<.03)return;[0,.45,.9,1.55,2.0].forEach((o,i)=>{g.cancelScheduledValues&&0;g.setTargetAtTime(lv*.55,t0+o,.03);g.setTargetAtTime(0,t0+o+(i===2||i===4?.4:.22),.05)});
- const el=document.getElementById('chant');if(el&&AU.lvl>.2&&mode!=='play'){el.textContent=CHANTS[chantI++%CHANTS.length];el.style.opacity=1;setTimeout(()=>{el.style.opacity=0},1900)}}
+ const el=document.getElementById('chant');if(el&&AU.lvl>.2){el.textContent=CHANTS[chantI++%CHANTS.length];el.style.opacity=1;setTimeout(()=>{el.style.opacity=0},1900)}}
 function crowdLevel(){if(mode==='walk'){if(WK.kind==='half')return .12;const x=WK.x,z=WK.z;if(z<-252)return Math.min(.95,.35+(Math.abs(x)<22?.6:0));if(z<-168)return .3;if(z<-112)return .2;return .1}if(mode==='lineup'||mode==='shake')return .95;if(mode==='play')return .42+Math.min(.5,ca*.2);return .1}
 function audioTick(dt){if(!AU.c)return;const lv=crowdLevel();AU.lvl+=(lv-AU.lvl)*Math.min(1,dt*1.5);AU.noise.gain.setTargetAtTime(AU.lvl*.35,AU.c.currentTime,.2)}
 /* ---- floor height, route beacon ---- */
@@ -606,9 +607,9 @@ const q=WK.kind==='pre'?'Gaffer: "Big night, lad. How do you want us to play it?
 const choose=m=>{st.m[m]=m==='op'?.92:m==='sp'?1.08:1.18;WK.talked=true;WK.lock=false;openDlg('Gaffer: "Right. Go out there and show them."',[["Let's go",()=>{closeDlg();say(WK.kind==='pre'?'Head out through the tunnel':'Head back out to the pitch',2800)}]])};
 openDlg(q,[['Motivate',()=>choose('sp')],['Demand more',()=>choose('pw')],['Stay calm',()=>choose('op')]])}
 function openTactics(){st.pause=true;$('pm').classList.add('on')}
-const goLevel=l=>{if(WK.busy)return;WK.busy=true;fade(1);setTimeout(()=>{WK.x=-70;WK.z=l?-160:-170.5;WK.vx=WK.vz=0;fade(0);WK.busy=false;say(l?'LEVEL 2 · Upper Concourse':'LEVEL 1 · Grand Atrium',2200)},600)};
+const goLevel=l=>{if(WK.busy)return;WK.busy=true;fade(1);setTimeout(()=>{WK.x=-70;WK.z=l?-160:-170.5;WK.vx=WK.vz=0;WK.y=gy(WK.x,WK.z);walkCam(0,true);fade(0);WK.busy=false;say(l?'LEVEL 2 · Upper Concourse':'LEVEL 1 · Grand Atrium',2200)},600)};
 const INT=[
- {x:0,z:-253,r:6,skip:()=>WK.security,label:'Security check',fn:()=>showSecurityCheck()},
+ {x:0,z:-253,r:9,label:'Security check',fn:()=>showSecurityCheck()},
  {x:-14,z:-224,r:4.5,label:'Stadium map',fn:()=>openMap()},{x:14,z:-224,r:4.5,label:'Stadium map',fn:()=>openMap()},
  {x:0,z:-232,r:8,label:'Fan Zone',fn:()=>openDlg('FT90 FAN ZONE · The trophy cabinet shines under the atrium lights. Supporters queue for photos, legends videos play on the big ring screen.',[['Take a photo',()=>{closeDlg();say('Great shot! The fan zone team cheers.',2000)}],['Move on',closeDlg]])},
  {x:-60,z:-214,r:8,label:'Megastore',fn:()=>openDlg('OFFICIAL FT90 MEGASTORE · Shirts, scarves and matchday souvenirs. Staff are serving a queue of supporters.',[['Buy a scarf · £12',()=>{closeDlg();say('FT90 scarf added to your matchday bag.',2200)}],['Leave',closeDlg]])},
@@ -622,7 +623,7 @@ const INT=[
  {x:-36,z:-100,r:4.5,label:'Players-only door',fn:()=>{if(!WK.security){openDlg('ACCESS DENIED · Your accreditation must be verified at the main gate first.',[['Understood',closeDlg]])}else if(WK.access){say('Door open. Follow the corridor to the dressing room.',2200)}else{WK.access=true;openDlg('PLAYERS-ONLY ACCESS · Accreditation scanned by armed security. The corridor leads to the dressing room.',[['Enter',closeDlg]])}}},
  {x:5,z:-78,r:3.8,label:'Talk',fn:coachTalk},{x:7,z:-84,r:3.8,label:'Tactics',fn:openTactics},{x:11.5,z:-70,r:3.2,label:'Locker',fn:()=>say('Your locker. Number 10. Your boots and kit are ready.',2400)},
  ...RM.map(o=>({x:o.x,z:o.z,r:2.3,label:'Chat',fn:()=>say(o.name+': \"'+o.line+'\"',2800)}))];
-function nearInt(){let best=null,bd=1e9;for(const it of INT){if(it.skip&&it.skip())continue;const d=Math.hypot(it.x-WK.x,it.z-WK.z);if(d<it.r&&d<bd){bd=d;best=it}}return best}
+function nearInt(){let best=null,bd=1e9;for(const it of INT){const d=Math.hypot(it.x-WK.x,it.z-WK.z);if(d<it.r&&d<bd){bd=d;best=it}}return best}
 function drawMap(cv){const x=cv.getContext('2d'),W=cv.width,H=cv.height,X=z=>(z+330)/300*W,Y=q=>(q+95)/190*H;x.clearRect(0,0,W,H);x.fillStyle='#07111e';x.fillRect(0,0,W,H);
  const Z=(x0,x1,z0,z1,f,t)=>{x.fillStyle=f;x.fillRect(X(z0),Y(x0),X(z1)-X(z0),Y(x1)-Y(x0));if(t){x.fillStyle='#e8f4ff';x.font='bold 11px system-ui,sans-serif';x.textAlign='center';x.fillText(t,(X(z0)+X(z1))/2,(Y(x0)+Y(x1))/2+4)}};
  Z(-68,68,-320,-252,'#2b3a4a','ARRIVAL PLAZA');Z(-78,78,-248,-170,'#23505e','GRAND ATRIUM');Z(-78,78,-168,-140,'#2d3f6e','LEVEL 2');Z(-66,-54,-140,-96,'#35507a');Z(-66,3,-102.6,-97.4,'#1d3a6a');Z(-2.4,2.4,-98,-86,'#1d3a6a');Z(-13.2,13.2,-86,-63.4,'#2a7de1','');Z(-3.5,3.5,-63.4,-36.6,'#1d3a6a');Z(-55,55,-36,36,'#1f6a2e','PITCH');
@@ -653,24 +654,24 @@ function walkObjective(){
  return 'OBJECTIVE 5/6 · Speak to the manager in the dressing room'+d}
 function showSecurityCheck(){if(WK.security){say('Accreditation verified. Follow the green signs to the players-only door.',2400);return}openDlg('FT90 SECURITY CHECKPOINT\n\nArmed security need to verify your player accreditation before you enter the stadium. Tap SHOW ACCREDITATION to continue.',[['Show accreditation',()=>{WK.security=true;closeDlg();say('✓ ACCREDITATION VERIFIED — enter the Grand Atrium, then head for the Upper Concourse.',3600)}],['Not yet',closeDlg]])}
 function doInteract(){if(WK.busy||st.pause)return;const it=nearInt();if(it)it.fn()}
-function startWalk(kind){mode='walk';tt=0;WK.kind=kind;WK.talked=false;WK.lock=false;WK.busy=false;WK.exiting=false;WK.security=false;WK.access=false;WK.vx=WK.vz=0;
+function startWalk(kind){mode='walk';tt=0;WK.kind=kind;WK.talked=false;WK.lock=false;WK.busy=false;WK.exiting=false;WK.security=false;WK.access=false;WK.vx=WK.vz=0;WK.y=undefined;
 HIDE.forEach(o=>o.visible=false);housing.visible=false;U.visible=true;mark.visible=false;showWalkUI(true);rs();
 if(kind==='pre'){ext.visible=true;WK.x=-41;WK.z=-292;WK.a=Math.PI/2;WK.ri=0;P.forEach(p=>p.m.visible=false);RF.visible=false;ball.visible=false;say('Team bus arrived. Walk through the chanting supporters, pass security, cross the atrium and find the dressing room.',6500)}
 else{const q=u||P[0];WK.x=cl(q.p.x,-50,50);WK.z=cl(q.p.y,-34,33);WK.a=-Math.PI/2;q.m.visible=false;say('Half time. Walk to the tunnel and into the dressing room',4500)}
 WK.cyaw=kind==='pre'?0:Math.PI;WK.camPitch=0;WK.view=0;$('viewbtn').textContent='VIEW: 3RD PERSON';walkCam(0,true)}
 function camOK(x,z){const ax=WK.access,sc=WK.security;WK.access=true;WK.security=true;const r=inside(x,z);WK.access=ax;WK.security=sc;return r}
-function walkCam(dt,snap){const px=WK.x,pz=WK.z,gh=gy(px,pz),yaw=WK.cyaw,p=WK.camPitch,fx=Math.sin(yaw),fz=Math.cos(yaw);
+function walkCam(dt,snap){const px=WK.x,pz=WK.z,gh=(WK.y===undefined?gy(px,pz):WK.y),yaw=WK.cyaw,p=WK.camPitch,fx=Math.sin(yaw),fz=Math.cos(yaw);
  const want=WK.view===1?68:52;if(Math.abs(cam.fov-want)>.1){cam.fov=want;cam.updateProjectionMatrix()}
  if(WK.view===1){U.visible=false;const c=Math.cos(p);cam.position.set(px+fx*.3,gh+1.62,pz+fz*.3);cam.lookAt(px+fx*.3+fx*c*10,gh+1.62+Math.sin(p)*10,pz+fz*.3+fz*c*10);return}
  U.visible=true;const tight=(WK.kind==='pre'&&pz>-140&&pz<-36)||(WK.kind==='half'&&pz<-36);
  let d=tight?4.4:7,h=(tight?2.3:3.3)+p*3;if(h<1.2)h=1.2;
  while(d>1.3&&!camOK(px-fx*d,pz-fz*d))d-=.5;
- const k=snap?1:Math.min(1,dt*9),tx=px-fx*d,tz=pz-fz*d,ty=gh+h;
+ const k=snap?1:Math.min(1,dt*9),tx=px-fx*d,tz=pz-fz*d,ty=Math.max(gh+h,gy(tx,tz)+1.1);
  cam.position.x=lerp(snap?tx:cam.position.x,tx,k);cam.position.y=lerp(snap?ty:cam.position.y,ty,k);cam.position.z=lerp(snap?tz:cam.position.z,tz,k);
  const lx=px+fx*3,ly=gh+1.25+p*2.6,lz=pz+fz*3;WK.lk.x=lerp(snap?lx:WK.lk.x,lx,k);WK.lk.y=lerp(snap?ly:WK.lk.y,ly,k);WK.lk.z=lerp(snap?lz:WK.lk.z,lz,k);cam.lookAt(WK.lk)}
 function exitWalk(){if(WK.exiting)return;WK.exiting=true;fade(1);setTimeout(()=>{U.visible=false;HIDE.forEach(o=>o.visible=true);housing.visible=true;showWalkUI(false);ball.visible=true;mark.visible=true;RF.visible=true;
 if(WK.kind==='pre')startLineup();else kickoff();fade(0)},650)}
-function walkTick(dt){const now=performance.now()/1000;
+function walkTick(dt){const now=performance.now()/1000;const g0=gy(WK.x,WK.z);if(WK.y===undefined||Math.abs(g0-WK.y)>2.5)WK.y=g0;else WK.y+=(g0-WK.y)*Math.min(1,dt*14);
 if(!WK.busy&&!st.pause){const sx=jx+(K.KeyD||K.ArrowRight?1:0)-(K.KeyA||K.ArrowLeft?1:0),sf=-jy+(K.KeyW||K.ArrowUp?1:0)-(K.KeyS||K.ArrowDown?1:0),cd=cam.getWorldDirection(new T.Vector3()),cl2=Math.hypot(cd.x,cd.z)||1,fx=cd.x/cl2,fz=cd.z/cl2,ix=fx*sf-fz*sx,iz=fz*sf+fx*sx,m=Math.hypot(ix,iz),nx=m>1?ix/m:ix,nz=m>1?iz/m:iz,top=(Math.hypot(jx,jy)>.91||K.ShiftLeft)?6.4:4.4;
 WK.vx=lerp(WK.vx,nx*top,Math.min(1,dt*9));WK.vz=lerp(WK.vz,nz*top,Math.min(1,dt*9))}else{WK.vx*=.8;WK.vz*=.8}
 if(WK.target&&!WK.busy){
@@ -685,32 +686,37 @@ if(inside(ax,WK.z))WK.x=ax;else WK.vx=0;if(!WK.busy){if(inside(WK.x,az))WK.z=az;
 if(WK.kind==='half'&&!WK.lock&&!WK.talked&&WK.z<-39)WK.lock=true;
 if(WK.lock&&!WK.talked&&WK.z>-38.6&&WK.vz>.5&&performance.now()>WK.msg){say('The gaffer wants a word first.',2000);WK.msg=performance.now()+3000}
 const v=Math.hypot(WK.vx,WK.vz);if(v>.4)WK.a=turnA(WK.a,Math.atan2(WK.vz,WK.vx),dt*12);WK.ph+=v*dt*1.6;
-if(WK.kind==='pre'&&WK.x>=52&&WK.x<=62&&WK.z>=-198&&WK.z<-168.4)WK.z+=1.3*dt;U.position.set(WK.x,gy(WK.x,WK.z),WK.z);U.rotation.y=-WK.a;worldTick(now,dt);U.anim(v*1.25,WK.ph);
+if(WK.kind==='pre'&&WK.x>=52&&WK.x<=62&&WK.z>=-198&&WK.z<-168.4)WK.z+=1.3*dt;U.position.set(WK.x,WK.y,WK.z);U.rotation.y=-WK.a;worldTick(now,dt);U.anim(v*1.25,WK.ph);
 if(WK.kind==='half')P.forEach((p,i)=>{if(!p.m.visible)return;const tx=p.t?p.p.x:cl(p.p.x*.3,-6,6)+(i%5-2)*.8,tz=p.t?40:-37.6;walk(p,tx,tz,6.5,dt);if(p.t?p.p.y>36.8:p.p.y<-36.8)p.m.visible=false});
 RM.forEach(o=>o.m.pose(o.pose,now));COACH.pose('talk',now);
 const it=nearInt(),ia=$('ia');if(it&&!WK.busy&&!st.pause){if(ia.textContent!==it.label+' · TAP')ia.textContent=it.label+' · TAP';ia.style.display='flex'}else ia.style.display='none';const obj=$('walkobj');if(obj)obj.textContent=walkObjective();
 if(!WK.exiting&&WK.z>-35.4&&(WK.kind!=='pre'||WK.talked))exitWalk();
 mark.position.set(WK.x,4.2,WK.z);walkCam(dt,false)}
 let last=performance.now();
-function loop(n){const dt=Math.min(.05,(n-last)/1000);last=n;tt+=dt;sky.position.copy(cam.position);if(mode!=='play'&&NEARHIDE&&NEARHIDE.hidden){NEARHIDE.forEach(o=>o.visible=true);NEARHIDE.hidden=false}if(mode!=='walk')audioTick(dt);ca*=.985;crowdA.position.y=Math.max(0,Math.sin(n/230))*.25*(1+ca);crowdB.position.y=Math.max(0,Math.sin(n/230+2.1))*.25*(1+ca);
+function loop(n){const dt=Math.min(.05,(n-last)/1000);last=n;tt+=dt;sky.position.copy(cam.position);if(mode!=='walk')audioTick(dt);ca*=.985;crowdA.position.y=Math.max(0,Math.sin(n/230))*.25*(1+ca);crowdB.position.y=Math.max(0,Math.sin(n/230+2.1))*.25*(1+ca);
 if(mode==='walk'){walkTick(dt);crowdPeople.forEach((o,i)=>{const t=n/1000+o.phase;o.m.pose(o.pose,t);if(o.pose==='wave'){o.m.J.arms[0].rotation.z=2.2+Math.sin(t*4)*.35;o.m.J.arms[1].rotation.z=2.2+Math.cos(t*4)*.35}else if(o.pose==='talk'){o.m.J.hd.rotation.y=Math.sin(t*1.7)*.13;o.m.J.arms[1].rotation.z=.65+Math.max(0,Math.sin(t*2+i))*.55}});worldPeople.forEach((o,i)=>{const t=n/1000+o.phase;o.m.pose(o.pose,t);if(o.pose==='talk'){o.m.J.hd.rotation.y=Math.sin(t*1.4)*.15;o.m.J.arms[0].rotation.z=.4+Math.max(0,Math.sin(t*1.8+i))*.45}});securityStaff.forEach((o,i)=>{const t=n/1000+i;o.m.J.hd.rotation.y=Math.sin(t*1.1)*.16;o.m.J.arms[1].rotation.z=.55+Math.max(0,Math.sin(t*1.7))*.45});R.render(S,cam)}
 else if(mode==='lineup'){lineupTick(dt);if(tt>14.5){cap('Starting line-ups');shakeStart()}R.render(S,cam)}
 else if(mode==='shake'){P.forEach(p=>walk(p,p.x0+(p.t?-4:4),p.t?1.3:-1.3,1.4,dt));if(tt>3.6)toKick();R.render(S,cam)}
 else if(mode==='wait')R.render(S,cam);
 else{if(!st.pause){if(st.freeze>0)st.freeze-=dt;else step(dt);refUpd(dt)}if(u)mark.position.set(u.p.x,4.2,u.p.y);pitchCrew.forEach(o=>o.m.pose(o.pose,n/1000+o.phase));bowlPeople.forEach(o=>{const t=n/1000+o.phase;o.m.pose(o.pose,t);if(o.pose==='talk'){o.m.J.hd.rotation.y=Math.sin(t*1.5)*.14;o.m.J.arms[0].rotation.z=.45+Math.max(0,Math.sin(t*2))*0.55}});dugoutPeople.forEach(o=>{const t=n/1000+o.phase;o.m.pose(o.pose,t);if(o.pose==='talk'){o.m.J.hd.rotation.y=Math.sin(t*1.5)*.12;o.m.J.arms[1].rotation.z=.7+Math.max(0,Math.sin(t*2))*0.4}});AR.forEach((r,i)=>{r.position.x=cl(ball.position.x*.78+(i===0?-5:5),-48,48);r.position.z=i===0?-38.2:38.2;r.anim(2,n/140)});ctx();drawRad();
 const w=cam.aspect<1,b=ball.position;
-if(!NEARHIDE)NEARHIDE=S.children.filter(o=>o.isMesh&&o!==sky&&o.position.z>38&&o.position.y>=11&&Math.abs(o.position.x)<110);
-NEARHIDE.forEach(o=>o.visible=cm===1);NEARHIDE.hidden=cm!==1;
-camBX+=(b.x-camBX)*Math.min(1,dt*2.2);camBZ+=(b.z-camBZ)*Math.min(1,dt*2.2);
-if(cm===0){ // broadcast: high, deep sideline view of the whole pitch, smooth ball-led pan
- const bx=cl(camBX*(w?.7:.55),-(w?40:34),w?40:34);camTrackX+=(bx-camTrackX)*Math.min(1,dt*2);
- cam.position.set(camTrackX,w?46:36,w?78:62);cam.lookAt(camTrackX*.95,0,w?-6:-4+camBZ*.12)
-}else if(cm===2){ // wide tactical view
- const wx=cl(camBX*.3,-20,20);camTrackX+=(wx-camTrackX)*Math.min(1,dt*1.4);
- cam.position.set(camTrackX,w?52:44,w?90:76);cam.lookAt(camTrackX,0,-2)
-}else{ // player cam: blends the controlled player with the ball and is low-pass filtered, so switching players never snaps the view
- const tx=u?u.p.x*.55+camBX*.45:camBX,tz=u?u.p.y*.55+camBZ*.45:camBZ;camFX+=(tx-camFX)*Math.min(1,dt*1.5);camFZ+=(tz-camFZ)*Math.min(1,dt*1.5);
- cam.position.x+=(camFX-cam.position.x)*Math.min(1,dt*4);cam.position.y+=(CM[1][0]+4-cam.position.y)*Math.min(1,dt*1.3);cam.position.z+=(camFZ+CM[1][1]-cam.position.z)*Math.min(1,dt*4);cam.lookAt(camFX,0,camFZ)
+if(cm===0){
+ // Broadcast: FC25-style side-on tele view. Camera sits inside the bowl, lower and further back than before,
+ // pans smoothly with the ball (never with the controlled player) and leads slightly in the direction of play.
+ const lead=cl(b.vx*.35,-8,8),bx=cl((b.x+lead)*(w?.78:.62),-(w?44:36),w?44:36);camTrackX+=(bx-camTrackX)*Math.min(1,dt*1.9);
+ camTrackZ+=(cl(b.z,-36,36)-camTrackZ)*Math.min(1,dt*1.4);
+ cam.position.set(camTrackX,w?27:18.8,w?68:56.5);
+ cam.lookAt(camTrackX*.93,0,w?-3+camTrackZ*.3:-2+camTrackZ*.5);
+}else if(cm===2){
+ const wx=cl(b.x*.3,-20,20);camTrackX+=(wx-camTrackX)*Math.min(1,dt*1.2);
+ cam.position.set(camTrackX,w?40:32,w?70:63);
+ cam.lookAt(camTrackX,0,w?0:1);
+}else{
+ // Player cam: low chase view behind the controlled player blended with the ball; heavy smoothing so switching players never snaps.
+ const tx0=u?u.p.x:b.x,tz0=u?u.p.y:b.z,fx0=tx0*.65+b.x*.35,fz0=tz0*.65+b.z*.35,k=Math.min(1,dt*.9);
+ camTrackX+=(fx0+(u?cl(u.v.x*.3,-3,3):0)-camTrackX)*k;camTrackZ+=(fz0-camTrackZ)*k;
+ cam.position.x+=(camTrackX-cam.position.x)*Math.min(1,dt*1.6);cam.position.y+=((w?15:11)-cam.position.y)*Math.min(1,dt*1.3);cam.position.z+=(camTrackZ+(w?24:19)-cam.position.z)*Math.min(1,dt*1.6);
+ cam.lookAt(camTrackX,0,camTrackZ-1);
 }
 R.render(S,cam)}
 requestAnimationFrame(loop)}
