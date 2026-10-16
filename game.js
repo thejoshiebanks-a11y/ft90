@@ -1,12 +1,12 @@
 const T=THREE,$=id=>document.getElementById(id),cl=(v,a,b)=>Math.max(a,Math.min(b,v)),lerp=(a,b,k)=>a+(b-a)*k;
-const R=new T.WebGLRenderer({canvas:$('c'),antialias:true});R.setPixelRatio(Math.min(devicePixelRatio,2));R.shadowMap.enabled=true;
+const R=new T.WebGLRenderer({canvas:$('c'),antialias:false,powerPreference:'high-performance'});R.setPixelRatio(Math.min(devicePixelRatio||1,1.5));R.shadowMap.enabled=true;R.shadowMap.type=T.PCFSoftShadowMap;
 const S=new T.Scene();S.background=new T.Color(0x16254a);S.fog=new T.Fog(0x0b1220,170,400);
 const cam=new T.PerspectiveCamera(50,1,.1,500);
 function rs(){const w=document.body.clientWidth,h=document.body.clientHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.fov=w<h?(typeof mode!=='undefined'&&mode==='walk'?55:52):(typeof mode!=='undefined'&&mode==='walk'?50:(typeof cm!=='undefined'&&cm===0?36:(typeof cm!=='undefined'&&cm===1?50:46)));cam.updateProjectionMatrix()}
 addEventListener('resize',rs);
 S.add(new T.HemisphereLight(0xbfd4ff,0x1a3a1a,.8));
 const sun=new T.DirectionalLight(0xffffff,.9);sun.position.set(-30,60,30);sun.castShadow=true;
-Object.assign(sun.shadow.camera,{left:-70,right:70,top:50,bottom:-50,far:200});sun.shadow.mapSize.set(1024,1024);S.add(sun);
+Object.assign(sun.shadow.camera,{left:-70,right:70,top:50,bottom:-50,far:200});sun.shadow.mapSize.set(512,512);S.add(sun);
 function tex(w,h,fn){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),c);return new T.CanvasTexture(c)}
 /* ---------- pitch ---------- */
 const pc=document.createElement('canvas');pc.width=1100;pc.height=720;const g=pc.getContext('2d');
@@ -154,19 +154,19 @@ const gSph=(r,a,b,p0,pl,t0,tl)=>{const k=['s',r,a,b,p0,pl,t0,tl].join();return G
 function numTex(n){return NT[n]||(NT[n]=tex(64,64,g=>{g.clearRect(0,0,64,64);g.lineWidth=6;g.strokeStyle='#0008';g.fillStyle='#fff';g.font='bold 46px sans-serif';g.textAlign='center';g.strokeText(n,32,48);g.fillText(n,32,48)}))}
 function mk(col,sc,o){sc=sc||S;o=o||{};const gp=new T.Group(),M=mat,sh=M(col),shorts=M(o.shorts===undefined?0xf2f2f2:o.shorts),sock=M(o.sock===undefined?col:o.sock),skin=M(SK[o.skin||0]),hair=M(HR[o.hair||0]),boot=M(o.boot||0x111111,.5),hand=M(o.gk?0x7CFC9A:SK[o.skin||0]),dark=M(0x111111),band=M(0xffffff);
 const cs=[],A=(geo,m,par,x,y,z,cast)=>{const e=new T.Mesh(geo,m);e.position.set(x||0,y||0,z||0);par.add(e);if(cast)cs.push(e);return e};
-const hip=new T.Group();hip.position.y=0.98;gp.add(hip);A(gBox(.32,.2,.48),shorts,hip,0,.05,0,1);
-const torso=new T.Group();torso.position.y=.18;hip.add(torso);const ch=A(gCyl(.22,.26,.72,'bottom',12),sh,torso,0,0,0,1);ch.scale.x=.68;ch.scale.z=.85;
-[-1,1].forEach(sd=>A(gSph(.12,10,8),sh,torso,0,.58,sd*.32));
-if(o.num){const pl=new T.Mesh(new T.PlaneGeometry(.38,.42),new T.MeshBasicMaterial({map:numTex(o.num),transparent:true}));pl.position.set(-.16,.32,0);pl.rotation.y=-Math.PI/2;torso.add(pl)}
-A(gCyl(.055,.065,.12,'bottom',8),skin,torso,0,.68,0);
-const hd=new T.Group();hd.position.y=.76;torso.add(hd);const hh=A(gSph(.175,16,12),skin,hd,0,.12,0);hh.scale.set(.92,1.08,.9);
-[-1,1].forEach(sd=>{A(gSph(.032,6,5),skin,hd,0,.08,sd*.16);A(gBox(.025,.03,.04),dark,hd,.15,.12,sd*.05);A(gSph(.018,5,4),dark,hd,.148,.135,sd*.055)});
-const hs=o.hs||0;if(hs!==2){if(hs===1)A(gSph(.22,12,10),hair,hd,-.02,.18,0);else{A(gSph(.19,14,10,0,Math.PI*2,0,Math.PI*.6),hair,hd,-.01,.13,0);if(hs===3)A(gBox(.36,.08,.07),hair,hd,-.02,.32,0);if(hs===4)A(gBox(.09,.3,.32),hair,hd,-.16,.02,0)}}
+const hip=new T.Group();hip.position.y=1.05;gp.add(hip);A(gBox(.34,.18,.42),shorts,hip,0,.02,0,1);
+const torso=new T.Group();torso.position.y=.15;hip.add(torso);const ch=A(gCyl(.24,.28,.78,'bottom',12),sh,torso,0,0,0,1);ch.scale.x=.72;ch.scale.z=.82;
+[-1,1].forEach(sd=>A(gSph(.13,10,8),sh,torso,0,.62,sd*.34));
+if(o.num){const pl=new T.Mesh(new T.PlaneGeometry(.4,.44),new T.MeshBasicMaterial({map:numTex(o.num),transparent:true}));pl.position.set(-.18,.34,0);pl.rotation.y=-Math.PI/2;torso.add(pl)}
+A(gCyl(.06,.07,.14,'bottom',8),skin,torso,0,.74,0);
+const hd=new T.Group();hd.position.y=.82;torso.add(hd);const hh=A(gSph(.185,16,12),skin,hd,0,.14,0);hh.scale.set(.94,1.12,.92);
+[-1,1].forEach(sd=>{A(gSph(.034,6,5),skin,hd,0,.09,sd*.17);A(gBox(.028,.032,.042),dark,hd,.16,.13,sd*.055);A(gSph(.02,5,4),dark,hd,.158,.145,sd*.06)});
+const hs=o.hs||0;if(hs!==2){if(hs===1)A(gSph(.23,12,10),hair,hd,-.02,.2,0);else{A(gSph(.2,14,10,0,Math.PI*2,0,Math.PI*.62),hair,hd,-.01,.15,0);if(hs===3)A(gBox(.38,.09,.08),hair,hd,-.02,.34,0);if(hs===4)A(gBox(.1,.32,.34),hair,hd,-.17,.03,0)}}
 const arms=[],elb=[],legs=[],knees=[],ft=[];
-[-1,1].forEach(sd=>{const a=new T.Group();a.position.set(0,.52,sd*.34);torso.add(a);A(gCyl(.07,.058,.32,'top'),sh,a,0,0,0,1);const e=new T.Group();e.position.y=-.32;a.add(e);A(gCyl(.052,.046,.28,'top'),skin,e);A(gSph(o.gk?.085:.062,8,6),hand,e,0,-.3,0);arms.push(a);elb.push(e);
-const l=new T.Group();l.position.set(0,0,sd*.11);hip.add(l);A(gCyl(.115,.09,.58,'top'),skin,l,0,0,0,1);A(gCyl(.13,.12,.26,'top'),shorts,l,0,.04,0);const k=new T.Group();k.position.y=-.58;l.add(k);A(gCyl(.082,.068,.52,'top'),sock,k,0,0,0,1);A(gCyl(.088,.087,.055,'top'),band,k,0,-.04,0);
-const f=new T.Group();f.position.y=-.52;k.add(f);A(gBox(.32,.11,.16),boot,f,.08,-.05,0);A(gSph(.08,8,6),boot,f,.22,-.05,0);legs.push(l);knees.push(k);ft.push(f)});
-const bl=new T.Mesh(new T.CircleGeometry(.58,16),new T.MeshBasicMaterial({color:0,transparent:true,opacity:.25}));bl.rotation.x=-Math.PI/2;bl.position.y=.02;gp.add(bl);
+[-1,1].forEach(sd=>{const a=new T.Group();a.position.set(0,.56,sd*.36);torso.add(a);A(gCyl(.075,.062,.34,'top'),sh,a,0,0,0,1);const e=new T.Group();e.position.y=-.34;a.add(e);A(gCyl(.055,.05,.3,'top'),skin,e);A(gSph(o.gk?.09:.065,8,6),hand,e,0,-.32,0);arms.push(a);elb.push(e);
+const l=new T.Group();l.position.set(0,-.02,sd*.12);hip.add(l);A(gCyl(.12,.095,.62,'top'),skin,l,0,0,0,1);A(gCyl(.135,.125,.28,'top'),shorts,l,0,.05,0);const k=new T.Group();k.position.y=-.62;l.add(k);A(gCyl(.085,.072,.56,'top'),sock,k,0,0,0,1);A(gCyl(.09,.09,.06,'top'),band,k,0,-.05,0);
+const f=new T.Group();f.position.y=-.56;k.add(f);A(gBox(.34,.12,.18),boot,f,.09,-.06,0);A(gSph(.085,8,6),boot,f,.24,-.06,0);legs.push(l);knees.push(k);ft.push(f)});
+const bl=new T.Mesh(new T.CircleGeometry(.62,16),new T.MeshBasicMaterial({color:0,transparent:true,opacity:.22}));bl.rotation.x=-Math.PI/2;bl.position.y=.01;gp.add(bl);
 cs.forEach(e=>e.castShadow=true);gp.ph0=Math.random()*6;gp.J={hip,torso,hd,arms,elb,legs,knees,ft};
 gp.anim=(v,ph,st)=>{const now=performance.now()/1000,k=Math.min(v/8,1),mv=Math.min(1,v/1.2),s=Math.sin(ph),c=Math.cos(ph);
 gp.rotation.z=0;gp.position.y=0;hip.rotation.set(0,s*.2*mv*(.4+.6*k),0);torso.rotation.set(0,-s*.3*mv*(.4+.6*k),-.3*k-.04*mv);hd.rotation.set(0,0,.25*k);hip.position.y=1.02+Math.abs(s)*.06*mv*(.4+.6*k);
@@ -197,7 +197,7 @@ const bowlPeople=[];
 for(let side of [-1,1])for(let i=0;i<6;i++){const f=mk(pick(side<0?BLU:RED),S,{shorts:pick([0x171a20,0x303744,0xf2f2f2]),skin:i%5,hair:(i+2)%5,hs:i%5,boot:0x171717});f.position.set(-29+i*11,.92,side*43.2);f.rotation.y=side<0?Math.PI:0;bowlPeople.push({m:f,pose:i%3===0?'stretch':'talk',phase:i*.8+side})}
 for(let side of [-1,1])for(let i=0;i<4;i++){const f=mk(pick(side<0?BLU:RED),S,{shorts:0x20242e,skin:(i+2)%5,hair:i%5,hs:i%4,boot:0x171717});f.position.set(side*61,.92,-25+i*16.5);f.rotation.y=side<0?Math.PI/2:-Math.PI/2;bowlPeople.push({m:f,pose:i%2?'stretch':'talk',phase:i+side})}
 const P=[];for(let t=0;t<2;t++)for(let i=0;i<Sim.N;i++){const k=t?0xd8342f:0x2a7de1,gk=i===0?(t?0xf39c12:0x27ae60):k;
-P.push({m:mk(gk,S,{num:i+1,shorts:t?0xf2f2f2:0x0b1b3a,sock:gk,skin:(i*3+t)%5,hair:(i*2+t)%5,hs:(i+t*2)%5,gk:i===0,boot:i%3?0x111111:0xf5f5f5}),t,gk:i===0,p:new T.Vector2(),v:new T.Vector2(),a:0,ph:Math.random()*6,x0:0})}
+P.push({m:mk(gk,S,{num:i+1,shorts:t?0xf2f2f2:0x0b1b3a,sock:gk,skin:t===0&&i===9?2:(i*3+t)%5,hair:t===0&&i===9?0:(i*2+t)%5,hs:t===0&&i===9?0:(i+t*2)%5,gk:i===0,boot:i%3?0x111111:0xf5f5f5}),t,gk:i===0,p:new T.Vector2(),v:new T.Vector2(),a:0,ph:Math.random()*6,x0:0})}
 const ball=new T.Mesh(new T.SphereGeometry(.22,16,12),new T.MeshStandardMaterial({map:tex(128,64,(g,c)=>{g.fillStyle='#fff';g.fillRect(0,0,128,64);g.fillStyle='#1b1b1b';for(let i=0;i<8;i++)for(let j=0;j<3;j++){g.beginPath();g.arc(8+i*16+(j%2)*8,10+j*22,6,0,7);g.fill()}}),roughness:.55}));ball.castShadow=true;S.add(ball);
 const passLine=new T.Mesh(new T.CylinderGeometry(.03,.03,1,6),new T.MeshBasicMaterial({color:0x00ff88,transparent:true,opacity:.7}));passLine.rotation.x=Math.PI/2;passLine.visible=false;S.add(passLine);
 const ring=new T.Mesh(new T.RingGeometry(.85,1.05,32),new T.MeshBasicMaterial({color:0x2dffc4,side:T.DoubleSide,transparent:true,opacity:.9}));ring.rotation.x=-Math.PI/2;ring.position.y=.06;S.add(ring);
@@ -284,8 +284,8 @@ for(const [x,z,c] of [[-22,-92,0x246a86],[22,-88,0x8b4b2d]]){const kiosk=new T.G
 // Coaches and substitutes occupy both dugouts instead of leaving the technical areas empty.
 [-1,1].forEach((side,team)=>{for(let i=0;i<5;i++){const person=mk(team?0xd8342f:0x2a7de1,S,{shorts:0x171a20,skin:(i+team)%5,hair:(i+2)%5,hs:i%4,boot:0x111111});person.position.set(side*15+(i-2)*1.65,0,40.1);person.rotation.y=side>0?Math.PI:0;pitchCrew.push({m:person,pose:i%2?'talk':'sit',phase:i+team*2})}});
 
-let mode='play',tt=0,cm=0,sprint=false;
-const CM=[[34,92,0],[11,20,14],[43,112,0]],CN=['default','player','stadium'];
+let mode='play',tt=0,cm=1,sprint=false; // default to player-follow 3rd person
+const CM=[[34,92,0],[11,20,14],[43,112,0]],CN=['player 3rd','player 1st','stadium'];
 let camTrackX=0,camTrackZ=0;
 const tn=t=>t?'City':'United',nm=id=>(id%11)+1,turnA=(a,b,m)=>{const d=((b-a+Math.PI*3)%(Math.PI*2))-Math.PI;return a+cl(d,-m,m)};
 const cap=t=>{$('cp').textContent=t},fade=f=>{$('fd').style.opacity=f?1:0};
@@ -315,7 +315,7 @@ gameCanvas.addEventListener('pointermove',e=>{if(lookPointer!==e.pointerId||mode
 const endLook=e=>{if(lookPointer===e.pointerId)lookPointer=null};gameCanvas.addEventListener('pointerup',endLook);gameCanvas.addEventListener('pointercancel',endLook);
 
 $('sh').addEventListener('pointerdown',()=>act(1));$('ps').addEventListener('pointerdown',()=>act(0));$('th').addEventListener('pointerdown',()=>act((sim.owner>=0&&sim.p[sim.owner].t===0)?4:5));$('lb').addEventListener('pointerdown',()=>act((sim.owner>=0&&sim.p[sim.owner].t===0)?2:6));$('sk').addEventListener('pointerdown',()=>{if(sim.owner>=0&&sim.p[sim.owner].t===0)Sim.skillMove(sim,sim.p[sim.user]);});
-$('ia').addEventListener('pointerdown',e=>{e.preventDefault();doInteract()});$('viewbtn').addEventListener('pointerdown',e=>{e.preventDefault();if(mode!=='walk'||WK.busy)return;WK.view=WK.view?0:1;$('viewbtn').textContent=WK.view?'VIEW: 1ST PERSON':'VIEW: 3RD PERSON';walkCam(0,true)});$('mapbtn').addEventListener('pointerdown',e=>{e.preventDefault();if(mode==='walk'&&!WK.busy)openMap();else if(mode==='walk'&&$('mapoverlay').style.display==='flex')closeMap()});
+$('ia').addEventListener('pointerdown',e=>{e.preventDefault();doInteract()});$('viewbtn').addEventListener('pointerdown',e=>{e.preventDefault();if(WK.busy)return;if(mode==='walk'){WK.view=WK.view?0:1;$('viewbtn').textContent=WK.view?'VIEW: 1ST PERSON':'VIEW: 3RD PERSON';walkCam(0,true)}else if(mode==='play'){cm=cm===1?0:1;$('viewbtn').textContent=cm===1?'VIEW: 3RD PERSON':'VIEW: 1ST PERSON';rs()}});$('mapbtn').addEventListener('pointerdown',e=>{e.preventDefault();if(mode==='walk'&&!WK.busy)openMap();else if(mode==='walk'&&$('mapoverlay').style.display==='flex')closeMap()});
 addEventListener('keydown',e=>{K[e.code]=1;if(mode==='walk'){if(e.code==='KeyE'||e.code==='Enter')doInteract();return}if(e.code==='Space')act(1);if(e.code==='KeyE')act(0);if(e.code==='KeyQ')act(2);if(e.code==='KeyR')act(4);if(e.code==='KeyF')act(3)});addEventListener('keyup',e=>K[e.code]=0);
 function upd(){$('sc').textContent=st.sc[0]+' - '+st.sc[1];$('tm').textContent=Math.min(90,Math.floor(st.min))+"'"}
 function goal(t){ca=3;st.sc[t]++;st.run=false;owner=null;banner('Goal! '+(t?'City':'United'));upd();setTimeout(()=>{banner('');reset();st.run=true},2000)}
@@ -353,7 +353,7 @@ $('cmb').onclick=()=>{cm=(cm+1)%3;$('cmb').textContent='Camera: '+CN[cm];rs();};
 $('pz').onclick=()=>{st.pause=true;$('pm').classList.add('on')};$('rsm').onclick=()=>{st.pause=false;$('pm').classList.remove('on')};
 let atk=true;function ctx(){const a=sim.owner>=0?sim.p[sim.owner].t===0:(sim.lastT===0);if(a===atk&&ctx.d)return;atk=a;ctx.d=1;$('ps').textContent=a?'Pass':'Pressure';$('sh').textContent=a?'Shoot':'Tackle';$('th').textContent=a?'Through':'Switch';$('lb').textContent=a?'Cross':'Clear'}
 function ui(on){const d=on?'block':'none',f=on?'flex':'none';$('pad').style.display=d;document.querySelectorAll('.b').forEach(e=>e.style.display=f);$('pz').style.display=f;$('stm').style.display=d;$('rad').style.display=d;$('ia').style.display='none'}
-function showWalkUI(on){$('pad').style.display=on?'block':'none';$('sc').parentNode.style.display=on?'none':'flex';$('ia').style.display='none';$('rad').style.display='none';$('mapbtn').style.display=on?'block':'none';$('viewbtn').style.display=on?'block':'none';$('walkobj').style.display=on?'block':'none';if(!on)$('cp').textContent=''}
+function showWalkUI(on){$('pad').style.display=on?'block':'none';$('sc').parentNode.style.display=on?'none':'flex';$('ia').style.display='none';$('rad').style.display='none';$('mapbtn').style.display=on?'block':'none';$('viewbtn').style.display='block';$('walkobj').style.display=on?'block':'none';if(!on)$('cp').textContent=''}
 /* ---------- ceremony helpers (lineup, handshakes, kickoff) ---------- */
 function setP(p,x,z,a){p.p.set(x,z);p.a=a;p.v.set(0,0);p.m.position.set(x,0,z);p.m.rotation.set(0,-a,0);p.m.anim(0,0)}
 function walk(p,tx,tz,spd,dt){const dx=tx-p.p.x,dz=tz-p.p.y,d=Math.hypot(dx,dz);if(d>.3){p.p.x+=dx/d*spd*dt;p.p.y+=dz/d*spd*dt;p.a=Math.atan2(dz,dx);p.ph+=dt*spd*1.6;p.m.anim(Math.min(spd,8),p.ph)}else p.m.anim(0,0);p.m.position.set(p.p.x,0,p.p.y);p.m.rotation.y=-p.a}
@@ -731,13 +731,11 @@ if(u&&sim.owner===u.id&&Math.hypot(INP.ix,INP.iz)>.25){
  passLine.scale.set(1,len,1);passLine.rotation.z=-ang;passLine.visible=true;
 }else passLine.visible=false;
 if(cm===0){
- // DEFAULT (eFootball-style): high, tight, steeply pitched camera that follows the ball closely and keeps the action large.
- const sp=Math.hypot(bv.x,bv.z),fxT=cl(b.x*.88+cl(bv.x*.22,-6,6),-46,46),fzT=cl(b.z*.88+cl(bv.z*.15,-3,3),-30,30);
- camTrackX+=(fxT-camTrackX)*Math.min(1,dt*2.8);camTrackZ+=(fzT-camTrackZ)*Math.min(1,dt*2.2);
- const H=(w?36:27)+Math.min(5,sp*.18),D=(w?30:17)+Math.min(4,sp*.14);
- const cz=Math.min(camTrackZ+D,w?60:43.5);
- cam.position.set(camTrackX,H,cz);
- cam.lookAt(camTrackX,0,camTrackZ-3);
+ // 1ST PERSON on controlled player
+ const px=u?u.p.x:b.x,pz=u?u.p.y:b.z,pa=u?u.a:0;
+ const back=Math.sin(pa),fwd=Math.cos(pa);
+ cam.position.set(px+fwd*0.15,1.65,pz+back*0.15);
+ cam.lookAt(px+fwd*4,1.4,pz+back*4);
 }else if(cm===2){
  // STADIUM view: wide tele camera from inside the bowl (shows roof, stands and the whole pitch).
  const lead=cl(bv.x*.35,-8,8),bx=cl((b.x+lead)*(w?.78:.62),-(w?44:36),w?44:36);camTrackX+=(bx-camTrackX)*Math.min(1,dt*1.9);
@@ -745,18 +743,18 @@ if(cm===0){
  cam.position.set(camTrackX,w?27:17,w?68:58);
  cam.lookAt(camTrackX*.93,0,w?-3+camTrackZ*.3:-8+camTrackZ*.5);
 }else{
- // Player cam (3rd person eFootball-style): tight behind controlled player, low angle, ball-aware lead.
+ // Player cam (3rd person): tight behind controlled player, low angle, ball-aware lead.
  const px=u?u.p.x:b.x,pz=u?u.p.y:b.z,pa=u?u.a:0;
  const back=Math.sin(pa),fwd=Math.cos(pa);
- const dist=w?5.8:4.6,height=w?2.8:2.2;
- const leadX=px+fwd*1.8+cl(bv.x*.15,-2,2),leadZ=pz+back*1.8+cl(bv.z*.1,-1.5,1.5);
- camTrackX+=(leadX-camTrackX)*Math.min(1,dt*3.2);
- camTrackZ+=(leadZ-camTrackZ)*Math.min(1,dt*3.2);
+ const dist=w?6.2:5.0,height=w?2.6:2.1;
+ const leadX=px+fwd*2.2+cl(bv.x*.12,-1.5,1.5),leadZ=pz+back*2.2+cl(bv.z*.08,-1,1);
+ camTrackX+=(leadX-camTrackX)*Math.min(1,dt*4.5);
+ camTrackZ+=(leadZ-camTrackZ)*Math.min(1,dt*4.5);
  const cx=camTrackX-fwd*dist,cz=camTrackZ-back*dist,cy=height;
- cam.position.x+=(cx-cam.position.x)*Math.min(1,dt*2.8);
- cam.position.y+=(cy-cam.position.y)*Math.min(1,dt*2.4);
- cam.position.z+=(cz-cam.position.z)*Math.min(1,dt*2.8);
- cam.lookAt(camTrackX+fwd*6,1.1,camTrackZ+back*6);
+ cam.position.x+=(cx-cam.position.x)*Math.min(1,dt*3.5);
+ cam.position.y+=(cy-cam.position.y)*Math.min(1,dt*3.0);
+ cam.position.z+=(cz-cam.position.z)*Math.min(1,dt*3.5);
+ cam.lookAt(camTrackX+fwd*7,1.15,camTrackZ+back*7);
 }
 if(!isFinite(cam.position.x+cam.position.y+cam.position.z)){camTrackX=0;camTrackZ=0;cam.position.set(0,19,56.5)}
 R.render(S,cam)}
