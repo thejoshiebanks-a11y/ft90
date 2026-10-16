@@ -280,7 +280,13 @@ for(const p of P){if(p.off)continue;p.cd-=dt;p.imm-=dt;p.dv-=dt;p.lunge-=dt;p.jp
   if(own&&own.t!==p.t&&!p.gk&&p.cd<=0&&p.lunge<=0&&p.tkw<=0&&S.plan[p.t].press[0]===p){const dd=hyp(own.x-p.x,own.z-p.z),os=hyp(own.vx,own.vz),df=p.t?S.diff:1;
    if(dd<2.7&&dd>1.45&&os>5.6&&S.rng()<dt*.3*df)p.lunge=.35;
    else if(dd<1.7&&S.rng()<dt*1.0*df)p.tkw=.3}}
- let ax=wx-p.vx,az=wz-p.vz;const l=hyp(ax,az),mx=(p.dv>0?55:(p.lunge>0?18:30))*dt;if(l>mx){ax*=mx/l;az*=mx/l}p.vx+=ax;p.vz+=az;
+ let ax=wx-p.vx,az=wz-p.vz;
+ if(p.dv>0){const l=hyp(ax,az),mx=55*dt;if(l>mx){ax*=mx/l;az*=mx/l}}
+ else{const v=hyp(p.vx,p.vz),hx=v>.4?p.vx/v:Math.cos(p.a),hz=v>.4?p.vz/v:Math.sin(p.a),ctl=isU(p)?1.22:1;
+  let al=ax*hx+az*hz,pe=-ax*hz+az*hx;
+  const acc=(p.lunge>0?6:Math.max(4.5,(13-v*.7)*ctl)),brk=(p.lunge>0?9:30*ctl),prp=(p.lunge>0?5:(26*ctl)/(1+v*.2));
+  al=cl(al,-brk*dt,acc*dt);pe=cl(pe,-prp*dt,prp*dt);ax=al*hx-pe*hz;az=al*hz+pe*hx}
+ p.vx+=ax;p.vz+=az;
  p.x=cl(p.x+p.vx*dt,-L-3,L+3);p.z=cl(p.z+p.vz*dt,-W-2,W+2);
  const spd=hyp(p.vx,p.vz);p.dph+=spd*dt*.9;
  if(spd>.8)p.a=turn(p.a,Math.atan2(p.vz,p.vx),(own===p?11:16)*dt)}
@@ -302,7 +308,7 @@ else{b.vy-=25*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;b.z+=b.vz*dt;
 if(b.y<.45){b.y=.22;b.vy=b.vy<-3?-b.vy*.45:0}
 if(b.y<.25){const k=hyp(b.vx,b.vz)>10?.52:.82,f=Math.max(0,1-k*dt);b.vx*=f;b.vz*=f}else{const f=Math.max(0,1-.1*dt);b.vx*=f;b.vz*=f}
 const hs=hyp(b.vx,b.vz);let pick=null,pd=1e9;
-for(const q of P){if(q.cd>0||q.off)continue;const d=hyp(q.x-b.x,q.z-b.z),r=q.gk?(q.dv>0?2.4:1.45):(q.id===S.rcv?1.7:1.05);
+for(const q of P){if(q.cd>0||q.off)continue;const d=hyp(q.x-b.x,q.z-b.z),r=q.gk?(q.dv>0?2.05:1.35):(q.id===S.rcv?1.7:1.05);
  if(d<r&&b.y<(q.gk?2.9:2.3)&&(q.gk||hs<22)&&d<pd&&!(q.gk&&hs>20&&S.roll>.6-.2*(d/r))){pd=d;pick=q}}
 if(pick){const q=pick;
  if(S.offs){const f=S.offs;if(q.t!==f.t)S.offs=null;else if(!q.gk&&S.time-f.at<4&&S.lastT===q.t&&f.ids.includes(q.id)){S.st.offsides[q.t]++;S.ev.push({type:'offside',t:q.t,id:q.id});setPiece(S,'free',1-q.t,q.x,q.z,true);return}}

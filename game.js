@@ -2,7 +2,7 @@ const T=THREE,$=id=>document.getElementById(id),cl=(v,a,b)=>Math.max(a,Math.min(
 const R=new T.WebGLRenderer({canvas:$('c'),antialias:true});R.setPixelRatio(Math.min(devicePixelRatio,2));R.shadowMap.enabled=true;
 const S=new T.Scene();S.background=new T.Color(0x16254a);S.fog=new T.Fog(0x0b1220,170,400);
 const cam=new T.PerspectiveCamera(50,1,.1,500);
-function rs(){const w=document.body.clientWidth,h=document.body.clientHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.fov=w<h?(typeof mode!=='undefined'&&mode==='walk'?55:52):(typeof mode!=='undefined'&&mode==='walk'?50:(typeof cm!=='undefined'&&cm===0?46:(typeof cm!=='undefined'&&cm===1?50:46)));cam.updateProjectionMatrix()}
+function rs(){const w=document.body.clientWidth,h=document.body.clientHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.fov=w<h?(typeof mode!=='undefined'&&mode==='walk'?55:52):(typeof mode!=='undefined'&&mode==='walk'?50:(typeof cm!=='undefined'&&cm===0?38:(typeof cm!=='undefined'&&cm===1?50:46)));cam.updateProjectionMatrix()}
 addEventListener('resize',rs);
 S.add(new T.HemisphereLight(0xbfd4ff,0x1a3a1a,.8));
 const sun=new T.DirectionalLight(0xffffff,.9);sun.position.set(-30,60,30);sun.castShadow=true;
@@ -173,6 +173,10 @@ gp.rotation.z=0;gp.position.y=0;hip.rotation.set(0,s*.2*mv*(.4+.6*k),0);torso.ro
 const sw=(.5+.5*k)*mv,kb=(.5+.9*k)*mv;legs[0].rotation.set(0,0,s*sw);legs[1].rotation.set(0,0,-s*sw);knees[0].rotation.z=-Math.max(0,c)*kb-.1*mv;knees[1].rotation.z=-Math.max(0,-c)*kb-.1*mv;ft[0].rotation.z=Math.max(0,s)*.4*mv;ft[1].rotation.z=Math.max(0,-s)*.4*mv;
 arms[0].rotation.set(0,0,-s*(.55+.5*k)*mv);arms[1].rotation.set(0,0,s*(.55+.5*k)*mv);elb[0].rotation.z=elb[1].rotation.z=(.3+.9*k)*mv+.12;
 if(mv<1)torso.rotation.z+=Math.sin(now*1.8+gp.ph0)*.014*(1-mv);
+if(st&&typeof sim!=='undefined'&&!st.gk){const bb=sim.ball;let rel=Math.atan2(bb.z-st.z,bb.x-st.x)-st.a;rel=((rel+Math.PI*3)%(Math.PI*2))-Math.PI;hd.rotation.y=-Math.max(-1.1,Math.min(1.1,rel))*.55;torso.rotation.y+=-Math.max(-1,Math.min(1,rel))*.12*(1-k*.6);
+ const ow=sim.owner>=0?sim.p[sim.owner]:null;
+ if(ow&&ow.t!==st.t&&v<5.2&&Math.hypot(ow.x-st.x,ow.z-st.z)<4){/* jockey: low, wide, arms out */hip.position.y=.9+Math.abs(s)*.02;legs[0].rotation.z=.35+s*.12;legs[1].rotation.z=-.35-s*.12;knees[0].rotation.z=knees[1].rotation.z=-.55;torso.rotation.z=-.22;arms[0].rotation.set(.55,0,.6);arms[1].rotation.set(-.55,0,.6)}
+ else if(k>.7){elb[0].rotation.z=elb[1].rotation.z=1.25;hip.position.y+=.03}}
 if(st){if(st.gk&&st.dv<=0&&!(st.jp>0)&&v<3){legs[0].rotation.set(.14,0,.25);legs[1].rotation.set(-.14,0,.25);knees[0].rotation.z=knees[1].rotation.z=-.5;torso.rotation.z=-.3;arms[0].rotation.set(.8,0,.5);arms[1].rotation.set(-.8,0,.5);hip.position.y=.92}
 if(st.jp>0){gp.position.y=Math.sin(Math.min(1,1-st.jp/.5)*Math.PI)*.55;arms[0].rotation.z=arms[1].rotation.z=2.4;torso.rotation.z=.12}
 else if(st.dv>0){const pr=1-st.dv/.7;gp.position.y=Math.sin(Math.min(1,pr)*Math.PI)*.9;arms[0].rotation.set(0,0,2.7);arms[1].rotation.set(0,0,2.7);legs[0].rotation.z=.4;legs[1].rotation.z=-.4;knees[0].rotation.z=knees[1].rotation.z=-.2}
@@ -195,6 +199,7 @@ for(let side of [-1,1])for(let i=0;i<4;i++){const f=mk(pick(side<0?BLU:RED),S,{s
 const P=[];for(let t=0;t<2;t++)for(let i=0;i<Sim.N;i++){const k=t?0xd8342f:0x2a7de1,gk=i===0?(t?0xf39c12:0x27ae60):k;
 P.push({m:mk(gk,S,{num:i+1,shorts:t?0xf2f2f2:0x0b1b3a,sock:gk,skin:(i*3+t)%5,hair:(i*2+t)%5,hs:(i+t*2)%5,gk:i===0,boot:i%3?0x111111:0xf5f5f5}),t,gk:i===0,p:new T.Vector2(),v:new T.Vector2(),a:0,ph:Math.random()*6,x0:0})}
 const ball=new T.Mesh(new T.SphereGeometry(.22,16,12),new T.MeshStandardMaterial({map:tex(128,64,(g,c)=>{g.fillStyle='#fff';g.fillRect(0,0,128,64);g.fillStyle='#1b1b1b';for(let i=0;i<8;i++)for(let j=0;j<3;j++){g.beginPath();g.arc(8+i*16+(j%2)*8,10+j*22,6,0,7);g.fill()}}),roughness:.55}));ball.castShadow=true;S.add(ball);
+const ring=new T.Mesh(new T.RingGeometry(.85,1.05,32),new T.MeshBasicMaterial({color:0x2dffc4,side:T.DoubleSide,transparent:true,opacity:.9}));ring.rotation.x=-Math.PI/2;ring.position.y=.06;S.add(ring);
 const bv=new T.Vector3(),mark=new T.Mesh(new T.ConeGeometry(.35,.7,8),new T.MeshBasicMaterial({color:0xfac775}));mark.rotation.x=Math.PI;S.add(mark);
 /* ---------- walkable tunnel + dressing room (north side, beyond the stand) ---------- */
 const room=new T.Group();S.add(room);const HIDE=[],bm=c=>new T.MeshBasicMaterial({color:c});
@@ -279,15 +284,23 @@ for(const [x,z,c] of [[-22,-92,0x246a86],[22,-88,0x8b4b2d]]){const kiosk=new T.G
 [-1,1].forEach((side,team)=>{for(let i=0;i<5;i++){const person=mk(team?0xd8342f:0x2a7de1,S,{shorts:0x171a20,skin:(i+team)%5,hair:(i+2)%5,hs:i%4,boot:0x111111});person.position.set(side*15+(i-2)*1.65,0,40.1);person.rotation.y=side>0?Math.PI:0;pitchCrew.push({m:person,pose:i%2?'talk':'sit',phase:i+team*2})}});
 
 let mode='play',tt=0,cm=0,sprint=false;
-const CM=[[34,92,0],[11,20,14],[43,112,0]],CN=['broadcast','player','wide'];
+const CM=[[34,92,0],[11,20,14],[43,112,0]],CN=['default','player','stadium'];
 let camTrackX=0,camTrackZ=0;
 const tn=t=>t?'City':'United',nm=id=>(id%11)+1,turnA=(a,b,m)=>{const d=((b-a+Math.PI*3)%(Math.PI*2))-Math.PI;return a+cl(d,-m,m)};
 const cap=t=>{$('cp').textContent=t},fade=f=>{$('fd').style.opacity=f?1:0};
 function say(t,ms){cap(t);clearTimeout(say.h);say.h=setTimeout(()=>cap(''),ms||1800)}
 function banner(t){const m=$('msg');m.textContent=t;m.style.display=t?'block':'none'}
 function sync(dt){sim.p.forEach((s,i)=>{const p=P[i],v=Math.hypot(s.vx,s.vz);p.p.set(s.x,s.z);p.v.set(s.vx,s.vz);p.a=s.a;p.ph+=v*dt*1.25;p.m.visible=!s.off;
-p.m.position.set(s.x,0,s.z);p.m.rotation.y=-s.a;p.m.rotation.x=s.dv>0?s.dd*(Math.cos(s.a)>0?1:-1)*Math.min(1.35,(1-s.dv/.7)*3):0;p.m.anim(v,p.ph,s)});
-const b=sim.ball;const bsp=Math.hypot(b.vx,b.vz);if(bsp>.3&&dt>0){const ax=new T.Vector3(b.vz,0,-b.vx).normalize();ball.rotateOnWorldAxis(ax,bsp*dt/.22)}ball.position.set(b.x,b.y,b.z);bv.set(b.vx,b.vy,b.vz);owner=sim.owner>=0?P[sim.owner]:null;u=P[sim.user]||null}
+if(p.va===undefined||dt<=0)p.va=s.a;else{const pa=p.va;p.va=turnA(p.va,s.a,Math.min(1,dt*(v>5?9:13)));p.yr=((p.va-pa+Math.PI*3)%(Math.PI*2)-Math.PI)/Math.max(dt,.001)}
+p.m.position.set(s.x,0,s.z);p.m.rotation.y=-p.va;
+const lean=s.dv>0?s.dd*(Math.cos(s.a)>0?1:-1)*Math.min(1.35,(1-s.dv/.7)*3):Math.max(-.32,Math.min(.32,(p.yr||0)*v*.011));
+p.lean=(p.lean||0)+(lean-(p.lean||0))*Math.min(1,dt*10);p.m.rotation.x=s.dv>0?lean:p.lean;
+p.m.anim(v,p.ph,s);
+const thr=sim.rs&&sim.rs.kind==='throw'&&sim.rs.taker===i&&sim.owner===i;
+if(thr){p.m.J.arms[0].rotation.set(0,0,2.9);p.m.J.arms[1].rotation.set(0,0,2.9);p.m.J.elb[0].rotation.z=p.m.J.elb[1].rotation.z=.2;p.m.J.torso.rotation.z=.18;p.thrown=true}else p.thrown=false});
+const b=sim.ball;const bsp=Math.hypot(b.vx,b.vz);if(bsp>.3&&dt>0){const ax=new T.Vector3(b.vz,0,-b.vx).normalize();ball.rotateOnWorldAxis(ax,bsp*dt/.22)}ball.position.set(b.x,b.y,b.z);
+{const o=sim.owner>=0?P[sim.owner]:null;if(o&&o.thrown)ball.position.set(o.p.x,2.25,o.p.y)}
+bv.set(b.vx,b.vy,b.vz);owner=sim.owner>=0?P[sim.owner]:null;u=P[sim.user]||null}
 function reset(){Sim.reset(sim);sim.mood=st.m;sync(0)}
 function act(k){if(!st.run||st.pause||st.freeze>0)return;Sim.act(sim,k)}
 const pad=$('pad'),kn=$('kn');
@@ -703,24 +716,27 @@ const it=nearInt(),ia=$('ia');if(it&&!WK.busy&&!st.pause){if(ia.textContent!==it
 if(!WK.exiting&&WK.z>-35.4&&(WK.kind!=='pre'||WK.talked))exitWalk();
 mark.position.set(WK.x,4.2,WK.z);walkCam(dt,false)}
 let last=performance.now();
-function loop(n){const dt=Math.min(.05,(n-last)/1000);last=n;tt+=dt;sky.position.copy(cam.position);if(mode!=='walk')audioTick(dt);ca*=.985;crowdA.position.y=Math.max(0,Math.sin(n/230))*.25*(1+ca);crowdB.position.y=Math.max(0,Math.sin(n/230+2.1))*.25*(1+ca);
+function loop(n){const dt=Math.min(.05,(n-last)/1000);last=n;tt+=dt;sky.position.copy(cam.position);if(mode!=='walk')audioTick(dt);ca*=.985;if(mode!=='play')ring.visible=false;crowdA.position.y=Math.max(0,Math.sin(n/230))*.25*(1+ca);crowdB.position.y=Math.max(0,Math.sin(n/230+2.1))*.25*(1+ca);
 if(mode==='walk'){walkTick(dt);crowdPeople.forEach((o,i)=>{const t=n/1000+o.phase;o.m.pose(o.pose,t);if(o.pose==='wave'){o.m.J.arms[0].rotation.z=2.2+Math.sin(t*4)*.35;o.m.J.arms[1].rotation.z=2.2+Math.cos(t*4)*.35}else if(o.pose==='talk'){o.m.J.hd.rotation.y=Math.sin(t*1.7)*.13;o.m.J.arms[1].rotation.z=.65+Math.max(0,Math.sin(t*2+i))*.55}});worldPeople.forEach((o,i)=>{const t=n/1000+o.phase;o.m.pose(o.pose,t);if(o.pose==='talk'){o.m.J.hd.rotation.y=Math.sin(t*1.4)*.15;o.m.J.arms[0].rotation.z=.4+Math.max(0,Math.sin(t*1.8+i))*.45}});securityStaff.forEach((o,i)=>{const t=n/1000+i;o.m.J.hd.rotation.y=Math.sin(t*1.1)*.16;o.m.J.arms[1].rotation.z=.55+Math.max(0,Math.sin(t*1.7))*.45});R.render(S,cam)}
 else if(mode==='lineup'){lineupTick(dt);if(tt>14.5){cap('Starting line-ups');shakeStart()}R.render(S,cam)}
 else if(mode==='shake'){P.forEach(p=>walk(p,p.x0+(p.t?-4:4),p.t?1.3:-1.3,1.4,dt));if(tt>3.6)toKick();R.render(S,cam)}
 else if(mode==='wait')R.render(S,cam);
-else{if(!st.pause){if(st.freeze>0)st.freeze-=dt;else step(dt);refUpd(dt)}if(u)mark.position.set(u.p.x,4.2,u.p.y);pitchCrew.forEach(o=>o.m.pose(o.pose,n/1000+o.phase));bowlPeople.forEach(o=>{const t=n/1000+o.phase;o.m.pose(o.pose,t);if(o.pose==='talk'){o.m.J.hd.rotation.y=Math.sin(t*1.5)*.14;o.m.J.arms[0].rotation.z=.45+Math.max(0,Math.sin(t*2))*0.55}});dugoutPeople.forEach(o=>{const t=n/1000+o.phase;o.m.pose(o.pose,t);if(o.pose==='talk'){o.m.J.hd.rotation.y=Math.sin(t*1.5)*.12;o.m.J.arms[1].rotation.z=.7+Math.max(0,Math.sin(t*2))*0.4}});AR.forEach((r,i)=>{r.position.x=cl(ball.position.x*.78+(i===0?-5:5),-48,48);r.position.z=i===0?-38.2:38.2;r.anim(2,n/140)});ctx();drawRad();
+else{if(!st.pause){if(st.freeze>0)st.freeze-=dt;else step(dt);refUpd(dt)}if(u){mark.position.set(u.p.x,3.6,u.p.y);ring.visible=true;ring.position.set(u.p.x,.06,u.p.y)}else ring.visible=false;pitchCrew.forEach(o=>o.m.pose(o.pose,n/1000+o.phase));bowlPeople.forEach(o=>{const t=n/1000+o.phase;o.m.pose(o.pose,t);if(o.pose==='talk'){o.m.J.hd.rotation.y=Math.sin(t*1.5)*.14;o.m.J.arms[0].rotation.z=.45+Math.max(0,Math.sin(t*2))*0.55}});dugoutPeople.forEach(o=>{const t=n/1000+o.phase;o.m.pose(o.pose,t);if(o.pose==='talk'){o.m.J.hd.rotation.y=Math.sin(t*1.5)*.12;o.m.J.arms[1].rotation.z=.7+Math.max(0,Math.sin(t*2))*0.4}});AR.forEach((r,i)=>{r.position.x=cl(ball.position.x*.78+(i===0?-5:5),-48,48);r.position.z=i===0?-38.2:38.2;r.anim(2,n/140)});ctx();drawRad();
 const w=cam.aspect<1,b=ball.position;
 if(cm===0){
- // Broadcast: FC25-style side-on tele view. Camera sits inside the bowl, lower and further back than before,
- // pans smoothly with the ball (never with the controlled player) and leads slightly in the direction of play.
+ // DEFAULT (eFootball-style): high, tight, steeply pitched camera that follows the ball closely and keeps the action large.
+ const sp=Math.hypot(bv.x,bv.z),fxT=cl(b.x*.88+cl(bv.x*.22,-6,6),-46,46),fzT=cl(b.z*.88+cl(bv.z*.15,-3,3),-30,30);
+ camTrackX+=(fxT-camTrackX)*Math.min(1,dt*2.8);camTrackZ+=(fzT-camTrackZ)*Math.min(1,dt*2.2);
+ const H=(w?36:25)+Math.min(5,sp*.18),D=(w?30:20)+Math.min(4,sp*.14);
+ const cz=Math.min(camTrackZ+D,w?60:43.5);
+ cam.position.set(camTrackX,H,cz);
+ cam.lookAt(camTrackX,0,camTrackZ-3);
+}else if(cm===2){
+ // STADIUM view: wide tele camera from inside the bowl (shows roof, stands and the whole pitch).
  const lead=cl(bv.x*.35,-8,8),bx=cl((b.x+lead)*(w?.78:.62),-(w?44:36),w?44:36);camTrackX+=(bx-camTrackX)*Math.min(1,dt*1.9);
  camTrackZ+=(cl(b.z,-36,36)-camTrackZ)*Math.min(1,dt*1.4);
  cam.position.set(camTrackX,w?27:17,w?68:58);
  cam.lookAt(camTrackX*.93,0,w?-3+camTrackZ*.3:-8+camTrackZ*.5);
-}else if(cm===2){
- const wx=cl(b.x*.3,-20,20);camTrackX+=(wx-camTrackX)*Math.min(1,dt*1.2);
- cam.position.set(camTrackX,w?40:32,w?70:63);
- cam.lookAt(camTrackX,0,w?0:1);
 }else{
  // Player cam: low chase view behind the controlled player blended with the ball; heavy smoothing so switching players never snaps.
  const tx0=u?u.p.x:b.x,tz0=u?u.p.y:b.z,fx0=tx0*.65+b.x*.35,fz0=tz0*.65+b.z*.35,k=Math.min(1,dt*.9);
