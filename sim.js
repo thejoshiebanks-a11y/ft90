@@ -20,9 +20,22 @@ const rg=()=>Math.random();
 const S={roll:.5,thru:null,cross:null,rs:null,lock:0,lastT:-1,rcv:-1,time:0,p:[],ball:{x:0,y:.45,z:0,vx:0,vy:0,vz:0},owner:-1,user:-1,ev:[],diff:(o&&o.diff)||.9,mood:{sp:1,pw:1,op:1},stam:1,rng:Math.random,botUser:false,inp:{ix:0,iz:0,sprint:false},
  st:{goals:[0,0],shots:[0,0],sot:[0,0],passes:[0,0],passOK:[0,0],inter:[0,0],poss:[0,0],saves:0,tackles:0,fouls:[0,0],yellows:[0,0],reds:[0,0],offsides:[0,0],pens:[0,0]},
  offs:null,pg:null,ol:[0,0],kickoff:null,nextKickoff:0,form:['4-3-3','4-4-2'],plan:[{press:[],sup:[],run:[],mk:{},chase:null,chase2:null},{press:[],sup:[],run:[],mk:{},chase:null,chase2:null}],pt:0,shot:null,shotId:0,lastPass:null};
-for(let t=0;t<2;t++)for(let i=0;i<N;i++)S.p.push({id:t*N+i,t,gk:i===0,role:'M',hx:0,hz:0,x:0,z:0,vx:0,vz:0,a:t?Math.PI:0,cd:0,imm:0,hold:0,dv:0,dd:1,gt:0,lunge:0,jp:0,kt:-9,
- thk:0,tkw:0,prs:0,stun:0,dph:0,mk:-1,dx:t?-1:1,dz:0,seen:0,
- spd:.96+rg()*.1,pa:.86+rg()*.22,sh:.84+rg()*.26,ta:.86+rg()*.22,dr:.84+rg()*.26,pc:.86+rg()*.22,re:.11+rg()*.13});
+for(let t=0;t<2;t++)for(let i=0;i<N;i++){
+ const baseSpd=.96+rg()*.1, basePa=.86+rg()*.22, baseSh=.84+rg()*.26, baseTa=.86+rg()*.22, baseDr=.84+rg()*.26, basePc=.86+rg()*.22, baseRe=.11+rg()*.13;
+ const roles=['Goalkeeper','Fullback','CentreBack','Holding','BoxToBox','Winger','AdvancedForward'];
+ const focuses=['Defend','Balanced','Attack','Build-Up','Roaming'];
+ S.p.push({
+  id:t*N+i, t, gk:i===0,
+  identity:{playerId:t*N+i, teamId:t, name:'P'+(i+1), number:i+1},
+  attributes:{speed:Math.round(baseSpd*99), passing:Math.round(basePa*99), shooting:Math.round(baseSh*99), tackling:Math.round(baseTa*99), dribbling:Math.round(baseDr*99), physical:Math.round(basePc*99), reactions:Math.round(baseRe*99)},
+  roleAI:{role:i===0?'SweeperKeeper':roles[Math.min(6,i)], focus:focuses[i%5], familiarity:i===0||i===9?'Role++':'Role+'},
+  dynamic:{x:0,y:0,z:0, vx:0,vz:0, stamina:100, currentAction:'idle'},
+  physics:{radius:0.4, height:1.85},
+  role:'M', hx:0, hz:0, x:0, z:0, vx:0, vz:0, a:t?Math.PI:0, cd:0, imm:0, hold:0, dv:0, dd:1, gt:0, lunge:0, jp:0, kt:-9,
+  thk:0, tkw:0, prs:0, stun:0, dph:0, mk:-1, dx:t?-1:1, dz:0, seen:0,
+  spd:baseSpd, pa:basePa, sh:baseSh, ta:baseTa, dr:baseDr, pc:basePc, re:baseRe
+ });
+}
 setFormation(S,0,'4-3-3');setFormation(S,1,'4-4-2');reset(S);return S}
 function reset(S,team){S.offs=null;S.pg=null;S.shot=null;S.lastPass=null;
 team=team===0||team===1?team:(S.nextKickoff===0||S.nextKickoff===1?S.nextKickoff:0);S.nextKickoff=1-team;
@@ -228,17 +241,35 @@ if(S.owner<0){
 if(!car)return;
 if(car.t!==t){
  const tp={x:car.x+car.vx*.3,z:car.z+car.vz*.3};
- const l=cands.filter(p=>p!==own).map(p=>[hyp(p.x-tp.x,p.z-tp.z)/(p.spd*7)+(p.role==='F'?.6:0),p]).sort((a,c)=>a[0]-c[0]);
+ const l=cands.filter(p=>p!==own).map(p=>{
+  let bias=0;
+  const r=p.roleAI&&p.roleAI.role||'';
+  const f=p.roleAI&&p.roleAI.focus||'';
+  if(r.includes('Holding')||r.includes('Defender')||f==='Defend')bias-=2;
+  if(r.includes('Winger')||r.includes('Forward')||f==='Attack')bias+=1.5;
+  return[hyp(p.x-tp.x,p.z-tp.z)/(p.spd*7)+bias,p]
+ }).sort((a,c)=>a[0]-c[0]);
  if(l[0])pl.press.push(l[0][1]);if(l[1]&&hyp(l[1][1].x-tp.x,l[1][1].z-tp.z)<20)pl.press.push(l[1][1]);
  const used=new Set(pl.press.map(p=>p.id));
  const atk=P.filter(a=>a.t!==t&&!a.gk&&!a.off&&a!==car&&a.x*dir<22).sort((a,c)=>(a.x*dir)-(c.x*dir));
  let n=0;for(const a of atk){if(n>=5)break;let best=null,bd=1e9;
-  for(const d of cands){if(used.has(d.id)||d.role==='F')continue;const dd=hyp(d.x-a.x,d.z-a.z)+(d.mk===a.id?-4:0);if(dd<bd&&dd<26){bd=dd;best=d}}
+  for(const d of cands){if(used.has(d.id)||(d.roleAI&&d.roleAI.role.includes('Forward')))continue;const dd=hyp(d.x-a.x,d.z-a.z)+(d.mk===a.id?-4:0);if(dd<bd&&dd<26){bd=dd;best=d}}
   if(best){used.add(best.id);pl.mk[best.id]=a.id;best.mk=a.id;n++}}}
 else{
  const mates=cands.filter(p=>p!==car);
- pl.sup=mates.map(p=>[hyp(p.x-car.x,p.z-car.z),p]).filter(e=>e[0]>4&&e[0]<30).sort((a,c)=>a[0]-c[0]).slice(0,3).map(e=>e[1]);
- pl.run=mates.filter(p=>p.role==='F'||(p.role==='M'&&p.hx*dir>-4)).sort((a,c)=>(c.x*dir)-(a.x*dir)).slice(0,3)}}
+ pl.sup=mates.map(p=>{
+  let bias=0;
+  const r=p.roleAI&&p.roleAI.role||'';
+  const f=p.roleAI&&p.roleAI.focus||'';
+  if(r.includes('Playmaker')||f==='Build-Up'||f==='Roaming')bias-=3;
+  if(r.includes('Winger')||f==='Attack')bias+=1;
+  return[hyp(p.x-car.x,p.z-car.z)+bias,p]
+ }).filter(e=>e[0]>4&&e[0]<30).sort((a,c)=>a[0]-c[0]).slice(0,3).map(e=>e[1]);
+ pl.run=mates.filter(p=>{
+  const r=p.roleAI&&p.roleAI.role||'';
+  const f=p.roleAI&&p.roleAI.focus||'';
+  return r.includes('Forward')||r.includes('Winger')||f==='Attack'||(p.role==='M'&&p.hx*dir>-4);
+ }).sort((a,c)=>(c.x*dir)-(a.x*dir)).slice(0,3)}}
 /* ---------------- restarts ---------------- */
 function outOfPlay(S){const b=S.ball,P=S.p,lt=S.lastT<0?0:S.lastT;let t,x,z,kind;
 if(Math.abs(b.z)>W&&Math.abs(b.x)<=L){kind='throw';t=1-lt;x=cl(b.x,-L+3,L-3);z=Math.sign(b.z)*W}
