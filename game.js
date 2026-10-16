@@ -682,7 +682,8 @@ if(WK.target&&!WK.busy){
 const ax=WK.x+WK.vx*dt,az=WK.z+WK.vz*dt;
 // Stop at the checkpoint and open accreditation automatically so mobile users cannot miss the interaction prompt.
 if(WK.kind==='pre'&&!WK.security&&Math.abs(WK.x)<27&&WK.z<=-252.6&&az>-252.6){WK.z=-252.6;WK.vz=0;showSecurityCheck()}
-if(inside(ax,WK.z))WK.x=ax;else WK.vx=0;if(!WK.busy){if(inside(WK.x,az))WK.z=az;else WK.vz=0}else{WK.vx*=.5;WK.vz=0;}
+const solid=(x,z)=>inside(x,z)&&inside(x+.55,z)&&inside(x-.55,z)&&inside(x,z+.55)&&inside(x,z-.55);
+if(solid(ax,WK.z))WK.x=ax;else WK.vx=0;if(!WK.busy){if(solid(WK.x,az))WK.z=az;else WK.vz=0}else{WK.vx*=.5;WK.vz=0;}
 if(WK.kind==='half'&&!WK.lock&&!WK.talked&&WK.z<-39)WK.lock=true;
 if(WK.lock&&!WK.talked&&WK.z>-38.6&&WK.vz>.5&&performance.now()>WK.msg){say('The gaffer wants a word first.',2000);WK.msg=performance.now()+3000}
 const v=Math.hypot(WK.vx,WK.vz);if(v>.4)WK.a=turnA(WK.a,Math.atan2(WK.vz,WK.vx),dt*12);WK.ph+=v*dt*1.6;
@@ -703,7 +704,7 @@ const w=cam.aspect<1,b=ball.position;
 if(cm===0){
  // Broadcast: FC25-style side-on tele view. Camera sits inside the bowl, lower and further back than before,
  // pans smoothly with the ball (never with the controlled player) and leads slightly in the direction of play.
- const lead=cl(b.vx*.35,-8,8),bx=cl((b.x+lead)*(w?.78:.62),-(w?44:36),w?44:36);camTrackX+=(bx-camTrackX)*Math.min(1,dt*1.9);
+ const lead=cl(bv.x*.35,-8,8),bx=cl((b.x+lead)*(w?.78:.62),-(w?44:36),w?44:36);camTrackX+=(bx-camTrackX)*Math.min(1,dt*1.9);
  camTrackZ+=(cl(b.z,-36,36)-camTrackZ)*Math.min(1,dt*1.4);
  cam.position.set(camTrackX,w?27:18.8,w?68:56.5);
  cam.lookAt(camTrackX*.93,0,w?-3+camTrackZ*.3:-2+camTrackZ*.5);
@@ -718,6 +719,7 @@ if(cm===0){
  cam.position.x+=(camTrackX-cam.position.x)*Math.min(1,dt*1.6);cam.position.y+=((w?15:11)-cam.position.y)*Math.min(1,dt*1.3);cam.position.z+=(camTrackZ+(w?24:19)-cam.position.z)*Math.min(1,dt*1.6);
  cam.lookAt(camTrackX,0,camTrackZ-1);
 }
+if(!isFinite(cam.position.x+cam.position.y+cam.position.z)){camTrackX=0;camTrackZ=0;cam.position.set(0,19,56.5)}
 R.render(S,cam)}
 requestAnimationFrame(loop)}
 rs();cam.position.set(0,34,92);cam.lookAt(0,0,0);reset();requestAnimationFrame(loop);
