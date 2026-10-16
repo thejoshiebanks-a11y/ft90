@@ -2,7 +2,7 @@ const T=THREE,$=id=>document.getElementById(id),cl=(v,a,b)=>Math.max(a,Math.min(
 const R=new T.WebGLRenderer({canvas:$('c'),antialias:true});R.setPixelRatio(Math.min(devicePixelRatio,2));R.shadowMap.enabled=true;
 const S=new T.Scene();S.background=new T.Color(0x16254a);S.fog=new T.Fog(0x0b1220,170,400);
 const cam=new T.PerspectiveCamera(50,1,.1,500);
-function rs(){const w=document.body.clientWidth,h=document.body.clientHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.fov=w<h?(typeof mode!=='undefined'&&mode==='walk'?55:52):(typeof mode!=='undefined'&&mode==='walk'?50:(typeof cm!=='undefined'&&cm===0?40:(typeof cm!=='undefined'&&cm===1?50:46)));cam.updateProjectionMatrix()}
+function rs(){const w=document.body.clientWidth,h=document.body.clientHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.fov=w<h?(typeof mode!=='undefined'&&mode==='walk'?55:52):(typeof mode!=='undefined'&&mode==='walk'?50:(typeof cm!=='undefined'&&cm===0?46:(typeof cm!=='undefined'&&cm===1?50:46)));cam.updateProjectionMatrix()}
 addEventListener('resize',rs);
 S.add(new T.HemisphereLight(0xbfd4ff,0x1a3a1a,.8));
 const sun=new T.DirectionalLight(0xffffff,.9);sun.position.set(-30,60,30);sun.castShadow=true;
@@ -80,6 +80,15 @@ for(let x=-80;x<=80;x+=20){const c=new T.Mesh(new T.CylinderGeometry(.55,.55,30,
 for(let z=-40;z<=40;z+=20){const c=new T.Mesh(new T.CylinderGeometry(.55,.55,30,6),steel);c.position.set(sg*92,15,z);S.add(c)}});
 [[-92,-66],[92,-66],[-92,66],[92,66]].forEach(([x,z])=>{const t=new T.Mesh(new T.CylinderGeometry(.6,.9,36,6),steel);t.position.set(x,18,z);S.add(t);
 const h=new T.Mesh(new T.BoxGeometry(7,3.4,1),lampM);h.position.set(x,37,z);h.lookAt(0,10,0);S.add(h)});
+/* High-tech inner roof canopy: sloped membrane lips with glowing LED edges so the roof reads from the broadcast camera. */
+(function(){const mem=new T.MeshStandardMaterial({color:0x1b2230,metalness:.6,roughness:.35}),led=new T.MeshBasicMaterial({color:0x9edbff}),truss=new T.MeshStandardMaterial({color:0x7d8798,metalness:.7,roughness:.3});
+const th=Math.atan2(8.5,10),ln=Math.hypot(10,8.5);
+const far=new T.Mesh(new T.BoxGeometry(150,.5,ln),mem);far.position.set(0,25.75,-45);far.rotation.x=th;S.add(far);
+const fl=new T.Mesh(new T.BoxGeometry(150,.28,.34),led);fl.position.set(0,21.45,-39.9);S.add(fl);
+for(let x=-70;x<=70;x+=10){const rib=new T.Mesh(new T.BoxGeometry(.3,.3,ln),truss);rib.position.set(x,25.5,-45);rib.rotation.x=th;S.add(rib)}
+[-1,1].forEach(sd=>{const e=new T.Mesh(new T.BoxGeometry(ln,.5,70),mem);e.position.set(sd*62.5,25.75,0);e.rotation.z=sd*th;S.add(e);
+ const el=new T.Mesh(new T.BoxGeometry(.34,.28,70),led);el.position.set(sd*57.9,21.45,0);S.add(el);
+ for(let z=-30;z<=30;z+=10){const rib=new T.Mesh(new T.BoxGeometry(ln,.3,.3),truss);rib.position.set(sd*62.5,25.5,z);rib.rotation.z=sd*th;S.add(rib)}})})();
 /* Inner-bowl identity, broadcast scoreboard, roof trusses and section wayfinding. */
 const screenTex=tex(768,300,g=>{g.fillStyle='#071226';g.fillRect(0,0,768,300);g.fillStyle='#143a70';g.fillRect(0,0,768,62);g.fillStyle='#fff';g.font='bold 48px sans-serif';g.textAlign='center';g.fillText('FT 90  ·  MATCHDAY',384,44);g.fillStyle='#f7f9fc';g.font='bold 108px sans-serif';g.fillText('UNITED  0 — 0  CITY',384,180);g.fillStyle='#62e6b2';g.font='bold 28px sans-serif';g.fillText('THE GAME NEVER ENDS',384,246)});
 const screenMat=new T.MeshBasicMaterial({map:screenTex,side:T.DoubleSide});
@@ -223,7 +232,7 @@ const COACH=mk(0x15171c,S,{shorts:0x15171c,sock:0x15171c,skin:1,hair:4,hs:2,boot
 const U=mk(0x2a7de1,S,{num:10,shorts:0x0b1b3a,skin:2,hair:0,hs:0});U.visible=false;
 /* ---------- match wiring ---------- */
 let owner=null,u=null,jx=0,jy=0;const K={},st={sc:[0,0],min:0,half:1,run:false,m:{sp:1,pw:1,op:1},freeze:0,pause:false};
-const sim=Sim.create({diff:.98}),INP={ix:0,iz:0,sprint:false},MR=.375;
+const sim=Sim.create({diff:.93}),INP={ix:0,iz:0,sprint:false},MR=.375;
 const RF=mk(0xf4d03f,S);RF.position.set(0,0,12);
 /* touchline production crew, ball kids and technical-area staff */
 const pitchCrew=[];
@@ -666,7 +675,7 @@ function walkCam(dt,snap){const px=WK.x,pz=WK.z,gh=(WK.y===undefined?gy(px,pz):W
  U.visible=true;const tight=(WK.kind==='pre'&&pz>-140&&pz<-36)||(WK.kind==='half'&&pz<-36);
  let d=tight?4.4:7,h=(tight?2.3:3.3)+p*3;if(h<1.2)h=1.2;
  while(d>1.3&&!camOK(px-fx*d,pz-fz*d))d-=.5;
- const k=snap?1:Math.min(1,dt*9),tx=px-fx*d,tz=pz-fz*d,ty=Math.max(gh+h,gy(tx,tz)+1.1);
+ const k=snap?1:Math.min(1,dt*9),tx=px-fx*d,tz=pz-fz*d,ty=Math.max(gh+h,gy(tx,tz)+h);
  cam.position.x=lerp(snap?tx:cam.position.x,tx,k);cam.position.y=lerp(snap?ty:cam.position.y,ty,k);cam.position.z=lerp(snap?tz:cam.position.z,tz,k);
  const lx=px+fx*3,ly=gh+1.25+p*2.6,lz=pz+fz*3;WK.lk.x=lerp(snap?lx:WK.lk.x,lx,k);WK.lk.y=lerp(snap?ly:WK.lk.y,ly,k);WK.lk.z=lerp(snap?lz:WK.lk.z,lz,k);cam.lookAt(WK.lk)}
 function exitWalk(){if(WK.exiting)return;WK.exiting=true;fade(1);setTimeout(()=>{U.visible=false;HIDE.forEach(o=>o.visible=true);housing.visible=true;showWalkUI(false);ball.visible=true;mark.visible=true;RF.visible=true;
@@ -706,8 +715,8 @@ if(cm===0){
  // pans smoothly with the ball (never with the controlled player) and leads slightly in the direction of play.
  const lead=cl(bv.x*.35,-8,8),bx=cl((b.x+lead)*(w?.78:.62),-(w?44:36),w?44:36);camTrackX+=(bx-camTrackX)*Math.min(1,dt*1.9);
  camTrackZ+=(cl(b.z,-36,36)-camTrackZ)*Math.min(1,dt*1.4);
- cam.position.set(camTrackX,w?27:18.8,w?68:56.5);
- cam.lookAt(camTrackX*.93,0,w?-3+camTrackZ*.3:-2+camTrackZ*.5);
+ cam.position.set(camTrackX,w?27:17,w?68:58);
+ cam.lookAt(camTrackX*.93,0,w?-3+camTrackZ*.3:-8+camTrackZ*.5);
 }else if(cm===2){
  const wx=cl(b.x*.3,-20,20);camTrackX+=(wx-camTrackX)*Math.min(1,dt*1.2);
  cam.position.set(camTrackX,w?40:32,w?70:63);
