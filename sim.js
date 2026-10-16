@@ -4,7 +4,7 @@
    Pitch: x in [-55,55] (team 0 attacks +x), z in [-36,36]. Goal half-width GW.
    Systems: ball-touch dribbling, lane-aware passing, first touch, press/cover/mark defending,
    support + forward runs, offside line, intercept prediction, reactive goalkeeper, tackles/slides. */
-const GW=3.65,L=55,W=36,cl=(v,a,b)=>Math.max(a,Math.min(b,v)),hyp=Math.hypot,N=11;
+const GW=3.65,L=55,W=36,cl=(v,a,b)=>Math.max(a,Math.min(b,v)),hyp=Math.hypot,N=11,lerp=(a,b,k)=>a+(b-a)*k;
 const DEF=[[-30,-20],[-32,-7],[-32,7],[-30,20]];
 const FORM={
 '4-3-3':[[-46,0],...DEF,[-10,-12],[-12,0],[-10,12],[14,-18],[18,0],[14,18]],
@@ -33,13 +33,13 @@ const b=S.ball;b.x=0;b.y=.22;b.z=0;b.vx=b.vy=b.vz=0;S.owner=-1;S.rs=null;S.thru=
 /* ---------------- helpers ---------------- */
 function pickUser(S,force){const b=S.ball,P=S.p;
 const ok=i=>i>=0&&P[i]&&P[i].t===0&&!P[i].gk&&!P[i].off;
-if(S.owner>=0&&P[S.owner].t===0&&!P[S.owner].gk)return S.owner;
-if(!force&&S.lock>S.time&&ok(S.user))return S.user;
+if(!force&&ok(S.user)&&S.lock>S.time)return S.user;
+if(S.owner>=0&&P[S.owner].t===0&&!P[S.owner].gk&&ok(S.owner))return S.owner;
 const cur=ok(S.user)?S.user:-1;
+if(cur>=0&&!force)return cur;
 if(S.owner<0&&ok(S.rcv)){const r=P[S.rcv];if(cur<0||hyp(r.x-b.x,r.z-b.z)<4.5)return S.rcv;return cur}
 const px=b.x+b.vx*.25,pz=b.z+b.vz*.25;let best=-1,bd=1e9;
 for(const p of P){if(p.t||p.gk||p.off)continue;let d=hyp(p.x-px,p.z-pz);
- /* when defending prefer the player who is goal-side of the ball */
  if(S.owner>=0&&P[S.owner].t===1&&p.x>b.x+1.5)d+=3;
  if(d<bd){bd=d;best=p.id}}
 if(!force&&cur>=0&&hyp(P[cur].x-px,P[cur].z-pz)<bd+6)return cur;return best}
@@ -79,9 +79,13 @@ if(user&&!pen){const m=hyp(inp.ix,inp.iz),l=hyp(dx,dz);if(m>.3){if((inp.ix*dx+in
 else if((Math.cos(p.a)*dx+Math.sin(p.a)*dz)/l<.5){dx=Math.cos(p.a);dz=Math.sin(p.a)}}
 else if(!user){const e=(S.rng()-.5)*(.10+gdx*.007)*(1.7-(p.t?S.diff:1)*p.sh);const c=Math.cos(e),s=Math.sin(e);const x=dx*c-dz*s;dz=dx*s+dz*c;dx=x}
 const power=pen?(user?23:22):(user?(21.5+Math.min(gdx,30)*.2)*S.mood.pw:(21+S.rng()*4+Math.min(gdx,30)*.1)*p.sh);
+const curl=user&&!pen?cl(inp.iz*4.2,-5.5,5.5):0;
 const vy=pen?0.8+S.rng()*1.1:(S.rng()<.12&&gdx<16?3.5+S.rng()*2:0.5+S.rng()*2);
-kick(S,p,dx,dz,power,vy);S.shot={t:p.t,time:S.time,id:++S.shotId};
+kick(S,p,dx,dz+curl,power,vy);S.shot={t:p.t,time:S.time,id:++S.shotId};
 if(pen)S.pg={z:S.rng()<.3?tz:(S.rng()<.5?-2.6:2.6),t:S.time};S.st.shots[p.t]++}
+function skillMove(S,p){const dir=Math.sign(S.inp.iz)||1,spd=12+Math.random()*4;
+const dx=Math.cos(p.a)*3+Math.sin(p.a)*dir*8,dz=Math.sin(p.a)*3-Math.cos(p.a)*dir*8;
+kick(S,p,dx,dz,spd,0.4);p.cd=.35;S.ev.push({type:'skill',id:p.id});}
 function lead(p,q,k,c){let d=hyp(q.x-p.x,q.z-p.z),t=0,tx=q.x,tz=q.z;for(let i=0;i<4;i++){const sp=cl(d*k+c,9,21);t=Math.min(1.5,d/(sp*.82));tx=q.x+q.vx*t;tz=q.z+q.vz*t;d=hyp(tx-p.x,tz-p.z)}return[tx,tz]}
 function noisy(S,p,dx,dz,amp){const df=p.t?S.diff:1,pr=nearOpp(S,p).d,e=(S.rng()-.5)*amp*(1.5-df*p.pa)*(pr<3?1.5:1),c=Math.cos(e),s=Math.sin(e);return[dx*c-dz*s,dx*s+dz*c]}
 function passTo(S,p,q,user){const ld=lead(p,q,.88,5.5);let dx=ld[0]-p.x,dz=ld[1]-p.z;
@@ -291,8 +295,14 @@ for(const p of P){if(p.off)continue;p.cd-=dt;p.imm-=dt;p.dv-=dt;p.lunge-=dt;p.jp
  p.x=cl(p.x+p.vx*dt,-L-3,L+3);p.z=cl(p.z+p.vz*dt,-W-2,W+2);
  const spd=hyp(p.vx,p.vz);p.dph+=spd*dt*.9;
  if(spd>.8)p.a=turn(p.a,Math.atan2(p.vz,p.vx),(own===p?11:16)*dt)}
-if(own){const o=own,sp=hyp(o.vx,o.vz),spf=Math.min(sp/9,1),ph=o.dph*1.55,touch=Math.max(0,Math.sin(ph)),off=.7+.12*spf+touch*(.1+.5*spf),lat=Math.cos(ph*.5)*.07*spf;
- b.x=o.x+Math.cos(o.a)*off-Math.sin(o.a)*lat;b.z=o.z+Math.sin(o.a)*off+Math.cos(o.a)*lat;b.y=.22;b.vx=o.vx;b.vz=o.vz;b.vy=0;
+if(own){const o=own,sp=hyp(o.vx,o.vz),spf=Math.min(sp/9,1),ph=o.dph*1.55,touch=Math.max(0,Math.sin(ph*1.8));
+ const ahead=1.15+.45*spf+touch*.35,lat=Math.cos(ph*.7)*.12*spf;
+ const tx=o.x+Math.cos(o.a)*ahead-Math.sin(o.a)*lat,tz=o.z+Math.sin(o.a)*ahead+Math.cos(o.a)*lat;
+ const dx=tx-b.x,dz=tz-b.z,dd=hyp(dx,dz);
+ if(dd>0.15){const push=Math.min(1,dt*8+touch*.6);b.vx+=dx*push*3.2;b.vz+=dz*push*3.2;}
+ b.vx=b.vx*.82+o.vx*.18;b.vz=b.vz*.82+o.vz*.18;b.y=.22;b.vy=0;
+ b.x+=b.vx*dt;b.z+=b.vz*dt;
+ if(dd<1.8){b.x=lerp(b.x,tx,.35);b.z=lerp(b.z,tz,.35);}
  for(const q of P){if(q.t===o.t||q.off||q.cd>0||o.imm>0||q.stun>0)continue;
   const reach=q.lunge>0?2.1:1.25,dB=hyp(q.x-b.x,q.z-b.z),dO=hyp(q.x-o.x,q.z-o.z);if(Math.min(dB,dO+.25)>reach)continue;
   const usr=isU(q),df=(q.t?S.diff:1);
@@ -340,6 +350,6 @@ if(k===1){const c=S.owner>=0&&P[S.owner].t!==p.t?P[S.owner]:null;
 if(k===0){p.prs=1.1;p.tkw=Math.max(p.tkw,0);return}
 if(k===2){manualSwitch(S);return}
 p.lunge=.3}
-const Sim={create,reset,step,act,setFormation,FORM,N,L,W};
+const Sim={create,reset,step,act,setFormation,FORM,N,L,W,skillMove};
 if(typeof module!=='undefined'&&module.exports)module.exports=Sim;else root.Sim=Sim;
 })(typeof window!=='undefined'?window:globalThis);

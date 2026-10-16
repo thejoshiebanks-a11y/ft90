@@ -154,19 +154,19 @@ const gSph=(r,a,b,p0,pl,t0,tl)=>{const k=['s',r,a,b,p0,pl,t0,tl].join();return G
 function numTex(n){return NT[n]||(NT[n]=tex(64,64,g=>{g.clearRect(0,0,64,64);g.lineWidth=6;g.strokeStyle='#0008';g.fillStyle='#fff';g.font='bold 46px sans-serif';g.textAlign='center';g.strokeText(n,32,48);g.fillText(n,32,48)}))}
 function mk(col,sc,o){sc=sc||S;o=o||{};const gp=new T.Group(),M=mat,sh=M(col),shorts=M(o.shorts===undefined?0xf2f2f2:o.shorts),sock=M(o.sock===undefined?col:o.sock),skin=M(SK[o.skin||0]),hair=M(HR[o.hair||0]),boot=M(o.boot||0x111111,.5),hand=M(o.gk?0x7CFC9A:SK[o.skin||0]),dark=M(0x111111),band=M(0xffffff);
 const cs=[],A=(geo,m,par,x,y,z,cast)=>{const e=new T.Mesh(geo,m);e.position.set(x||0,y||0,z||0);par.add(e);if(cast)cs.push(e);return e};
-const hip=new T.Group();hip.position.y=1.02;gp.add(hip);A(gBox(.3,.22,.5),shorts,hip,0,.06,0,1);
-const torso=new T.Group();torso.position.y=.16;hip.add(torso);const ch=A(gCyl(.2,.28,.64,'bottom',10),sh,torso,0,0,0,1);ch.scale.x=.62;
-[-1,1].forEach(sd=>A(gSph(.1,8,6),sh,torso,0,.6,sd*.29));
-if(o.num){const pl=new T.Mesh(new T.PlaneGeometry(.4,.4),new T.MeshBasicMaterial({map:numTex(o.num),transparent:true}));pl.position.set(-.17,.36,0);pl.rotation.y=-Math.PI/2;torso.add(pl)}
-A(gCyl(.06,.07,.1,'bottom',6),skin,torso,0,.62,0);
-const hd=new T.Group();hd.position.y=.7;torso.add(hd);const hh=A(gSph(.17,12,10),skin,hd,0,.1,0);hh.scale.set(.95,1.12,.95);
-[-1,1].forEach(sd=>{A(gSph(.035,5,4),skin,hd,0,.1,sd*.165);A(gBox(.03,.035,.05),dark,hd,.155,.14,sd*.06)});
-const hs=o.hs||0;if(hs!==2){if(hs===1)A(gSph(.23,10,8),hair,hd,-.02,.17,0);else{A(gSph(.18,12,8,0,Math.PI*2,0,Math.PI*.55),hair,hd,-.015,.12,0);if(hs===3)A(gBox(.34,.07,.06),hair,hd,-.02,.3,0);if(hs===4)A(gBox(.08,.28,.3),hair,hd,-.15,.0,0)}}
+const hip=new T.Group();hip.position.y=0.98;gp.add(hip);A(gBox(.32,.2,.48),shorts,hip,0,.05,0,1);
+const torso=new T.Group();torso.position.y=.18;hip.add(torso);const ch=A(gCyl(.22,.26,.72,'bottom',12),sh,torso,0,0,0,1);ch.scale.x=.68;ch.scale.z=.85;
+[-1,1].forEach(sd=>A(gSph(.12,10,8),sh,torso,0,.58,sd*.32));
+if(o.num){const pl=new T.Mesh(new T.PlaneGeometry(.38,.42),new T.MeshBasicMaterial({map:numTex(o.num),transparent:true}));pl.position.set(-.16,.32,0);pl.rotation.y=-Math.PI/2;torso.add(pl)}
+A(gCyl(.055,.065,.12,'bottom',8),skin,torso,0,.68,0);
+const hd=new T.Group();hd.position.y=.76;torso.add(hd);const hh=A(gSph(.175,16,12),skin,hd,0,.12,0);hh.scale.set(.92,1.08,.9);
+[-1,1].forEach(sd=>{A(gSph(.032,6,5),skin,hd,0,.08,sd*.16);A(gBox(.025,.03,.04),dark,hd,.15,.12,sd*.05);A(gSph(.018,5,4),dark,hd,.148,.135,sd*.055)});
+const hs=o.hs||0;if(hs!==2){if(hs===1)A(gSph(.22,12,10),hair,hd,-.02,.18,0);else{A(gSph(.19,14,10,0,Math.PI*2,0,Math.PI*.6),hair,hd,-.01,.13,0);if(hs===3)A(gBox(.36,.08,.07),hair,hd,-.02,.32,0);if(hs===4)A(gBox(.09,.3,.32),hair,hd,-.16,.02,0)}}
 const arms=[],elb=[],legs=[],knees=[],ft=[];
-[-1,1].forEach(sd=>{const a=new T.Group();a.position.set(0,.56,sd*.33);torso.add(a);A(gCyl(.065,.055,.28,'top'),sh,a,0,0,0,1);const e=new T.Group();e.position.y=-.28;a.add(e);A(gCyl(.05,.045,.26,'top'),skin,e);A(gSph(o.gk?.08:.06,6,5),hand,e,0,-.28,0);arms.push(a);elb.push(e);
-const l=new T.Group();l.position.set(0,0,sd*.12);hip.add(l);A(gCyl(.11,.085,.5,'top'),skin,l,0,0,0,1);A(gCyl(.125,.115,.24,'top'),shorts,l,0,.02,0);const k=new T.Group();k.position.y=-.5;l.add(k);A(gCyl(.078,.062,.46,'top'),sock,k,0,0,0,1);A(gCyl(.083,.082,.05,'top'),band,k,0,-.03,0);
-const f=new T.Group();f.position.y=-.46;k.add(f);A(gBox(.3,.1,.15),boot,f,.07,-.04,0);A(gSph(.075,6,5),boot,f,.2,-.045,0);legs.push(l);knees.push(k);ft.push(f)});
-const bl=new T.Mesh(new T.CircleGeometry(.55,12),new T.MeshBasicMaterial({color:0,transparent:true,opacity:.28}));bl.rotation.x=-Math.PI/2;bl.position.y=.03;gp.add(bl);
+[-1,1].forEach(sd=>{const a=new T.Group();a.position.set(0,.52,sd*.34);torso.add(a);A(gCyl(.07,.058,.32,'top'),sh,a,0,0,0,1);const e=new T.Group();e.position.y=-.32;a.add(e);A(gCyl(.052,.046,.28,'top'),skin,e);A(gSph(o.gk?.085:.062,8,6),hand,e,0,-.3,0);arms.push(a);elb.push(e);
+const l=new T.Group();l.position.set(0,0,sd*.11);hip.add(l);A(gCyl(.115,.09,.58,'top'),skin,l,0,0,0,1);A(gCyl(.13,.12,.26,'top'),shorts,l,0,.04,0);const k=new T.Group();k.position.y=-.58;l.add(k);A(gCyl(.082,.068,.52,'top'),sock,k,0,0,0,1);A(gCyl(.088,.087,.055,'top'),band,k,0,-.04,0);
+const f=new T.Group();f.position.y=-.52;k.add(f);A(gBox(.32,.11,.16),boot,f,.08,-.05,0);A(gSph(.08,8,6),boot,f,.22,-.05,0);legs.push(l);knees.push(k);ft.push(f)});
+const bl=new T.Mesh(new T.CircleGeometry(.58,16),new T.MeshBasicMaterial({color:0,transparent:true,opacity:.25}));bl.rotation.x=-Math.PI/2;bl.position.y=.02;gp.add(bl);
 cs.forEach(e=>e.castShadow=true);gp.ph0=Math.random()*6;gp.J={hip,torso,hd,arms,elb,legs,knees,ft};
 gp.anim=(v,ph,st)=>{const now=performance.now()/1000,k=Math.min(v/8,1),mv=Math.min(1,v/1.2),s=Math.sin(ph),c=Math.cos(ph);
 gp.rotation.z=0;gp.position.y=0;hip.rotation.set(0,s*.2*mv*(.4+.6*k),0);torso.rotation.set(0,-s*.3*mv*(.4+.6*k),-.3*k-.04*mv);hd.rotation.set(0,0,.25*k);hip.position.y=1.02+Math.abs(s)*.06*mv*(.4+.6*k);
@@ -199,6 +199,7 @@ for(let side of [-1,1])for(let i=0;i<4;i++){const f=mk(pick(side<0?BLU:RED),S,{s
 const P=[];for(let t=0;t<2;t++)for(let i=0;i<Sim.N;i++){const k=t?0xd8342f:0x2a7de1,gk=i===0?(t?0xf39c12:0x27ae60):k;
 P.push({m:mk(gk,S,{num:i+1,shorts:t?0xf2f2f2:0x0b1b3a,sock:gk,skin:(i*3+t)%5,hair:(i*2+t)%5,hs:(i+t*2)%5,gk:i===0,boot:i%3?0x111111:0xf5f5f5}),t,gk:i===0,p:new T.Vector2(),v:new T.Vector2(),a:0,ph:Math.random()*6,x0:0})}
 const ball=new T.Mesh(new T.SphereGeometry(.22,16,12),new T.MeshStandardMaterial({map:tex(128,64,(g,c)=>{g.fillStyle='#fff';g.fillRect(0,0,128,64);g.fillStyle='#1b1b1b';for(let i=0;i<8;i++)for(let j=0;j<3;j++){g.beginPath();g.arc(8+i*16+(j%2)*8,10+j*22,6,0,7);g.fill()}}),roughness:.55}));ball.castShadow=true;S.add(ball);
+const passLine=new T.Mesh(new T.CylinderGeometry(.03,.03,1,6),new T.MeshBasicMaterial({color:0x00ff88,transparent:true,opacity:.7}));passLine.rotation.x=Math.PI/2;passLine.visible=false;S.add(passLine);
 const ring=new T.Mesh(new T.RingGeometry(.85,1.05,32),new T.MeshBasicMaterial({color:0x2dffc4,side:T.DoubleSide,transparent:true,opacity:.9}));ring.rotation.x=-Math.PI/2;ring.position.y=.06;S.add(ring);
 const bv=new T.Vector3(),mark=new T.Mesh(new T.ConeGeometry(.35,.7,8),new T.MeshBasicMaterial({color:0xfac775}));mark.rotation.x=Math.PI;S.add(mark);
 /* ---------- walkable tunnel + dressing room (north side, beyond the stand) ---------- */
@@ -313,7 +314,7 @@ gameCanvas.addEventListener('pointerdown',e=>{if(mode==='walk'&&!WK.busy&&e.clie
 gameCanvas.addEventListener('pointermove',e=>{if(lookPointer!==e.pointerId||mode!=='walk')return;e.preventDefault();const dx=e.clientX-lookX,dy=e.clientY-lookY;lookX=e.clientX;lookY=e.clientY;WK.cyaw-=dx*.0065;WK.camPitch=cl(WK.camPitch-dy*.004,-.55,.7)});
 const endLook=e=>{if(lookPointer===e.pointerId)lookPointer=null};gameCanvas.addEventListener('pointerup',endLook);gameCanvas.addEventListener('pointercancel',endLook);
 
-$('sh').addEventListener('pointerdown',()=>act(1));$('ps').addEventListener('pointerdown',()=>act(0));$('th').addEventListener('pointerdown',()=>act((sim.owner>=0&&sim.p[sim.owner].t===0)?4:5));$('lb').addEventListener('pointerdown',()=>act((sim.owner>=0&&sim.p[sim.owner].t===0)?2:6));
+$('sh').addEventListener('pointerdown',()=>act(1));$('ps').addEventListener('pointerdown',()=>act(0));$('th').addEventListener('pointerdown',()=>act((sim.owner>=0&&sim.p[sim.owner].t===0)?4:5));$('lb').addEventListener('pointerdown',()=>act((sim.owner>=0&&sim.p[sim.owner].t===0)?2:6));$('sk').addEventListener('pointerdown',()=>{if(sim.owner>=0&&sim.p[sim.owner].t===0)Sim.skillMove(sim,sim.p[sim.user]);});
 $('ia').addEventListener('pointerdown',e=>{e.preventDefault();doInteract()});$('viewbtn').addEventListener('pointerdown',e=>{e.preventDefault();if(mode!=='walk'||WK.busy)return;WK.view=WK.view?0:1;$('viewbtn').textContent=WK.view?'VIEW: 1ST PERSON':'VIEW: 3RD PERSON';walkCam(0,true)});$('mapbtn').addEventListener('pointerdown',e=>{e.preventDefault();if(mode==='walk'&&!WK.busy)openMap();else if(mode==='walk'&&$('mapoverlay').style.display==='flex')closeMap()});
 addEventListener('keydown',e=>{K[e.code]=1;if(mode==='walk'){if(e.code==='KeyE'||e.code==='Enter')doInteract();return}if(e.code==='Space')act(1);if(e.code==='KeyE')act(0);if(e.code==='KeyQ')act(2);if(e.code==='KeyR')act(4);if(e.code==='KeyF')act(3)});addEventListener('keyup',e=>K[e.code]=0);
 function upd(){$('sc').textContent=st.sc[0]+' - '+st.sc[1];$('tm').textContent=Math.min(90,Math.floor(st.min))+"'"}
@@ -723,6 +724,12 @@ else if(mode==='shake'){P.forEach(p=>walk(p,p.x0+(p.t?-4:4),p.t?1.3:-1.3,1.4,dt)
 else if(mode==='wait')R.render(S,cam);
 else{if(!st.pause){if(st.freeze>0)st.freeze-=dt;else step(dt);refUpd(dt)}if(u){mark.position.set(u.p.x,3.6,u.p.y);ring.visible=true;ring.position.set(u.p.x,.06,u.p.y)}else ring.visible=false;pitchCrew.forEach(o=>o.m.pose(o.pose,n/1000+o.phase));bowlPeople.forEach(o=>{const t=n/1000+o.phase;o.m.pose(o.pose,t);if(o.pose==='talk'){o.m.J.hd.rotation.y=Math.sin(t*1.5)*.14;o.m.J.arms[0].rotation.z=.45+Math.max(0,Math.sin(t*2))*0.55}});dugoutPeople.forEach(o=>{const t=n/1000+o.phase;o.m.pose(o.pose,t);if(o.pose==='talk'){o.m.J.hd.rotation.y=Math.sin(t*1.5)*.12;o.m.J.arms[1].rotation.z=.7+Math.max(0,Math.sin(t*2))*0.4}});AR.forEach((r,i)=>{r.position.x=cl(ball.position.x*.78+(i===0?-5:5),-48,48);r.position.z=i===0?-38.2:38.2;r.anim(2,n/140)});ctx();drawRad();
 const w=cam.aspect<1,b=ball.position;
+// Pass direction line when in possession
+if(u&&sim.owner===u.id&&Math.hypot(INP.ix,INP.iz)>.25){
+ const ang=Math.atan2(INP.iz,INP.ix),len=8+Math.hypot(INP.ix,INP.iz)*6;
+ passLine.position.set(u.p.x+Math.cos(ang)*len*.5,.15,u.p.y+Math.sin(ang)*len*.5);
+ passLine.scale.set(1,len,1);passLine.rotation.z=-ang;passLine.visible=true;
+}else passLine.visible=false;
 if(cm===0){
  // DEFAULT (eFootball-style): high, tight, steeply pitched camera that follows the ball closely and keeps the action large.
  const sp=Math.hypot(bv.x,bv.z),fxT=cl(b.x*.88+cl(bv.x*.22,-6,6),-46,46),fzT=cl(b.z*.88+cl(bv.z*.15,-3,3),-30,30);
@@ -738,11 +745,18 @@ if(cm===0){
  cam.position.set(camTrackX,w?27:17,w?68:58);
  cam.lookAt(camTrackX*.93,0,w?-3+camTrackZ*.3:-8+camTrackZ*.5);
 }else{
- // Player cam: low chase view behind the controlled player blended with the ball; heavy smoothing so switching players never snaps.
- const tx0=u?u.p.x:b.x,tz0=u?u.p.y:b.z,fx0=tx0*.65+b.x*.35,fz0=tz0*.65+b.z*.35,k=Math.min(1,dt*.9);
- camTrackX+=(fx0+(u?cl(u.v.x*.3,-3,3):0)-camTrackX)*k;camTrackZ+=(fz0-camTrackZ)*k;
- cam.position.x+=(camTrackX-cam.position.x)*Math.min(1,dt*1.6);cam.position.y+=((w?15:11)-cam.position.y)*Math.min(1,dt*1.3);cam.position.z+=(camTrackZ+(w?24:19)-cam.position.z)*Math.min(1,dt*1.6);
- cam.lookAt(camTrackX,0,camTrackZ-1);
+ // Player cam (3rd person eFootball-style): tight behind controlled player, low angle, ball-aware lead.
+ const px=u?u.p.x:b.x,pz=u?u.p.y:b.z,pa=u?u.a:0;
+ const back=Math.sin(pa),fwd=Math.cos(pa);
+ const dist=w?5.8:4.6,height=w?2.8:2.2;
+ const leadX=px+fwd*1.8+cl(bv.x*.15,-2,2),leadZ=pz+back*1.8+cl(bv.z*.1,-1.5,1.5);
+ camTrackX+=(leadX-camTrackX)*Math.min(1,dt*3.2);
+ camTrackZ+=(leadZ-camTrackZ)*Math.min(1,dt*3.2);
+ const cx=camTrackX-fwd*dist,cz=camTrackZ-back*dist,cy=height;
+ cam.position.x+=(cx-cam.position.x)*Math.min(1,dt*2.8);
+ cam.position.y+=(cy-cam.position.y)*Math.min(1,dt*2.4);
+ cam.position.z+=(cz-cam.position.z)*Math.min(1,dt*2.8);
+ cam.lookAt(camTrackX+fwd*6,1.1,camTrackZ+back*6);
 }
 if(!isFinite(cam.position.x+cam.position.y+cam.position.z)){camTrackX=0;camTrackZ=0;cam.position.set(0,19,56.5)}
 R.render(S,cam)}
