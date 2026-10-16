@@ -300,7 +300,7 @@ if(k===1)shoot(S,taker,true);else if(k===2)lob(S,taker,true);else if(k===4)userT
 function step(S,dt,inp){
 S.ev.length=0;if(inp)S.inp=inp;S.time+=dt;
 const P=S.p,b=S.ball;
-if(S.kickoff){if((S.kickoff.team===1||S.botUser)&&S.time-S.kickoff.at>1.4)startKick(S);return}
+if(S.kickoff){if(S.time-S.kickoff.at>1.2||S.botUser||S.kickoff.team===1)startKick(S);return}
 let own=S.owner>=0?P[S.owner]:null;
 if(!S.botUser){const nu=pickUser(S);if(nu!==S.user&&S.user>=0)S.lock=Math.max(S.lock,S.time+.9);S.user=nu}
 S.ol=[0,1].map(t=>{const dir=t?-1:1,ds=P.filter(q=>q.t!==t&&!q.off).map(q=>q.x*dir).sort((a,c)=>c-a);return Math.max(ds[1]===undefined?0:ds[1],0)});

@@ -169,9 +169,12 @@ const f=new T.Group();f.position.y=-.56;k.add(f);A(gBox(.34,.12,.18),boot,f,.09,
 const bl=new T.Mesh(new T.CircleGeometry(.62,16),new T.MeshBasicMaterial({color:0,transparent:true,opacity:.22}));bl.rotation.x=-Math.PI/2;bl.position.y=.01;gp.add(bl);
 cs.forEach(e=>e.castShadow=true);gp.ph0=Math.random()*6;gp.J={hip,torso,hd,arms,elb,legs,knees,ft};
 gp.anim=(v,ph,st)=>{const now=performance.now()/1000,k=Math.min(v/8,1),mv=Math.min(1,v/1.2),s=Math.sin(ph),c=Math.cos(ph);
-gp.rotation.z=0;gp.position.y=0;hip.rotation.set(0,s*.2*mv*(.4+.6*k),0);torso.rotation.set(0,-s*.3*mv*(.4+.6*k),-.3*k-.04*mv);hd.rotation.set(0,0,.25*k);hip.position.y=1.02+Math.abs(s)*.06*mv*(.4+.6*k);
-const sw=(.5+.5*k)*mv,kb=(.5+.9*k)*mv;legs[0].rotation.set(0,0,s*sw);legs[1].rotation.set(0,0,-s*sw);knees[0].rotation.z=-Math.max(0,c)*kb-.1*mv;knees[1].rotation.z=-Math.max(0,-c)*kb-.1*mv;ft[0].rotation.z=Math.max(0,s)*.4*mv;ft[1].rotation.z=Math.max(0,-s)*.4*mv;
+gp.rotation.z=0;gp.position.y=0;hip.rotation.set(0,s*.2*mv*(.4+.6*k),0);torso.rotation.set(0,-s*.3*mv*(.4+.6*k),-.3*k-.04*mv);hd.rotation.set(0,0,.25*k);
+const idleLift=mv<0.25?0.02:0;
+hip.position.y=1.05+Math.abs(s)*.05*mv*(.4+.6*k)+idleLift;
+const sw=(.5+.5*k)*mv,kb=(.5+.9*k)*mv;legs[0].rotation.set(0,0,s*sw);legs[1].rotation.set(0,0,-s*sw);knees[0].rotation.z=-Math.max(0,c)*kb-.08*mv;knees[1].rotation.z=-Math.max(0,-c)*kb-.08*mv;ft[0].rotation.z=Math.max(0,s)*.35*mv;ft[1].rotation.z=Math.max(0,-s)*.35*mv;
 arms[0].rotation.set(0,0,-s*(.55+.5*k)*mv);arms[1].rotation.set(0,0,s*(.55+.5*k)*mv);elb[0].rotation.z=elb[1].rotation.z=(.3+.9*k)*mv+.12;
+if(mv<0.3){knees[0].rotation.z=knees[1].rotation.z=-.12;ft[0].rotation.z=ft[1].rotation.z=.05}
 if(mv<1)torso.rotation.z+=Math.sin(now*1.8+gp.ph0)*.014*(1-mv);
 if(st&&typeof sim!=='undefined'&&!st.gk){const bb=sim.ball;let rel=Math.atan2(bb.z-st.z,bb.x-st.x)-st.a;rel=((rel+Math.PI*3)%(Math.PI*2))-Math.PI;hd.rotation.y=-Math.max(-1.1,Math.min(1.1,rel))*.55;torso.rotation.y+=-Math.max(-1,Math.min(1,rel))*.12*(1-k*.6);
  const ow=sim.owner>=0?sim.p[sim.owner]:null;
@@ -358,7 +361,7 @@ function showWalkUI(on){$('pad').style.display=on?'block':'none';$('sc').parentN
 function setP(p,x,z,a){p.p.set(x,z);p.a=a;p.v.set(0,0);p.m.position.set(x,0,z);p.m.rotation.set(0,-a,0);p.m.anim(0,0)}
 function walk(p,tx,tz,spd,dt){const dx=tx-p.p.x,dz=tz-p.p.y,d=Math.hypot(dx,dz);if(d>.3){p.p.x+=dx/d*spd*dt;p.p.y+=dz/d*spd*dt;p.a=Math.atan2(dz,dx);p.ph+=dt*spd*1.6;p.m.anim(Math.min(spd,8),p.ph)}else p.m.anim(0,0);p.m.position.set(p.p.x,0,p.p.y);p.m.rotation.y=-p.a}
 function refUpd(dt){const b=ball.position,tx=cl(b.x*.75-4,-40,40),tz=cl(b.z+(b.z>0?-8:8),-26,26),dx=tx-RF.position.x,dz=tz-RF.position.z,d=Math.hypot(dx,dz);if(d>1){const s=Math.min(6,d*1.5);RF.position.x+=dx/d*s*dt;RF.position.z+=dz/d*s*dt;RF.rotation.y=-Math.atan2(dz,dx);RF.anim(s,performance.now()/110)}}
-function kickoff(){mode='play';cap('');ext.visible=false;ESC.forEach(k=>k.visible=false);rs();cam.position.set(0,34,92);cam.lookAt(0,0,0);reset();RF.position.set(0,0,12);st.run=true;ui(true)}
+function kickoff(){mode='play';cap('Kick off!');ext.visible=false;ESC.forEach(k=>k.visible=false);rs();cam.position.set(0,34,92);cam.lookAt(0,0,0);reset();RF.position.set(0,0,12);st.run=true;ui(true);ctx();setTimeout(()=>cap(''),1200)}
 const ESC=[];
 function startLineup(){mode='lineup';tt=0;rs();cam.fov=45;cam.updateProjectionMatrix();owner=null;bv.set(0,0,0);
  P.forEach((p,i)=>{const n=i%Sim.N;p.m.visible=false;p.dl=1.6+n*.55+(p.t?.25:0);p.cx=p.t?1.5:-1.5;p.fx=(p.t?1:-1)*(3.6+(10-n)*2.15);p.x0=-15+n*3;p.ph=0;p.stg=0;setP(p,p.cx,-52,Math.PI/2)});
