@@ -154,7 +154,7 @@ const gSph=(r,a,b,p0,pl,t0,tl)=>{const k=['s',r,a,b,p0,pl,t0,tl].join();return G
 function numTex(n){return NT[n]||(NT[n]=tex(64,64,g=>{g.clearRect(0,0,64,64);g.lineWidth=6;g.strokeStyle='#0008';g.fillStyle='#fff';g.font='bold 46px sans-serif';g.textAlign='center';g.strokeText(n,32,48);g.fillText(n,32,48)}))}
 function mk(col,sc,o){sc=sc||S;o=o||{};const gp=new T.Group(),M=mat,sh=M(col),shorts=M(o.shorts===undefined?0xf2f2f2:o.shorts),sock=M(o.sock===undefined?col:o.sock),skin=M(SK[o.skin||0]),hair=M(HR[o.hair||0]),boot=M(o.boot||0x111111,.5),hand=M(o.gk?0x7CFC9A:SK[o.skin||0]),dark=M(0x111111),band=M(0xffffff);
 const cs=[],A=(geo,m,par,x,y,z,cast)=>{const e=new T.Mesh(geo,m);e.position.set(x||0,y||0,z||0);par.add(e);if(cast)cs.push(e);return e};
-const hip=new T.Group();hip.position.y=1.05;gp.add(hip);A(gBox(.34,.18,.42),shorts,hip,0,.02,0,1);
+const hip=new T.Group();hip.position.y=1.28;gp.add(hip);A(gBox(.34,.18,.42),shorts,hip,0,.02,0,1);
 const torso=new T.Group();torso.position.y=.15;hip.add(torso);const ch=A(gCyl(.24,.28,.78,'bottom',12),sh,torso,0,0,0,1);ch.scale.x=.72;ch.scale.z=.82;
 [-1,1].forEach(sd=>A(gSph(.13,10,8),sh,torso,0,.62,sd*.34));
 if(o.num){const pl=new T.Mesh(new T.PlaneGeometry(.4,.44),new T.MeshBasicMaterial({map:numTex(o.num),transparent:true}));pl.position.set(-.18,.34,0);pl.rotation.y=-Math.PI/2;torso.add(pl)}
@@ -725,7 +725,7 @@ if(mode==='walk'){walkTick(dt);crowdPeople.forEach((o,i)=>{const t=n/1000+o.phas
 else if(mode==='lineup'){lineupTick(dt);if(tt>14.5){cap('Starting line-ups');shakeStart()}R.render(S,cam)}
 else if(mode==='shake'){P.forEach(p=>walk(p,p.x0+(p.t?-4:4),p.t?1.3:-1.3,1.4,dt));if(tt>3.6)toKick();R.render(S,cam)}
 else if(mode==='wait')R.render(S,cam);
-else{if(!st.pause){if(st.freeze>0)st.freeze-=dt;else step(dt);refUpd(dt)}if(u){mark.position.set(u.p.x,3.6,u.p.y);ring.visible=true;ring.position.set(u.p.x,.06,u.p.y)}else ring.visible=false;pitchCrew.forEach(o=>o.m.pose(o.pose,n/1000+o.phase));bowlPeople.forEach(o=>{const t=n/1000+o.phase;o.m.pose(o.pose,t);if(o.pose==='talk'){o.m.J.hd.rotation.y=Math.sin(t*1.5)*.14;o.m.J.arms[0].rotation.z=.45+Math.max(0,Math.sin(t*2))*0.55}});dugoutPeople.forEach(o=>{const t=n/1000+o.phase;o.m.pose(o.pose,t);if(o.pose==='talk'){o.m.J.hd.rotation.y=Math.sin(t*1.5)*.12;o.m.J.arms[1].rotation.z=.7+Math.max(0,Math.sin(t*2))*0.4}});AR.forEach((r,i)=>{r.position.x=cl(ball.position.x*.78+(i===0?-5:5),-48,48);r.position.z=i===0?-38.2:38.2;r.anim(2,n/140)});ctx();drawRad();
+else{if(!st.pause){if(st.freeze>0)st.freeze-=dt;else{try{step(dt)}catch(e){console.warn('step error',e)}};refUpd(dt)}if(u){mark.position.set(u.p.x,3.6,u.p.y);ring.visible=true;ring.position.set(u.p.x,.06,u.p.y)}else ring.visible=false;pitchCrew.forEach(o=>o.m.pose(o.pose,n/1000+o.phase));bowlPeople.forEach(o=>{const t=n/1000+o.phase;o.m.pose(o.pose,t);if(o.pose==='talk'){o.m.J.hd.rotation.y=Math.sin(t*1.5)*.14;o.m.J.arms[0].rotation.z=.45+Math.max(0,Math.sin(t*2))*0.55}});dugoutPeople.forEach(o=>{const t=n/1000+o.phase;o.m.pose(o.pose,t);if(o.pose==='talk'){o.m.J.hd.rotation.y=Math.sin(t*1.5)*.12;o.m.J.arms[1].rotation.z=.7+Math.max(0,Math.sin(t*2))*0.4}});AR.forEach((r,i)=>{r.position.x=cl(ball.position.x*.78+(i===0?-5:5),-48,48);r.position.z=i===0?-38.2:38.2;r.anim(2,n/140)});ctx();drawRad();
 const w=cam.aspect<1,b=ball.position;
 // Pass direction line when in possession
 if(u&&sim.owner===u.id&&Math.hypot(INP.ix,INP.iz)>.25){

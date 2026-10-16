@@ -301,9 +301,11 @@ function step(S,dt,inp){
 S.ev.length=0;if(inp)S.inp=inp;S.time+=dt;
 const P=S.p,b=S.ball;
 if(S.kickoff){
- if(S.time-S.kickoff.at>0.8||S.botUser||S.kickoff.team===1){
-  startKick(S);
+ if(S.time-S.kickoff.at>0.4||S.botUser||S.kickoff.team===1){
+  try{startKick(S);}catch(e){console.warn(e)}
   S.kickoff=null;
+  // force a simple pass so the ball always moves
+  if(S.owner>=0){const o=S.p[S.owner];b.vx=Math.cos(o.a)*4;b.vz=Math.sin(o.a)*4;b.vy=0.4;}
  }
  return;
 }
