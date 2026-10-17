@@ -3,11 +3,12 @@
 (function () {
 'use strict';
 const CITIES = {
-  england: { name: 'ENGLAND', flag: '\uD83C\uDDEC\uD83C\uDDE7', file: 'city_england.glb', nav: 'nav_england.json', sky: 0xa9b7c6, sun: 0xdfe6ee, hemi: 0.95 },
-  spain:   { name: 'SPAIN',   flag: '\uD83C\uDDEA\uD83C\uDDF8', file: 'city_spain.glb',   nav: 'nav_spain.json',   sky: 0x8fc4f2, sun: 0xfff0cf, hemi: 0.9 },
-  italy:   { name: 'ITALY',   flag: '\uD83C\uDDEE\uD83C\uDDF9', file: 'city_italy.glb',   nav: 'nav_italy.json',   sky: 0xf0c995, sun: 0xffd9a0, hemi: 0.85 },
-  germany: { name: 'GERMANY', flag: '\uD83C\uDDE9\uD83C\uDDEA', file: 'city_germany.glb', nav: 'nav_germany.json', sky: 0x9cb8d8, sun: 0xf4f7ff, hemi: 0.9 }
+  england: { name: 'ENGLAND', flag: '\uD83C\uDDEC\uD83C\uDDE7', file: 'city_england.glb', nav: 'nav_england.json', sky: 0xa9b7c6, sun: 0xdfe6ee, hemi: 0.95, gnd: 0x58634f, ll: [51.5074, -0.1278] },
+  spain:   { name: 'SPAIN',   flag: '\uD83C\uDDEA\uD83C\uDDF8', file: 'city_spain.glb',   nav: 'nav_spain.json',   sky: 0x8fc4f2, sun: 0xfff0cf, hemi: 0.9,  gnd: 0x8a7f6a, ll: [40.4168, -3.7038] },
+  italy:   { name: 'ITALY',   flag: '\uD83C\uDDEE\uD83C\uDDF9', file: 'city_italy.glb',   nav: 'nav_italy.json',   sky: 0xf0c995, sun: 0xffd9a0, hemi: 0.85, gnd: 0x8c8266, ll: [41.9028, 12.4964] },
+  germany: { name: 'GERMANY', flag: '\uD83C\uDDE9\uD83C\uDDEA', file: 'city_germany.glb', nav: 'nav_germany.json', sky: 0x9cb8d8, sun: 0xf4f7ff, hemi: 0.9,  gnd: 0x59654f, ll: [52.52, 13.405] }
 };
+const STADIUM_NAME = 'FT 90 STADIUM';
 const IDLE_T = 13.375;                 // standing frame inside Ronaldo's clip
 const HOUSE = { x0: -2.2, x1: 3.4, z0: -1.6, z1: 2.0, y: 0.25, spawn: [0.6, 0.8], exitZ: 1.35 };
 const STAD = { hx0: 130, hx1: 125, hz0: 105, hz1: 98 };   // blocked rectangle around the stadium (from its centre)
@@ -26,6 +27,7 @@ try { init(); } catch (e) {
 function init() {
   if (!T.GLTFLoader) throw new Error('GLTFLoader missing');
   injectUI();
+  bindInput();
   if (typeof ui === 'function') ui(false);
   $$('st').classList.remove('on');
   hideGameHud(true);
@@ -66,14 +68,21 @@ function injectUI() {
 #warr div{width:44px;height:44px;margin:0 auto 4px;border-radius:50%;background:#000a;display:flex;align-items:center;justify-content:center;font-size:26px;color:#38d27a}
 #wfade{position:absolute;inset:0;background:#000;opacity:0;transition:opacity .6s;pointer-events:none}
 #wcreds{background:#050a14ee}#wcreds pre{white-space:pre-wrap;text-align:left;max-height:70vh;overflow:auto;font-size:11px;width:min(92vw,560px)}
+#wl #whud,#wl #wfly{pointer-events:none}
+#wl #wskip,#wl #wact,#wl #wview{pointer-events:auto}
+#wview{position:absolute;left:5vw;top:max(14px,env(safe-area-inset-top));border:1px solid #fff6;background:#000a;color:#fff;border-radius:18px;padding:7px 14px;font:inherit;font-size:11px;letter-spacing:.12em;display:none;touch-action:manipulation}
+#wcrest{position:absolute;left:0;top:0;transform:translate(-50%,-100%);text-align:center;opacity:0;transition:opacity .8s;text-shadow:0 2px 14px #000;pointer-events:none;white-space:nowrap}
+#wcrest .cr{width:64px;height:64px;margin:0 auto 6px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#cfd8e6 60%,#8a97ab);display:flex;align-items:center;justify-content:center;font-size:34px;box-shadow:0 6px 26px #0009}
+#wcrest b{display:block;font-size:clamp(18px,5vw,30px);letter-spacing:.2em}
+#wcrest i{font-style:normal;font-size:11px;letter-spacing:.3em;opacity:.85}
 `;
   document.head.appendChild(css);
   const d = document.createElement('div'); d.id = 'wl';
   d.innerHTML = `
 <div class="scr" id="wsel"><h1>CHOOSE YOUR CITY</h1><p>Where does your story begin?</p><div id="wgrid"></div><button id="wcred">Credits</button></div>
 <div class="scr" id="wload"><h1 id="wlt" style="margin:0;letter-spacing:.12em">LOADING</h1><div id="wbar"><div id="wbf"></div></div><p id="wlp" style="margin:0;opacity:.7;font-size:13px"></p><button class="wc" id="wretry" style="display:none;padding:12px 26px">RETRY</button></div>
-<div class="scr" id="wfly"><div class="bar tp"></div><div class="bar bt"></div><div id="wtitle"><b id="wct"></b><i id="wcs"></i></div><div id="whud2"></div><button id="wskip">SKIP</button></div>
-<div class="scr" id="whud"><div id="whint"></div><div id="warr"><div id="warrg">\u27A4</div><span id="wdist"></span></div><button id="wact"></button></div>
+<div class="scr" id="wfly"><div class="bar tp"></div><div class="bar bt"></div><div id="wcrest"><div class="cr" id="wcrf"></div><b id="wcrn"></b><i id="wcrc"></i></div><div id="wtitle"><b id="wct"></b><i id="wcs"></i></div><div id="whud2"></div><button id="wskip">SKIP</button></div>
+<div class="scr" id="whud"><button id="wview">VIEW: 3RD PERSON</button><div id="whint"></div><div id="warr"><div id="warrg">\u27A4</div><span id="wdist"></span></div><button id="wact"></button></div>
 <div class="scr" id="wcreds"><pre id="wcp"></pre><button class="wc" id="wcc" style="padding:12px 26px">CLOSE</button></div>
 <div id="wfade"></div>`;
   document.body.appendChild(d);
@@ -86,16 +95,17 @@ function injectUI() {
     fetch('CREDITS.txt').then(r => r.text()).then(t => { $$('wcp').textContent = t; show('wcreds'); }).catch(() => { $$('wcp').textContent = 'Credits file not found.'; show('wcreds'); });
   });
   $$('wcc').addEventListener('click', () => show('wsel'));
+  $$('wview').addEventListener('click', () => { W.fp = !W.fp; $$('wview').textContent = W.fp ? 'VIEW: 1ST PERSON' : 'VIEW: 3RD PERSON'; });
 }
 function show(id) { document.querySelectorAll('#wl .scr').forEach(e => e.classList.toggle('on', e.id === id)); }
-function hint(t) { $$('whint').textContent = t; }
+function hint(t) { const h = $$('whint'); h.textContent = t; h.style.display = t ? '' : 'none'; }
 function fade(on) { $$('wfade').style.opacity = on ? 1 : 0; }
 function hideGameHud(on) {
   const sc = $$('sc'); if (sc && sc.parentNode) sc.parentNode.style.display = on ? 'none' : '';
   const pad = $$('pad'); if (pad) pad.style.display = 'none';
 }
 function padOn(on) { const p = $$('pad'); if (p) p.style.display = on ? 'block' : 'none'; }
-function stick() { return [typeof jx === 'number' ? jx : 0, typeof jy === 'number' ? jy : 0]; }
+function stick() { const I = W.in; if (I && (I.id !== null || I.m)) return [I.x, I.y]; return [typeof jx === 'number' ? jx : 0, typeof jy === 'number' ? jy : 0]; }
 
 /* ---------------- loading ---------------- */
 function glb(url, prog) {
@@ -104,19 +114,196 @@ function glb(url, prog) {
   });
 }
 function b64(s) { const b = atob(s), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; }
-function prep(root, double) {
+function capTex(root, lim) {
+  const seen = new Set();
+  root.traverse(o => {
+    if (!o.isMesh) return;
+    (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => {
+      ['map', 'emissiveMap', 'alphaMap'].forEach(k => {
+        const t = m[k]; if (!t || seen.has(t)) return; seen.add(t);
+        const im = t.image; if (!im) return; const w = im.width, h = im.height;
+        if (!w || !h || Math.max(w, h) <= lim) return;
+        try {
+          const sc = lim / Math.max(w, h), cv = document.createElement('canvas');
+          cv.width = Math.max(1, Math.round(w * sc)); cv.height = Math.max(1, Math.round(h * sc));
+          cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height); t.image = cv; t.needsUpdate = true;
+        } catch (e) {}
+      });
+    });
+  });
+}
+/* opt: cap = max texture size, lite = drop normal/rough/metal/ao maps, emi = self-light strength (never black), glass = fix see-through windows */
+function prep(root, double, opt) {
+  opt = opt || {};
   const lin = R.outputEncoding !== T.sRGBEncoding;
+  if (opt.cap) { try { capTex(root, opt.cap); } catch (e) {} }
   root.traverse(o => {
     if (!o.isMesh) return;
     o.frustumCulled = !o.isSkinnedMesh;
     (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => {
       if (double) m.side = T.DoubleSide;
       if ('metalness' in m) { m.metalness = 0; m.roughness = Math.max(m.roughness || 0, 0.6); }
+      if (opt.lite) { m.normalMap = null; m.roughnessMap = null; m.metalnessMap = null; m.aoMap = null; }
+      if (opt.glass && m.transparent) {
+        if (m.map) { m.alphaTest = Math.max(m.alphaTest || 0, 0.35); m.transparent = false; m.depthWrite = true; }
+        else { m.transparent = false; m.opacity = 1; if (m.color) m.color.lerp(new T.Color(0x3a4a5e), 0.6); }
+      }
+      if (opt.emi && 'emissive' in m) {
+        if (m.map) { m.emissive = new T.Color(0xffffff); m.emissiveMap = m.map; m.emissiveIntensity = opt.emi; }
+        else if (m.color) { m.emissive = m.color.clone(); m.emissiveIntensity = opt.emi * 0.8; }
+      }
       if (lin && m.map) { m.map.encoding = T.LinearEncoding; m.map.needsUpdate = true; }
       if (lin && m.emissiveMap) { m.emissiveMap.encoding = T.LinearEncoding; m.emissiveMap.needsUpdate = true; }
       m.needsUpdate = true;
     });
   });
+}
+
+/* ---------------- sky + clouds (fly-over) ---------------- */
+function makeSky(C) {
+  const cv = document.createElement('canvas'); cv.width = 8; cv.height = 256; const g = cv.getContext('2d'), gr = g.createLinearGradient(0, 0, 0, 256);
+  const base = new T.Color(C.sky), top = base.clone().multiplyScalar(0.4), mid = base.clone().multiplyScalar(0.85), hor = base.clone().lerp(new T.Color(0xffffff), 0.4);
+  gr.addColorStop(0, '#' + top.getHexString()); gr.addColorStop(0.4, '#' + mid.getHexString()); gr.addColorStop(0.5, '#' + hor.getHexString()); gr.addColorStop(1, '#' + hor.getHexString());
+  g.fillStyle = gr; g.fillRect(0, 0, 8, 256);
+  const tex = new T.CanvasTexture(cv); tex.encoding = R.outputEncoding === T.sRGBEncoding ? T.sRGBEncoding : T.LinearEncoding;
+  const mesh = new T.Mesh(new T.SphereGeometry(1, 24, 16), new T.MeshBasicMaterial({ map: tex, side: T.BackSide, fog: false, depthWrite: false }));
+  mesh.renderOrder = -1; mesh.frustumCulled = false;
+  return { mesh, hor };
+}
+function makeClouds(big, my) {
+  const cv = document.createElement('canvas'); cv.width = cv.height = 256; const g = cv.getContext('2d');
+  let sd = 7; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 70; i++) {
+    const x = rnd() * 256, y = rnd() * 256, r = 14 + rnd() * 34;
+    [-256, 0, 256].forEach(ox => [-256, 0, 256].forEach(oy => {
+      const gr = g.createRadialGradient(x + ox, y + oy, 0, x + ox, y + oy, r); gr.addColorStop(0, 'rgba(255,255,255,.55)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = gr; g.fillRect(x + ox - r, y + oy - r, r * 2, r * 2);
+    }));
+  }
+  const base = new T.CanvasTexture(cv), grp = new T.Group();
+  [0.62, 0.85, 1.1].forEach((h, k) => {
+    const t = base.clone(); t.needsUpdate = true; t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(3 + k, 3 + k);
+    const m = new T.Mesh(new T.PlaneGeometry(big * 5, big * 5), new T.MeshBasicMaterial({ map: t, transparent: true, opacity: 0.95, depthWrite: false, fog: false, side: T.DoubleSide }));
+    m.rotation.x = -Math.PI / 2; m.position.y = my + big * h; m.frustumCulled = false; grp.add(m);
+  });
+  return grp;
+}
+
+/* ---------------- house analysis: floor, walls, furniture, spawn (works on any layout) ---------------- */
+function analyzeHouse(root) {
+  const CELL = 0.2, RAD = 0.2;
+  root.updateMatrixWorld(true);
+  const bb = new T.Box3().setFromObject(root), sz = new T.Vector3(), ctr = new T.Vector3();
+  bb.getSize(sz);
+  const foot = Math.max(sz.x, sz.z);
+  if (foot > 0.01 && (foot < 4 || foot > 40)) { root.scale.multiplyScalar(10 / foot); root.updateMatrixWorld(true); bb.setFromObject(root); bb.getSize(sz); }
+  bb.getCenter(ctr); root.position.x -= ctr.x; root.position.z -= ctr.z; root.updateMatrixWorld(true); bb.setFromObject(root); bb.getSize(sz);
+  let total = 0; const meshes = [];
+  root.traverse(o => {
+    if (!o.isMesh || !o.geometry || !o.geometry.attributes.position) return;
+    const m = Array.isArray(o.material) ? o.material[0] : o.material; if (m && m.transparent && m.opacity < 0.15) return;
+    meshes.push(o); const g = o.geometry; total += Math.floor((g.index ? g.index.count : g.attributes.position.count) / 3);
+  });
+  const tri = new Float32Array(total * 9); let nt = 0;
+  const va = new T.Vector3(), vb = new T.Vector3(), vc = new T.Vector3();
+  meshes.forEach(o => {
+    const g = o.geometry, pos = g.attributes.position, idx = g.index, cnt = idx ? idx.count : pos.count;
+    for (let i = 0; i + 2 < cnt; i += 3) {
+      const a = idx ? idx.getX(i) : i, b = idx ? idx.getX(i + 1) : i + 1, c = idx ? idx.getX(i + 2) : i + 2;
+      va.fromBufferAttribute(pos, a).applyMatrix4(o.matrixWorld); vb.fromBufferAttribute(pos, b).applyMatrix4(o.matrixWorld); vc.fromBufferAttribute(pos, c).applyMatrix4(o.matrixWorld);
+      const k = nt * 9; tri[k] = va.x; tri[k + 1] = va.y; tri[k + 2] = va.z; tri[k + 3] = vb.x; tri[k + 4] = vb.y; tri[k + 5] = vb.z; tri[k + 6] = vc.x; tri[k + 7] = vc.y; tri[k + 8] = vc.z; nt++;
+    }
+  });
+  const yMin = bb.min.y, hgt = sz.y, BIN = 0.05, nb = Math.ceil(Math.min(hgt * 0.6, 1.6) / BIN) + 3, hist = new Float32Array(nb);
+  const nrm = (k) => {
+    const ux = tri[k + 3] - tri[k], uy = tri[k + 4] - tri[k + 1], uz = tri[k + 5] - tri[k + 2], wx = tri[k + 6] - tri[k], wy = tri[k + 7] - tri[k + 1], wz = tri[k + 8] - tri[k + 2];
+    const x = uy * wz - uz * wy, y = uz * wx - ux * wz, z = ux * wy - uy * wx, l = Math.sqrt(x * x + y * y + z * z);
+    return l < 1e-9 ? null : [x / l, y / l, z / l, l * 0.5];
+  };
+  for (let t = 0; t < nt; t++) {
+    const k = t * 9, n = nrm(k); if (!n || n[1] < 0.9) continue;
+    const bi = Math.floor(((tri[k + 1] + tri[k + 4] + tri[k + 7]) / 3 - yMin) / BIN); if (bi >= 0 && bi < nb) hist[bi] += n[3];
+  }
+  let fk = 0, fv = -1; for (let i = 0; i < nb; i++) { const v = hist[i] + (hist[i - 1] || 0) + (hist[i + 1] || 0); if (v > fv) { fv = v; fk = i; } }
+  const floorY = yMin + (fk + 0.5) * BIN;
+  const gx0 = bb.min.x - 0.2, gz0 = bb.min.z - 0.2, NX = Math.ceil((sz.x + 0.4) / CELL), NZ = Math.ceil((sz.z + 0.4) / CELL);
+  const floor = new Uint8Array(NX * NZ), wall = new Uint8Array(NX * NZ), top = new Uint8Array(NX * NZ);
+  const ci = x => Math.floor((x - gx0) / CELL), cj = z => Math.floor((z - gz0) / CELL);
+  const markPt = (g, x, z) => { const i = ci(x), j = cj(z); if (i >= 0 && j >= 0 && i < NX && j < NZ) g[i * NZ + j] = 1; };
+  const markSeg = (g, x0, z0, x1, z1) => { const n = Math.max(1, Math.ceil(Math.hypot(x1 - x0, z1 - z0) / 0.05)); for (let q = 0; q <= n; q++) markPt(g, x0 + (x1 - x0) * q / n, z0 + (z1 - z0) * q / n); };
+  const fillTri = (g, ax, az, bx, bz, cx, cz) => {
+    const i0 = Math.max(0, ci(Math.min(ax, bx, cx))), i1 = Math.min(NX - 1, ci(Math.max(ax, bx, cx))), j0 = Math.max(0, cj(Math.min(az, bz, cz))), j1 = Math.min(NZ - 1, cj(Math.max(az, bz, cz)));
+    const d = (bz - cz) * (ax - cx) + (cx - bx) * (az - cz); if (Math.abs(d) < 1e-12) return;
+    for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) {
+      const px = gx0 + (i + 0.5) * CELL, pz = gz0 + (j + 0.5) * CELL;
+      const l1 = ((bz - cz) * (px - cx) + (cx - bx) * (pz - cz)) / d, l2 = ((cz - az) * (px - cx) + (ax - cx) * (pz - cz)) / d, l3 = 1 - l1 - l2;
+      if (l1 >= -0.02 && l2 >= -0.02 && l3 >= -0.02) g[i * NZ + j] = 1;
+    }
+  };
+  for (let t = 0; t < nt; t++) {
+    const k = t * 9, n = nrm(k); if (!n) continue;
+    const ax = tri[k], ay = tri[k + 1], az = tri[k + 2], bx = tri[k + 3], by = tri[k + 4], bz = tri[k + 5], cx = tri[k + 6], cy = tri[k + 7], cz = tri[k + 8];
+    const ym = (ay + by + cy) / 3, lo = Math.min(ay, by, cy), hi = Math.max(ay, by, cy);
+    if (n[1] > 0.85) {
+      if (Math.abs(ym - floorY) < 0.15) fillTri(floor, ax, az, bx, bz, cx, cz);
+      else if (ym > floorY + 0.2 && ym < floorY + 1.4) fillTri(top, ax, az, bx, bz, cx, cz);
+    } else if (Math.abs(n[1]) < 0.85 && hi > floorY + 0.25 && lo < floorY + 1.6) {
+      markSeg(wall, ax, az, bx, bz); markSeg(wall, bx, bz, cx, cz); markSeg(wall, cx, cz, ax, az);
+    }
+  }
+  let fn = 0; for (let i = 0; i < floor.length; i++) fn += floor[i];
+  const ok = new Uint8Array(NX * NZ); for (let i = 0; i < ok.length; i++) ok[i] = ((fn < 30 || floor[i]) && !wall[i] && !top[i]) ? 1 : 0;
+  const N = NX * NZ, dist = new Int16Array(N).fill(9999), q = new Int32Array(N); let qh = 0, qt = 0;
+  for (let i = 0; i < N; i++) if (!ok[i]) { dist[i] = 0; q[qt++] = i; }
+  while (qh < qt) { const c = q[qh++], i = (c / NZ) | 0, j = c - i * NZ, d = dist[c] + 1; [[i + 1, j], [i - 1, j], [i, j + 1], [i, j - 1]].forEach(p => { if (p[0] < 0 || p[1] < 0 || p[0] >= NX || p[1] >= NZ) return; const e = p[0] * NZ + p[1]; if (dist[e] > d) { dist[e] = d; q[qt++] = e; } }); }
+  const c0i = ci(0), c0j = cj(0); let reg = null, sp = null;
+  for (const minC of [4, 3, 2, 1]) {
+    let best = -1, bd = 1e18;
+    for (let i = 0; i < NX; i++) for (let j = 0; j < NZ; j++) { const e = i * NZ + j; if (ok[e] && dist[e] >= minC) { const d = (i - c0i) * (i - c0i) + (j - c0j) * (j - c0j); if (d < bd) { bd = d; best = e; } } }
+    if (best < 0) continue;
+    const r = new Uint8Array(N), st = [best]; r[best] = 1; let cnt = 0;
+    while (st.length) { const c = st.pop(); cnt++; const i = (c / NZ) | 0, j = c - i * NZ; [[i + 1, j], [i - 1, j], [i, j + 1], [i, j - 1]].forEach(p => { if (p[0] < 0 || p[1] < 0 || p[0] >= NX || p[1] >= NZ) return; const e = p[0] * NZ + p[1]; if (ok[e] && !r[e]) { r[e] = 1; st.push(e); } }); }
+    if (cnt >= 40) { reg = r; sp = [gx0 + ((best / NZ | 0) + 0.5) * CELL, gz0 + ((best % NZ) + 0.5) * CELL]; break; }
+  }
+  if (!reg) throw new Error('no walkable floor found');
+  const st1 = (x, z) => { const i = ci(x), j = cj(z); return i >= 0 && j >= 0 && i < NX && j < NZ && reg[i * NZ + j] === 1; };
+  const R7 = RAD * 0.7, stand = (x, z) => st1(x, z) && st1(x + RAD, z) && st1(x - RAD, z) && st1(x, z + RAD) && st1(x, z - RAD) && st1(x + R7, z + R7) && st1(x - R7, z + R7) && st1(x + R7, z - R7) && st1(x - R7, z - R7);
+  const isWall = (x, z) => { const i = ci(x), j = cj(z); return i < 0 || j < 0 || i >= NX || j >= NZ || wall[i * NZ + j] === 1; };
+  let heading = Math.PI, hb = -1;
+  for (let k = 0; k < 16; k++) { const a = k * Math.PI / 8; let run = 0; while (run < 12 && st1(sp[0] + Math.sin(a) * (run + 0.1), sp[1] + Math.cos(a) * (run + 0.1))) run += 0.1; if (run > hb) { hb = run; heading = a; } }
+  const ceilY = Math.max(2.0, Math.min(hgt - (floorY - yMin), 3.2)) - 0.12, ly = Math.min(2.1, ceilY - 0.15);
+  const cells = []; for (let i = 0; i < NX; i += 2) for (let j = 0; j < NZ; j += 2) if (reg[i * NZ + j]) cells.push([gx0 + (i + 0.5) * CELL, gz0 + (j + 0.5) * CELL]);
+  const lights = [[sp[0], ly, sp[1]]];
+  for (let n = 0; n < 3 && cells.length; n++) { let bp = null, bdd = -1; cells.forEach(c => { let md = 1e9; lights.forEach(l => { md = Math.min(md, (c[0] - l[0]) * (c[0] - l[0]) + (c[1] - l[2]) * (c[1] - l[2])); }); if (md > bdd) { bdd = md; bp = c; } }); if (bdd < 4) break; lights.push([bp[0], ly, bp[1]]); }
+  root.position.y -= floorY; root.updateMatrixWorld(true);
+  return { stand, wall: isWall, spawn: sp, heading, ceilY, lights, floorY };
+}
+/* END analyzeHouse */
+function fallbackHouse() {
+  const inH = (x, z) => x > HOUSE.x0 && x < HOUSE.x1 && z > HOUSE.z0 && z < HOUSE.z1;
+  return { stand: inH, wall: (x, z) => !(x > HOUSE.x0 - 0.5 && x < HOUSE.x1 + 0.5 && z > HOUSE.z0 - 0.5 && z < HOUSE.z1 + 1.2), spawn: HOUSE.spawn.slice(), heading: Math.PI, ceilY: 2.2, lights: [[0, 2.0, 0], [2.4, 2.0, 0.8], [-1.4, 2.0, 0.4], [1.0, 2.0, -1.0]] };
+}
+
+/* ---------------- own joystick + drag-to-look (does not depend on game.js) ---------------- */
+function bindInput() {
+  const pad = $$('pad'), kn = $$('kn'), I = W.in = { x: 0, y: 0, id: null, m: false }; let base = null;
+  const knob = (px, py) => { if (!kn) return; if (base === null) { const t = getComputedStyle(kn).transform; base = (t && t !== 'none') ? ' ' + t : ''; } kn.style.transform = 'translate(' + px + 'px,' + py + 'px)' + base; };
+  const aim = (cx, cy) => { const r = pad.getBoundingClientRect(), R0 = Math.max(24, r.width / 2), ox = r.left + r.width / 2, oy = r.top + r.height / 2; let dx = (cx - ox) / R0, dy = (cy - oy) / R0; const l = Math.hypot(dx, dy); if (l > 1) { dx /= l; dy /= l; } I.x = dx; I.y = dy; knob(dx * R0 * 0.55, dy * R0 * 0.55); };
+  const end = () => { I.id = null; I.m = false; I.x = 0; I.y = 0; knob(0, 0); };
+  if (pad) {
+    pad.addEventListener('touchstart', e => { if (!W.on) return; const t = e.changedTouches[0]; I.id = t.identifier; aim(t.clientX, t.clientY); e.preventDefault(); }, { passive: false });
+    window.addEventListener('touchmove', e => { if (I.id === null) return; for (const t of e.changedTouches) if (t.identifier === I.id) { aim(t.clientX, t.clientY); e.preventDefault(); } }, { passive: false });
+    const te = e => { if (I.id === null) return; for (const t of e.changedTouches) if (t.identifier === I.id) end(); };
+    window.addEventListener('touchend', te); window.addEventListener('touchcancel', te);
+    pad.addEventListener('mousedown', e => { if (!W.on) return; I.m = true; aim(e.clientX, e.clientY); });
+    window.addEventListener('mousemove', e => { if (I.m) aim(e.clientX, e.clientY); });
+    window.addEventListener('mouseup', () => { if (I.m) end(); });
+  }
+  const cv = R.domElement; let lid = null, lx = 0, ly = 0;
+  cv.addEventListener('touchstart', e => { if (lid !== null || W.phase !== 'house') return; const t = e.changedTouches[0]; lid = t.identifier; lx = t.clientX; ly = t.clientY; }, { passive: true });
+  window.addEventListener('touchmove', e => { if (lid === null) return; for (const t of e.changedTouches) if (t.identifier === lid) { W.cy -= (t.clientX - lx) * 0.0065; W.cp = clamp(W.cp + (t.clientY - ly) * 0.004, -0.3, 0.8); lx = t.clientX; ly = t.clientY; } }, { passive: true });
+  const le = e => { if (lid === null) return; for (const t of e.changedTouches) if (t.identifier === lid) lid = null; };
+  window.addEventListener('touchend', le); window.addEventListener('touchcancel', le);
 }
 function startCity(key) {
   const C = CITIES[key]; W.key = key; W.C = C;
@@ -170,15 +357,17 @@ function pickHouse(n) {
 }
 function build(key, city, stad, player, house, navj) {
   const C = CITIES[key], nav = mkNav(navj); W.nav = nav;
-  prep(city.scene, true); prep(stad.scene, true); prep(player.scene, false); prep(house.scene, true);
+  prep(city.scene, true, { cap: 1024, lite: true, emi: 0.5, glass: true }); prep(stad.scene, true, { cap: 2048, lite: true, emi: 0.4, glass: true }); prep(player.scene, false, { cap: 2048, emi: 0.2 }); prep(house.scene, true, { cap: 2048, emi: 0.45 });
   city.scene.traverse(o => { if (o.isMesh) { o.updateMatrix(); o.matrixAutoUpdate = false; } });
   const gW = nav.W * nav.c, gH = nav.H * nav.c, cx = nav.ox + gW / 2, cz = nav.oz + gH / 2, big = Math.max(gW, gH), my = nav.mode;
   W.big = big; W.center = new T.Vector3(cx, my, cz);
   // ---- city scene ----
-  const cs = new T.Scene(); cs.background = new T.Color(C.sky); cs.fog = new T.Fog(C.sky, big * 0.6, big * 2.2);
-  cs.add(new T.HemisphereLight(0xffffff, 0x556070, C.hemi)); const sun = new T.DirectionalLight(C.sun, 1.0); sun.position.set(200, 400, 150); cs.add(sun);
+  const cs = new T.Scene(); const sky = makeSky(C); cs.background = sky.hor.clone(); cs.fog = new T.Fog(sky.hor.clone(), big * 0.6, big * 2.2);
+  W.dome = sky.mesh; W.dome.scale.setScalar(Math.max(5000, big * 8) * 0.9); cs.add(W.dome); W.clouds = makeClouds(big, my); cs.add(W.clouds);
+  W.cam.far = Math.max(5000, big * 8); W.cam.updateProjectionMatrix();
+  cs.add(new T.HemisphereLight(0xffffff, 0x556070, C.hemi)); cs.add(new T.AmbientLight(0xffffff, 0.32)); const sun = new T.DirectionalLight(C.sun, 1.0); sun.position.set(200, 400, 150); cs.add(sun);
   cs.add(city.scene);
-  const gm = new T.Mesh(new T.PlaneGeometry(6000, 6000), new T.MeshLambertMaterial({ color: 0x3b3f46 })); gm.rotation.x = -Math.PI / 2; gm.position.set(cx, my - 0.08, cz); cs.add(gm);
+  const gm = new T.Mesh(new T.PlaneGeometry(12000, 12000), new T.MeshLambertMaterial({ color: C.gnd })); gm.rotation.x = -Math.PI / 2; gm.position.set(cx, my - 0.6, cz); cs.add(gm);
   const house0 = pickHouse(nav); W.houseXZ = house0;
   const sx = nav.ox + gW + 210, sz = house0[1]; nav.stad = [sx, sz]; W.stadXZ = [sx, sz];
   stad.scene.position.set(sx, my, sz); cs.add(stad.scene);
@@ -199,8 +388,11 @@ function build(key, city, stad, player, house, navj) {
   // ---- bike ----
   W.bike = makeBike(); cs.add(W.bike);
   // ---- house scene ----
-  const hs = new T.Scene(); hs.background = new T.Color(0x0b0d12); hs.add(new T.HemisphereLight(0xffffff, 0x887766, 0.9)); hs.add(house.scene);
-  [[0, 2.1, 0], [2.4, 2.1, 0.8], [-1.4, 2.1, 0.4], [1.0, 2.1, -1.0]].forEach(p => { const l = new T.PointLight(0xffe8c8, 0.9, 7); l.position.set(p[0], p[1], p[2]); hs.add(l); });
+  let G; try { G = analyzeHouse(house.scene); } catch (e) { console.error('house analysis failed, using fallback', e); G = fallbackHouse(); }
+  W.hg = G;
+  const hs = new T.Scene(); hs.background = new T.Color(0x0b0d12); hs.add(new T.HemisphereLight(0xffffff, 0x998877, 1.0)); hs.add(new T.AmbientLight(0xffffff, 0.55));
+  const dl = new T.DirectionalLight(0xfff2dd, 0.6); dl.position.set(3, 8, 4); hs.add(dl); hs.add(house.scene);
+  G.lights.forEach(p => { const l = new T.PointLight(0xffe8c8, 0.9, 9); l.position.set(p[0], p[1], p[2]); hs.add(l); });
   W.houseScene = hs;
   startFly();
 }
@@ -220,61 +412,97 @@ function setClip(moving, speed) {
   else if (!W.act.paused) { W.act.paused = true; W.act.time = IDLE_T; W.mixer.update(0); }
 }
 
-/* ---------------- phase 1: fly-over ---------------- */
+/* ---------------- phase 1: fly-over (FC-style: clouds -> city -> low swoop -> stadium hero shot) ---------------- */
 function startFly() {
   W.phase = 'fly'; W.scene = W.cityScene; W.bike.visible = false; if (W.player.parent) W.player.parent.remove(W.player);
-  show('wfly'); $$('wct').textContent = W.C.name; $$('wcs').textContent = 'YOUR STORY BEGINS HERE'; W.ft = 0; W.fdur = 11;
-  const c = W.center, big = W.big, hx = W.houseXZ[0], hz = W.houseXZ[1], hy = W.nav.y(hx, hz), a0 = -0.7;
-  const P = (r, h, a) => new T.Vector3(c.x + Math.cos(a) * big * r, c.y + big * h, c.z + Math.sin(a) * big * r);
-  W.flyCurve = new T.CatmullRomCurve3([P(0.85, 0.6, a0), P(0.6, 0.38, a0 + 1.3), P(0.35, 0.2, a0 + 2.4), new T.Vector3(hx - 22, hy + 9, hz + 26)]);
-  W.flyLook = new T.Vector3(hx, hy + 2, hz); W.skipped = false;
-  $$('wskip').onclick = () => { if (W.phase === 'fly') endFly(); };
+  const C = W.C, big = W.big, c = W.center, S = new T.Vector3(W.stadXZ[0], c.y, W.stadXZ[1]);
+  show('wfly'); $$('wct').textContent = C.name; $$('wcs').textContent = 'YOUR STORY BEGINS HERE'; $$('wtitle').style.opacity = 1;
+  $$('wcrf').textContent = C.flag; $$('wcrn').textContent = STADIUM_NAME; $$('wcrc').textContent = C.name + ' \u00B7 HOME OF FT 90'; $$('wcrest').style.opacity = 0;
+  W.cam.near = 3; W.cam.far = Math.max(5000, big * 8); W.cam.updateProjectionMatrix();
+  W.cityScene.fog.near = big * 1.1; W.cityScene.fog.far = big * 3.6;
+  if (W.clouds) { W.clouds.visible = true; W.clouds.children.forEach(m => { m.material.opacity = 0.95; }); }
+  const alt = clamp(big * 0.07, 70, 170), RR = 360, V = (x, y, z) => new T.Vector3(x, y, z);
+  const at = a => V(S.x + Math.cos(a) * RR, c.y + alt, S.z + Math.sin(a) * RR), mid = new T.Vector3().lerpVectors(c, S, 0.5);
+  const Sl = S.clone(); Sl.y = c.y + 22; const Sc = new T.Vector3().lerpVectors(c, S, 0.25);
+  W.fk = [
+    { t: 0,    p: V(c.x - big * 0.30, c.y + big * 1.75, c.z + big * 0.22), l: c.clone(), f: 48 },
+    { t: 3.4,  p: V(c.x - big * 0.42, c.y + big * 0.50, c.z + big * 0.30), l: Sc, f: 54 },
+    { t: 6.8,  p: V(mid.x, c.y + alt * 1.5, mid.z - big * 0.10), l: Sl, f: 60 },
+    { t: 9.4,  p: at(-Math.PI / 2 - 0.1), l: Sl, f: 58 },
+    { t: 11.8, p: at(-0.55), l: Sl, f: 54 },
+    { t: 14.2, p: at(0.15), l: Sl, f: 50 }
+  ];
+  W.fdur = 14.2; W.ft = 0;
+  W.fpos = new T.CatmullRomCurve3(W.fk.map(k => k.p), false, 'centripetal'); W.flook = new T.CatmullRomCurve3(W.fk.map(k => k.l), false, 'centripetal');
+  W.skipped = false; $$('wskip').onclick = () => { if (W.phase === 'fly') endFly(); };
   fade(false);
 }
 function flyUpdate(dt) {
-  W.ft += dt; const u = clamp(W.ft / W.fdur, 0, 1), e = ease(u);
-  W.cam.position.copy(W.flyCurve.getPoint(e));
-  const look = new T.Vector3().lerpVectors(W.center, W.flyLook, Math.pow(e, 1.6)); look.y += 4 * (1 - e);
-  W.cam.lookAt(look); const f = 62 - 12 * e; if (Math.abs(W.cam.fov - f) > 0.05) { W.cam.fov = f; W.cam.updateProjectionMatrix(); }
-  $$('whud2').innerHTML = 'LAT ' + (51.5 + e * 0.01).toFixed(4) + '<br>ALT ' + Math.round(W.cam.position.y - W.center.y) + ' M<br>SCAN ' + Math.round(e * 100) + '%';
-  if (u >= 1) endFly();
+  W.ft += dt; const K = W.fk, tt = Math.min(W.ft, W.fdur); let i = 0; while (i < K.length - 2 && tt > K[i + 1].t) i++;
+  const s = clamp((tt - K[i].t) / (K[i + 1].t - K[i].t), 0, 1), u = (i + s) / (K.length - 1);
+  W.cam.position.copy(W.fpos.getPoint(u)); W.cam.lookAt(W.flook.getPoint(u)); W.cam.rotateZ(Math.sin(W.ft * 0.5) * 0.02 * (tt < 6 ? 1 : 0.5));
+  const f = K[i].f + (K[i + 1].f - K[i].f) * ease(s); if (Math.abs(W.cam.fov - f) > 0.05) { W.cam.fov = f; W.cam.updateProjectionMatrix(); }
+  if (W.clouds) W.clouds.children.forEach((m, k) => { m.material.map.offset.x += dt * 0.004 * (k + 1); m.material.opacity = tt > 4.2 ? Math.max(0.2, m.material.opacity - dt * 0.5) : 0.95; });
+  $$('wtitle').style.opacity = clamp(1 - (tt - 3.0), 0, 1);
+  const cr = $$('wcrest');
+  if (tt > 8.4) {
+    const _pv = W.pv || (W.pv = new T.Vector3()); _pv.set(W.stadXZ[0], W.center.y + 95, W.stadXZ[1]).project(W.cam);
+    if (_pv.z < 1) { cr.style.left = ((_pv.x * 0.5 + 0.5) * innerWidth) + 'px'; cr.style.top = ((-_pv.y * 0.5 + 0.5) * innerHeight) + 'px'; cr.style.opacity = tt > 8.8 ? 1 : 0; } else cr.style.opacity = 0;
+  }
+  const ll = W.C.ll;
+  $$('whud2').innerHTML = 'LAT ' + Math.abs(ll[0]).toFixed(4) + '\u00B0 ' + (ll[0] >= 0 ? 'N' : 'S') + '<br>LON ' + Math.abs(ll[1]).toFixed(4) + '\u00B0 ' + (ll[1] >= 0 ? 'E' : 'W') + '<br>ALT ' + Math.max(0, Math.round(W.cam.position.y - W.center.y)) + ' M';
+  if (W.ft >= W.fdur) endFly();
 }
-function endFly() { if (W.phase !== 'fly') return; W.phase = 'trans'; fade(true); setTimeout(startHouse, 700); }
+function endFly() { if (W.phase !== 'fly') return; W.phase = 'trans'; $$('wcrest').style.opacity = 0; fade(true); setTimeout(startHouse, 700); }
 
 /* ---------------- phase 2: house ---------------- */
 function startHouse() {
-  W.phase = 'house'; W.scene = W.houseScene; W.cam.fov = 58; W.cam.updateProjectionMatrix();
-  W.houseScene.add(W.player); W.hp = { x: HOUSE.spawn[0], z: HOUSE.spawn[1], h: Math.PI, sp: 0 };
-  W.player.position.set(W.hp.x, HOUSE.y, W.hp.z); W.player.rotation.y = W.hp.h;
-  show('whud'); hint('Use the left stick to walk. Go to the front glass door to leave.'); padOn(true); setAct(null);
-  W.cam.position.set(W.hp.x, 1.75, W.hp.z + 2.3); W.cam.lookAt(W.hp.x, 1.1, W.hp.z); fade(false);
+  const G = W.hg;
+  W.phase = 'house'; W.scene = W.houseScene; W.cam.fov = 58; W.cam.near = 0.08; W.cam.far = 200; W.cam.updateProjectionMatrix();
+  if (W.player.parent) W.player.parent.remove(W.player);
+  W.houseScene.add(W.player); W.player.visible = true;
+  W.hp = { x: G.spawn[0], z: G.spawn[1], h: G.heading, sp: 0 }; W.cy = G.heading + Math.PI; W.cp = 0.22; W.cam.position.set(W.hp.x, 1.6, W.hp.z);
+  W.player.position.set(W.hp.x, 0, W.hp.z); W.player.rotation.set(0, W.hp.h, 0);
+  show('whud'); $$('wview').style.display = 'block'; padOn(true);
+  hint('Left stick: walk. Drag the screen: look around. Tap GO OUTSIDE when you are ready to ride.');
+  setAct('GO OUTSIDE', leaveHouse); W.exitShown = false; fade(false);
+  setTimeout(() => { if (W.phase === 'house') hint(''); }, 8000);
 }
 function setAct(label, fn) { const b = $$('wact'); if (!label) { b.style.display = 'none'; b.onclick = null; return; } b.textContent = label; b.style.display = 'block'; b.onclick = fn; }
 function moveFace(o, vx, vz, dt) {
   const want = Math.atan2(vx, vz); let d = want - o.h; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; o.h += d * Math.min(1, dt * 10);
 }
 function houseUpdate(dt) {
-  const s = stick(), mag = Math.min(1, Math.hypot(s[0], s[1])), hp = W.hp;
+  const G = W.hg, s = stick(), mag = Math.min(1, Math.hypot(s[0], s[1])), hp = W.hp;
   const run = mag > 0.95, spd = mag > 0.12 ? (run ? 3.2 : 1.7) * mag : 0;
   if (spd > 0) {
-    const l = Math.hypot(s[0], s[1]), vx = s[0] / l, vz = s[1] / l;
-    const nx = clamp(hp.x + vx * spd * dt, HOUSE.x0, HOUSE.x1), nz = clamp(hp.z + vz * spd * dt, HOUSE.z0, HOUSE.z1);
-    hp.x = nx; hp.z = nz; moveFace(hp, vx, vz, dt);
+    const cy = W.cy, fx = -Math.sin(cy), fz = -Math.cos(cy), rx = Math.cos(cy), rz = -Math.sin(cy);
+    let vx = fx * -s[1] + rx * s[0], vz = fz * -s[1] + rz * s[0]; const l = Math.hypot(vx, vz) || 1; vx /= l; vz /= l;
+    const nx = hp.x + vx * spd * dt, nz = hp.z + vz * spd * dt;
+    if (G.stand(nx, nz)) { hp.x = nx; hp.z = nz; } else if (G.stand(nx, hp.z)) hp.x = nx; else if (G.stand(hp.x, nz)) hp.z = nz;
+    moveFace(hp, vx, vz, dt);
   }
-  W.player.position.set(hp.x, HOUSE.y, hp.z); W.player.rotation.y = hp.h;
+  W.player.position.set(hp.x, 0, hp.z); W.player.rotation.y = hp.h;
   setClip(spd > 0, spd / 1.7 * 0.9); if (W.mixer) W.mixer.update(dt);
-  const tx = hp.x * 0.75 + 0.3, tz = Math.min(hp.z + 2.3, 3.3);
-  W.cam.position.x += (tx - W.cam.position.x) * Math.min(1, dt * 4); W.cam.position.z += (tz - W.cam.position.z) * Math.min(1, dt * 4); W.cam.position.y = 1.75;
-  W.cam.lookAt(hp.x, 1.15, hp.z - 0.4);
-  const near = hp.z > HOUSE.exitZ;
-  if (near && !W.exitShown) { W.exitShown = true; setAct('GO OUTSIDE', leaveHouse); } else if (!near && W.exitShown) { W.exitShown = false; setAct(null); }
+  const k = Math.min(1, dt * 14);
+  if (W.fp) {
+    W.player.visible = false; const cy = W.cy, pit = W.cp - 0.22;
+    W.cam.position.set(hp.x, 1.6, hp.z); W.cam.lookAt(hp.x - Math.sin(cy) * 3, 1.6 - Math.sin(pit) * 3, hp.z - Math.cos(cy) * 3);
+  } else {
+    const cp = clamp(W.cp, -0.3, 0.8), ch = Math.cos(cp), sh = Math.sin(cp), DIST = 2.4;
+    let d = DIST; for (let q = 0.2; q <= DIST; q += 0.1) { if (G.wall(hp.x + Math.sin(W.cy) * ch * q, hp.z + Math.cos(W.cy) * ch * q)) { d = Math.max(0.25, q - 0.3); break; } }
+    const ty = clamp(1.38 + sh * d, 0.3, G.ceilY);
+    W.cam.position.x += (hp.x + Math.sin(W.cy) * ch * d - W.cam.position.x) * k; W.cam.position.z += (hp.z + Math.cos(W.cy) * ch * d - W.cam.position.z) * k; W.cam.position.y += (ty - W.cam.position.y) * k;
+    W.player.visible = d > 0.9; W.cam.lookAt(hp.x, 1.25, hp.z);
+  }
 }
 function leaveHouse() { if (W.phase !== 'house') return; W.phase = 'trans'; setAct(null); padOn(false); fade(true); setTimeout(startBike, 700); }
 
 /* ---------------- phase 3: bike ---------------- */
 function startBike() {
   const n = W.nav, hx = W.houseXZ[0], hz = W.houseXZ[1];
-  W.phase = 'bike'; W.scene = W.cityScene; W.cam.fov = 62; W.cam.updateProjectionMatrix();
+  W.phase = 'bike'; W.scene = W.cityScene; W.cam.fov = 62; W.cam.near = 0.4; W.cam.far = Math.max(5000, W.big * 8); W.cam.updateProjectionMatrix();
+  W.cityScene.fog.near = W.big * 0.6; W.cityScene.fog.far = W.big * 2.2; if (W.clouds) W.clouds.visible = false; W.player.visible = true; $$('wview').style.display = 'block';
   // face the most open direction (ties broken towards the stadium)
   let bh = Math.PI / 2, bs = -1;
   for (let k = 0; k < 24; k++) {
@@ -310,9 +538,14 @@ function bikeUpdate(dt) {
   b.lean += (-steer * clamp(b.v / maxV, 0, 1) * 0.35 - b.lean) * Math.min(1, dt * 6);
   W.bike.position.set(b.x, b.y, b.z); W.bike.rotation.set(0, b.h, b.lean, 'YXZ');
   W.bike.fw.rotation.x += b.v * dt / 0.34; W.bike.rw.rotation.x += b.v * dt / 0.34;
-  const cx = b.x - fx * 7, cz = b.z - fz * 7, cy = b.y + 3.3;
-  const k = Math.min(1, dt * 4); W.cam.position.x += (cx - W.cam.position.x) * k; W.cam.position.z += (cz - W.cam.position.z) * k; W.cam.position.y += (cy - W.cam.position.y) * k;
-  W.cam.lookAt(b.x + fx * 4, b.y + 1.2, b.z + fz * 4);
+  if (W.fp) {
+    W.player.visible = false; W.cam.position.set(b.x + fx * 0.25, b.y + 1.55, b.z + fz * 0.25); W.cam.lookAt(b.x + fx * 8, b.y + 1.35, b.z + fz * 8);
+  } else {
+    W.player.visible = true;
+    const cx = b.x - fx * 7, cz = b.z - fz * 7, cy = b.y + 3.3, k = Math.min(1, dt * 4);
+    W.cam.position.x += (cx - W.cam.position.x) * k; W.cam.position.z += (cz - W.cam.position.z) * k; W.cam.position.y += (cy - W.cam.position.y) * k;
+    W.cam.lookAt(b.x + fx * 4, b.y + 1.2, b.z + fz * 4);
+  }
   const dx = W.plaza[0] - b.x, dz = W.plaza[1] - b.z, dist = Math.hypot(dx, dz);
   const rel = Math.atan2(dx, dz) - b.h; $$('warrg').style.transform = 'rotate(' + (-90 - rel * 180 / Math.PI) + 'deg)';
   $$('wdist').textContent = 'STADIUM ' + Math.round(dist) + ' M';
@@ -332,6 +565,7 @@ function frame() {
   const now = performance.now(), dt = Math.min(0.05, (now - W.t) / 1000); W.t = now;
   const el = R.domElement, a = el.clientWidth / Math.max(1, el.clientHeight);
   if (Math.abs(W.cam.aspect - a) > 1e-3) { W.cam.aspect = a; W.cam.updateProjectionMatrix(); }
+  if (W.dome && W.scene === W.cityScene) W.dome.position.copy(W.cam.position);
   if (W.phase === 'fly') flyUpdate(dt); else if (W.phase === 'house') houseUpdate(dt); else if (W.phase === 'bike') bikeUpdate(dt);
 }
 })();
