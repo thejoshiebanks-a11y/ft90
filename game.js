@@ -186,7 +186,85 @@ const l=new T.Group();l.position.set(0,0,sd*.12);hip.add(l);A(gCyl(.11,.085,.5,'
 const f=new T.Group();f.position.y=-.46;k.add(f);A(gBox(.3,.1,.15),boot,f,.07,-.04,0);A(gSph(.075,6,5),boot,f,.2,-.045,0);legs.push(l);knees.push(k);ft.push(f)});
 const bl=new T.Mesh(new T.CircleGeometry(.55,12),new T.MeshBasicMaterial({color:0,transparent:true,opacity:.28}));bl.rotation.x=-Math.PI/2;bl.position.y=.03;gp.add(bl);
 cs.forEach(e=>e.castShadow=true);gp.ph0=Math.random()*6;gp.J={hip,torso,hd,arms,elb,legs,knees,ft};
-gp.anim=(v,ph,st)=>{const now=performance.now()/1000,k=Math.min(v/8,1),mv=Math.min(1,v/1.2),s=Math.sin(ph),c=Math.cos(ph);
+/* ---- goalkeeper animation: stance, side-shuffle, dives, catches, punches, claims, throws, get-up ---- */
+const gkA=(v,ph,st)=>{
+const gc=(x,a,b)=>Math.max(a,Math.min(b,x)),sm=x=>{x=gc(x,0,1);return x*x*(3-2*x)},eo=x=>{x=gc(x,0,1);return 1-(1-x)*(1-x)},lp=(a,b,t)=>a+(b-a)*t;
+const tn=sim.time,gs=st.gst||'set',age=tn-st.gt0,dur=Math.max(.05,st.gdur||.5),q=gc(age/dur,0,1),bb=sim.ball,
+ fx=Math.cos(st.a),fz=Math.sin(st.a),vf=st.vx*fx+st.vz*fz,vl=-st.vx*fz+st.vz*fx,sp=Math.hypot(st.vx,st.vz),hw=1.02*gp.scale.x,ry=gp.rotation.y,
+ lxw=Math.sin(ry),lzw=Math.cos(ry),fxw=Math.cos(ry),fzw=-Math.sin(ry),holding=sim.owner===st.id&&st.gball;
+const NEU=()=>{hip.rotation.set(0,0,0);hip.position.y=1.02;torso.rotation.set(0,0,0);hd.rotation.set(0,0,0);for(let i=0;i<2;i++){legs[i].rotation.set(0,0,0);knees[i].rotation.z=0;ft[i].rotation.z=0;arms[i].rotation.set(0,0,0);elb[i].rotation.z=0}gp.rotation.x=0;gp.rotation.z=0;gp.position.y=0;bl.visible=true};
+/* both legs: thigh forward a, knee bend b, foot kept flat; returns hip height */
+const squat=(a,b,side)=>{for(let i=0;i<2;i++){legs[i].rotation.z=a;knees[i].rotation.z=-b;ft[i].rotation.z=b-a}
+ const s=side||0;legs[0].rotation.x=s;legs[1].rotation.x=-s;return .5*Math.cos(a)*Math.cos(s)+.46*Math.cos(a-b)*Math.cos(s)+.07};
+/* roll/pitch the whole body about the hip so the hip stays over the keeper at height H */
+const place=(roll,pitch,H)=>{gp.rotation.x=roll;gp.rotation.z=pitch;const cr=Math.cos(roll),cp=Math.cos(pitch);gp.position.y=H-hw*cr*cp;
+ const sr=Math.sin(roll)*hw*cp,spc=Math.sin(pitch)*hw;gp.position.x+=-sr*lxw+spc*fxw;gp.position.z+=-sr*lzw+spc*fzw;bl.visible=Math.abs(roll)<.35&&Math.abs(pitch)<.35};
+const look=()=>{let rel=Math.atan2(bb.z-st.z,bb.x-st.x)-st.a;rel=((rel+Math.PI*3)%(Math.PI*2))-Math.PI;hd.rotation.y=-gc(rel,-1.1,1.1)*.6};
+const cradle=(k)=>{/* arms hugging the ball to the chest */arms[0].rotation.set(lp(.35,.22,k),0,lp(1.5,1.02,k));arms[1].rotation.set(-lp(.35,.22,k),0,lp(1.5,1.02,k));elb[0].rotation.z=elb[1].rotation.z=lp(.2,1.55,k)};
+const sg=st.dlat>=0?1:-1;
+/* ---------- on the ground: dive, lying, getting up ---------- */
+if(gs==='dive'||gs==='down'||gs==='rise'){NEU();
+ const smo=!!st.gsm,dh=st.dh||0,fl=Math.max(.2,st.dvT||.4),rm=smo?1.4:(dh===2?1.22:dh===1?1.38:1.5);let roll=0,H=1,reach=0,crouch=0,lying=false;
+ if(gs==='dive'){const qf=age/fl;
+  if(qf<.14){crouch=sm(qf/.14);H=.98-.12*crouch}
+  else if(qf<=1){const u=(qf-.14)/.86;roll=rm*eo(Math.min(1,u*1.15));H=lp(.88,.3,sm(u))+[0,.2,.42][dh]*Math.sin(Math.PI*u)*(smo?.6:1);reach=eo(u*1.3)}
+  else{const u=gc((age-fl)/.22,0,1);roll=lp(rm,1.5,sm(u));H=.3-.05*sm(u)+.03*Math.sin(Math.PI*u);reach=1;lying=true}}
+ else if(gs==='down'){roll=1.5;H=.25+Math.sin(tn*6)*.004;reach=holding?0:.85;lying=true}
+ else{roll=1.5*(1-sm(q*1.15));H=.25+.77*sm(q);crouch=1-q;lying=q<.5}
+ if(gs==='rise'){const c=squat(lp(.5,.05,q),lp(1.0,.05,q),0);hip.position.y=1.02;torso.rotation.z=-.45*Math.sin(Math.PI*q);
+  arms[0].rotation.set(.2,0,lp(1.2,0,q));arms[1].rotation.set(-.2,0,lp(1.2,0,q));elb[0].rotation.z=elb[1].rotation.z=lp(1.2,.2,q);if(holding)cradle(1)}
+ else if(crouch>0&&roll===0){squat(.35+.2*crouch,.7+.3*crouch,.12);hip.position.y=1.02;torso.rotation.z=-.25;arms[0].rotation.set(.5,0,1.0);arms[1].rotation.set(-.5,0,1.0);elb[0].rotation.z=elb[1].rotation.z=.8}
+ else{
+  const az=lp(1.0,2.85,reach);
+  if(holding&&(lying||gs==='down')){cradle(1);const k=sm((age-fl)/.15);cradle(gs==='dive'?k:1)}
+  else{arms[0].rotation.set(-.1*reach,0,az);arms[1].rotation.set(.1*reach,0,az);elb[0].rotation.z=elb[1].rotation.z=.12*(1-reach)}
+  legs[0].rotation.z=.2;knees[0].rotation.z=-.25;legs[1].rotation.z=-.12;knees[1].rotation.z=-.6;ft[0].rotation.z=.3;ft[1].rotation.z=.4;
+  torso.rotation.z=smo?-.05:.1;hd.rotation.z=.3;hd.rotation.x=-sg*.25;if(smo){legs[0].rotation.z=-.1;legs[1].rotation.z=-.2;knees[0].rotation.z=-.5;knees[1].rotation.z=-.7}}
+ if(gs==='rise'&&roll<.02)hip.position.y=1.02;
+ if(roll>0||smo&&roll>0)place(smo?0:sg*roll,smo?-roll:0,H);else if(gs==='rise')place(0,0,H);
+ if(gs==='dive'&&roll===0&&crouch>0)gp.position.y=0;
+ if(!(roll>.5))look();return}
+/* ---------- other ball-handling actions ---------- */
+if(gs==='catch'||gs==='claim'||gs==='punch'||gs==='parry'||gs==='collect'||gs==='throw'){
+ NEU();
+ if(gs==='catch'){const c=squat(.3,.55,.1);hip.position.y=c-.02;torso.rotation.z=-.2+.1*q;cradle(sm(q*2.2));look()}
+ else if(gs==='claim'){const j=Math.sin(Math.PI*gc(q*1.05,0,1));gp.position.y=.62*j;squat(lp(.1,.05,q),0,.05);legs[1].rotation.z=.9*j;knees[1].rotation.z=-1.25*j;ft[1].rotation.z=.5*j;legs[0].rotation.z=-.1*j;
+  if(q<.62){arms[0].rotation.set(.1,0,2.85);arms[1].rotation.set(-.1,0,2.85);elb[0].rotation.z=elb[1].rotation.z=.1;torso.rotation.z=.1}else{cradle(sm((q-.62)/.3));torso.rotation.z=-.12}look()}
+ else if(gs==='punch'){const j=Math.sin(Math.PI*gc(q*1.1,0,1));gp.position.y=.5*j;squat(.1,0,.05);legs[1].rotation.z=1.0*j;knees[1].rotation.z=-1.3*j;legs[0].rotation.z=-.15*j;
+  const ex=q<.35?sm(q/.35):1-sm((q-.35)/.5)*.7;arms[0].rotation.set(.18,0,lp(.8,2.5,ex));arms[1].rotation.set(-.18,0,lp(.8,2.5,ex));elb[0].rotation.z=elb[1].rotation.z=lp(1.7,.55,ex);torso.rotation.z=-.1+.25*ex;torso.rotation.x=sg*.08;look()}
+ else if(gs==='parry'){const ex=q<.3?sm(q/.3):1-sm((q-.3)/.6)*.8,hy=squat(.3,.6,.15);hip.position.y=hy-.02;torso.rotation.x=sg*.2*ex;torso.rotation.z=-.15;
+  const a=sg>0?1:0,b=1-a,sa=a?-1:1,sb=-sa;arms[a].rotation.set(sa*lp(.5,1.5,ex),0,lp(.9,.45,ex));elb[a].rotation.z=lp(1.0,.15,ex);arms[b].rotation.set(sb*.55,0,.8);elb[b].rotation.z=.9;look()}
+ else if(gs==='collect'){const k=Math.sin(Math.PI*gc(q,0,1));const c=squat(.65+.2*k,1.0+.4*k,.14);hip.position.y=c-.02;torso.rotation.z=-.5*k-.1;arms[0].rotation.set(.18,0,lp(1.1,1.5,k));arms[1].rotation.set(-.18,0,lp(1.1,1.5,k));elb[0].rotation.z=elb[1].rotation.z=.4;if(holding&&q>.5)cradle(sm((q-.5)*2));look()}
+ else if(gs==='throw'){const rl=st.gthk===1,c=squat(.3,.5,.1);hip.position.y=c-.02;
+  if(rl){/* underarm roll */const sw=sm(q/.6);torso.rotation.z=-.35-.1*Math.sin(Math.PI*gc(q/.6,0,1));arms[1].rotation.set(0,0,lp(-.8,1.2,sw));elb[1].rotation.z=.2;arms[0].rotation.set(.5,0,.5);legs[0].rotation.z=.55*sw;legs[1].rotation.z=.1}
+  else{const wind=q<.3?sm(q/.3):1,rel=q<.3?0:sm((q-.3)/.3);torso.rotation.y=lp(0,-.5,wind)+lp(0,.8,rel);torso.rotation.z=lp(0,.08,wind)-.2*rel;
+   arms[1].rotation.set(-.2,0,lp(1.0,-1.3,wind)+lp(0,3.5,rel));elb[1].rotation.z=lp(.8,1.5,wind)-1.3*rel;arms[0].rotation.set(.4,0,lp(1.0,1.6,wind));elb[0].rotation.z=.4;legs[0].rotation.z=.2+.5*rel;legs[1].rotation.z=.05}look()}
+ return}
+/* ---------- on his feet ---------- */
+const tw=performance.now()/1000;
+/* running forward at pace: keep the normal run cycle */
+if(!holding&&vf>3.4&&vf>Math.abs(vl)*1.6&&st.gpose!=='big'){return}
+if(sim.time-st.kt<.45){/* goal kick / clearance: base kick swing is already applied */arms[1].rotation.z=Math.max(arms[1].rotation.z,-.2);return}
+NEU();
+if(st.gjump>0){const jq=gc(1-st.gjump/.5,0,1),j=Math.sin(Math.PI*jq);gp.position.y=.62*j;squat(.2,.2,.1);legs[1].rotation.z=.7*j;knees[1].rotation.z=-1.1*j;arms[0].rotation.set(.12,0,2.85);arms[1].rotation.set(-.12,0,2.85);torso.rotation.z=-.04;look();return}
+if(holding){/* carrying the ball: tall, ball cradled at the chest */const c=squat(.14,.22,.06);hip.position.y=1.0;torso.rotation.z=-.08;cradle(1);hd.rotation.y=Math.sin(tw*.6+gp.ph0)*.25;
+ if(sp>.8){const s=Math.sin(ph);legs[0].rotation.z=.14+s*.5;legs[1].rotation.z=.14-s*.5;knees[0].rotation.z=-.22-Math.max(0,-s)*.6;knees[1].rotation.z=-.22-Math.max(0,s)*.6}return}
+if(st.gpose==='big'){/* narrowing the angle: spread wide */squat(.4,.75,.3);hip.position.y=.9;torso.rotation.z=-.3;arms[0].rotation.set(1.25,0,.55);arms[1].rotation.set(-1.25,0,.55);elb[0].rotation.z=elb[1].rotation.z=.3;look();return}
+const shout=tn-st.gsay<2.4&&st.gsk==='shout'&&sp<1.2;
+if(sp>.7&&Math.abs(vl)>Math.abs(vf)*.8){/* side shuffle, square to the ball */
+ const sd=vl>0?1:-1,u=Math.sin(ph*1.7),a=sd>0?1:0,b=1-a;squat(.42,.8,0);hip.position.y=.95;
+ const lead=.14+.26*Math.max(0,u),trail=.1+.22*Math.max(0,-u);
+ if(sd>0){legs[1].rotation.x=-lead;legs[0].rotation.x=trail}else{legs[0].rotation.x=lead;legs[1].rotation.x=-trail}
+ torso.rotation.z=-.16;torso.rotation.x=sd*.09;
+ arms[0].rotation.set(.75,0,.9);arms[1].rotation.set(-.75,0,.9);elb[0].rotation.z=elb[1].rotation.z=.9;hip.position.y+=Math.abs(u)*.02;look();return}
+if(sp>.7&&vf<-1.2){/* back-pedal */const s=Math.sin(ph*1.5);squat(.34,.7,.06);hip.position.y=.96;legs[0].rotation.z+=s*.32;legs[1].rotation.z-=s*.32;torso.rotation.z=-.1;
+ arms[0].rotation.set(.6,0,.8);arms[1].rotation.set(-.6,0,.8);elb[0].rotation.z=elb[1].rotation.z=.9;look();return}
+/* ready stance */
+const bob=Math.sin(tw*4.2+gp.ph0)*.012,hy=squat(.4,.78,.12);hip.position.y=hy-.02+bob;torso.rotation.z=-.22;
+arms[0].rotation.set(.6,0,.85);arms[1].rotation.set(-.6,0,.85);elb[0].rotation.z=elb[1].rotation.z=.85;
+if(shout){const w=Math.sin(tw*7);arms[1].rotation.set(-.15,0,2.35+.14*w);elb[1].rotation.z=.25;arms[0].rotation.set(1.1,0,.2);elb[0].rotation.z=.4;torso.rotation.y=.3;hd.rotation.y=-.5;hip.position.y=1.0;legs[0].rotation.z=.15;legs[1].rotation.z=.15;knees[0].rotation.z=knees[1].rotation.z=-.2;ft[0].rotation.z=ft[1].rotation.z=.35;return}
+look()};
+const baseAnim=(v,ph,st)=>{const now=performance.now()/1000,k=Math.min(v/8,1),mv=Math.min(1,v/1.2),s=Math.sin(ph),c=Math.cos(ph);
 gp.rotation.z=0;gp.position.y=0;hip.rotation.set(0,s*.2*mv*(.4+.6*k),0);torso.rotation.set(0,-s*.3*mv*(.4+.6*k),-.3*k-.04*mv);hd.rotation.set(0,0,.25*k);hip.position.y=1.02+Math.abs(s)*.06*mv*(.4+.6*k);
 const sw=(.5+.5*k)*mv,kb=(.5+.9*k)*mv;legs[0].rotation.set(0,0,s*sw);legs[1].rotation.set(0,0,-s*sw);knees[0].rotation.z=-Math.max(0,c)*kb-.1*mv;knees[1].rotation.z=-Math.max(0,-c)*kb-.1*mv;ft[0].rotation.z=Math.max(0,s)*.4*mv;ft[1].rotation.z=Math.max(0,-s)*.4*mv;
 arms[0].rotation.set(0,0,-s*(.55+.5*k)*mv);arms[1].rotation.set(0,0,s*(.55+.5*k)*mv);elb[0].rotation.z=elb[1].rotation.z=(.3+.9*k)*mv+.12;
@@ -209,6 +287,7 @@ if(typeof sim!=='undefined'&&!st.gk){const tn=sim.time;
   else if(st.sk==='burst'){torso.rotation.z=-.4*w;arms[0].rotation.z=-1.1*w;arms[1].rotation.z=1.1*w}
   else if(st.sk==='roulette'){hip.position.y-=.06*w;legs[1].rotation.z=.7*w;knees[1].rotation.z=-.5*w}}
  if(st.hdt>0&&tn-st.hdt<.5){const q=(tn-st.hdt)/.5,w=Math.sin(Math.min(1,q)*Math.PI);torso.rotation.z=-.55*w;hd.rotation.z=-.3*w;arms[0].rotation.z=-.9*w;arms[1].rotation.z=-.9*w}}}};
+gp.anim=(v,ph,st)=>{baseAnim(v,ph,st);if(st&&st.gk&&typeof sim!=='undefined'&&sim.p[st.id]===st)gkA(v,ph,st)};
 gp.pose=(type,t)=>{gp.anim(0,0);const w=Math.sin(t*1.6+gp.ph0);
 if(type==='sit'||type==='tie'){hip.position.y=.64;legs[0].rotation.set(0,0,1.5);legs[1].rotation.set(0,0,1.5);knees[0].rotation.z=knees[1].rotation.z=-1.5;arms[0].rotation.z=arms[1].rotation.z=.6;elb[0].rotation.z=elb[1].rotation.z=.9;torso.rotation.z=-.05+w*.015;
 if(type==='tie'){torso.rotation.z=-.95+w*.03;hd.rotation.z=.5;arms[0].rotation.z=arms[1].rotation.z=1.1;elb[0].rotation.z=elb[1].rotation.z=.4}}
@@ -331,7 +410,7 @@ function sync(dt){sim.p.forEach((s,i)=>{const p=P[i],v=Math.hypot(s.vx,s.vz);p.p
 if(p.va===undefined||dt<=0)p.va=s.a;else{const pa=p.va;p.va=turnA(p.va,s.a,Math.min(1,dt*(v>5?9:13)));p.yr=((p.va-pa+Math.PI*3)%(Math.PI*2)-Math.PI)/Math.max(dt,.001)}
 p.m.position.set(s.x,0,s.z);p.m.rotation.y=-p.va+((s.sk==='roulette'&&sim.time-s.skt<.6)?((sim.time-s.skt)/.6)*Math.PI*2:0);
 const lean=s.dv>0?s.dd*(Math.cos(s.a)>0?1:-1)*Math.min(1.35,(1-s.dv/.7)*3):Math.max(-.32,Math.min(.32,(p.yr||0)*v*.011));
-p.lean=(p.lean||0)+(lean-(p.lean||0))*Math.min(1,dt*10);p.m.rotation.x=s.dv>0?lean:p.lean;
+if(s.gk){p.lean=0;p.m.rotation.x=0}else{p.lean=(p.lean||0)+(lean-(p.lean||0))*Math.min(1,dt*10);p.m.rotation.x=s.dv>0?lean:p.lean}
 p.m.anim(v,p.ph,s);
 const thr=sim.rs&&sim.rs.kind==='throw'&&sim.rs.taker===i&&sim.owner===i;
 if(thr){p.m.J.arms[0].rotation.set(0,0,2.9);p.m.J.arms[1].rotation.set(0,0,2.9);p.m.J.elb[0].rotation.z=p.m.J.elb[1].rotation.z=.2;p.m.J.torso.rotation.z=.18;p.thrown=true}else p.thrown=false});
@@ -388,6 +467,8 @@ if(e.pen){banner('Penalty!');setTimeout(()=>banner(''),1500);txt=e.t===1?'Penalt
 say(txt,2400);st.freeze=e.card?1.9:(e.pen?1.7:.7)}
 else if(e.type==='skill'){if(e.id===sim.user)say({stepover:'Step-over',roulette:'Roulette',dragback:'Drag-back',burst:'Knock-on burst'}[e.sk]||'Skill',900)}
 else if(e.type==='perfect'){say('Perfect pass!',900)}
+else if(e.type==='save'){if(e.shot&&(e.great||e.kind==='tip'||e.kind==='parry'||e.kind==='catch'&&e.sp>15))say(e.great?'Great save!':e.kind==='tip'?'Tipped away!':'Save!',1100)}
+else if(e.type==='wood'){if(e.sp>12)say(e.kind==='bar'?'Off the bar!':'Off the post!',1100)}
 else if(e.type==='offside'){say('Offside · '+tn(e.t)+' #'+nm(e.id),1800);st.freeze=.8}
 else if(e.type==='restart'&&RL[e.kind])say(RL[e.kind]+' · '+tn(e.t),1500)}
 /* ---------- radar ---------- */
