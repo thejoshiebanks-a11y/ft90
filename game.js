@@ -32,6 +32,7 @@ for(let z=-3.5;z<=3.51;z+=.5){const v=new T.Mesh(new T.BoxGeometry(3.08,.025,.02
 goalMesh(1);goalMesh(-1);
 [[-55,-36],[55,-36],[-55,36],[55,36]].forEach(([x,z])=>{const p=new T.Mesh(new T.CylinderGeometry(.05,.05,1.6,5),new T.MeshBasicMaterial({color:0xffffff}));p.position.set(x,.8,z);S.add(p);const f=new T.Mesh(new T.PlaneGeometry(.6,.4),new T.MeshBasicMaterial({color:0xf1c40f,side:T.DoubleSide}));f.position.set(x+.3,1.4,z);S.add(f)});
 /* ---------- stadium: solid two-tier banks, sections, concourse, gates, roofs ---------- */
+const __bowl0=S.children.length;
 let ca=0;const crowdA=new T.Group(),crowdB=new T.Group();S.add(crowdA,crowdB);
 const conc=new T.MeshStandardMaterial({color:0x4a505e,roughness:.95}),concD=new T.MeshStandardMaterial({color:0x2c303a,roughness:1}),seatRec=[];
 const KT=[0xc0392b,0xecf0f1,0x2980b9,0xf1c40f,0x7f8c8d,0x27ae60,0x8e44ad,0x1c1c22,0xe67e22,0xd8342f],SKT=[0xf1c6a0,0xd9a77a,0xb07850,0x7a4a2a,0x4a2c1a];
@@ -103,6 +104,7 @@ const housing=new T.Group();S.add(housing);
 {const blk=new T.Mesh(new T.BoxGeometry(9.5,11.1,17.9),concD);blk.position.set(0,9.45,-(42+8.95));housing.add(blk);
 const sg=new T.Mesh(new T.PlaneGeometry(8.6,1.5),new T.MeshBasicMaterial({map:tex(512,90,g=>{g.fillStyle='#0b1b3a';g.fillRect(0,0,512,90);g.fillStyle='#fff';g.font='bold 54px Barlow Condensed, sans-serif';g.textAlign='center';g.fillText("PLAYERS' TUNNEL",256,64)})}));sg.position.set(0,8.2,-41.9);housing.add(sg)}
 /* ---------- exterior arrival plaza: FT90's Bernabeu-inspired matchday approach ---------- */
+window.FT90_OLD_BOWL=S.children.slice(__bowl0);
 const ext=new T.Group();S.add(ext);
 const facade=new T.MeshStandardMaterial({color:0x8a909a,metalness:.68,roughness:.38});
 const facadeDark=new T.MeshStandardMaterial({color:0x202733,metalness:.35,roughness:.62});
