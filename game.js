@@ -144,7 +144,7 @@ const front=new T.Mesh(new T.BoxGeometry(12.4,2.1,.08),glass);front.position.set
 [-6.2,6.2].forEach(sx=>{const post=new T.Mesh(new T.BoxGeometry(.12,2.35,3.2),frame);post.position.set(sx,1.15,0);d.add(post)});
 const back=new T.Mesh(new T.BoxGeometry(12.4,1.9,.08),glass);back.position.set(0,1.05,1.55);d.add(back);
 for(let i=0;i<8;i++){const sx=-5.1+i*1.46;const base=new T.Mesh(new T.BoxGeometry(1.12,.16,.86),seatmat);base.position.set(sx,.68,.42);d.add(base);const backrest=new T.Mesh(new T.BoxGeometry(1.12,.7,.12),seatmat);backrest.position.set(sx,1.05,.79);d.add(backrest);const arm1=new T.Mesh(new T.BoxGeometry(.08,.32,.65),frame);arm1.position.set(sx-.52,.86,.42);d.add(arm1);const arm2=arm1.clone();arm2.position.x=sx+.52;d.add(arm2)}
-const fascia=new T.Mesh(new T.BoxGeometry(12.7,.22,.12),new T.MeshBasicMaterial({color:team?0xe74c3c:0x2a7de1}));fascia.position.set(0,2.2,-1.62);d.add(fascia);d.position.set(x,0,40.6);S.add(d);
+const fascia=new T.Mesh(new T.BoxGeometry(12.7,.22,.12),new T.MeshBasicMaterial({color:team?0xe74c3c:0x2a7de1}));fascia.position.set(0,2.2,-1.62);d.add(fascia);d.position.set(x,0,40.6);S.add(d);(window.FT90_DUG=window.FT90_DUG||[]).push(d);
 dugoutTeams.push([x,team]);
 });
 /* ---------- players: shared geometry, tapered kit, face, hair styles, procedural gait ---------- */
@@ -297,8 +297,8 @@ else if(type==='stretch'){arms[0].rotation.z=arms[1].rotation.z=2.7+w*.15;torso.
 else if(type==='talk'){arms[1].rotation.z=.9+Math.max(0,w)*.5;elb[1].rotation.z=1.4;torso.rotation.y=w*.1}};
 gp.rotation.order='YXZ';gp.scale.setScalar(HI?.85:1.02);sc.add(gp);gp.anim(0,0);return gp}
 // Populate the completed dugouts only after the shared human rig and its materials exist.
-dugoutTeams.forEach(([x,team])=>{for(let i=0;i<6;i++){const person=mk(team?0xd8342f:0x2a7de1,S,{shorts:0x171a20,skin:(i+team)%5,hair:(i+2)%5,hs:i%4,boot:0x111111});person.position.set(x-4.9+i*1.55,0,40.25);person.rotation.y=team?Math.PI:0;dugoutPeople.push({m:person,pose:i%3===0?'talk':'sit',phase:i*.9+team})}
-const coach=mk(0x20242e,S,{shorts:0x20242e,sock:0x20242e,skin:team?3:1,hair:2,hs:2,boot:0x111111});coach.position.set(x+(team?-7.2:7.2),0,37.9);coach.rotation.y=team?Math.PI:0;dugoutPeople.push({m:coach,pose:'talk',phase:team+2});});
+dugoutTeams.forEach(([x,team])=>{for(let i=0;i<6;i++){const person=mk(team?0xd8342f:0x2a7de1,S,{shorts:0x171a20,skin:(i+team)%5,hair:(i+2)%5,hs:i%4,boot:0x111111});person.position.set(-(x-4.9+i*1.55),0,-40.25);person.rotation.y=team?0:Math.PI;dugoutPeople.push({m:person,pose:i%3===0?'talk':'sit',phase:i*.9+team})}
+const coach=mk(0x20242e,S,{shorts:0x20242e,sock:0x20242e,skin:team?3:1,hair:2,hs:2,boot:0x111111});coach.position.set(-(x+(team?-7.2:7.2)),0,-37.9);coach.rotation.y=team?0:Math.PI;dugoutPeople.push({m:coach,pose:'talk',phase:team+2});});
 // Front-row supporters are individually rigged for small cheers and conversations; the upper tiers remain instanced for mobile performance.
 const bowlPeople=[];
 for(let side of [-1,1])for(let i=0;i<6;i++){const f=mk(pick(side<0?BLU:RED),S,{shorts:pick([0x171a20,0x303744,0xf2f2f2]),skin:i%5,hair:(i+2)%5,hs:i%5,boot:0x171717});f.position.set(-29+i*11,.92,side*43.2);f.rotation.y=side<0?Math.PI:0;bowlPeople.push({m:f,pose:i%3===0?'stretch':'talk',phase:i*.8+side})}
@@ -399,7 +399,7 @@ for(const [x,z,c] of [[-22,-92,0x246a86],[22,-88,0x8b4b2d]]){const kiosk=new T.G
 // Ball kids in high-visibility bibs near each touchline/end-zone corner.
 [[-52,-31],[52,-31],[-52,31],[52,31],[-34,-39],[34,-39]].forEach(([x,z],i)=>{const kid=mk(0xf1c40f,S,{shorts:0x101820,skin:i%5,hair:i%4,hs:i%3,boot:0x111111});kid.position.set(x,0,z);kid.rotation.y=Math.atan2(-x,-z);pitchCrew.push({m:kid,pose:'sit',phase:i*1.4})});
 // Coaches and substitutes occupy both dugouts instead of leaving the technical areas empty.
-[-1,1].forEach((side,team)=>{for(let i=0;i<5;i++){const person=mk(team?0xd8342f:0x2a7de1,S,{shorts:0x171a20,skin:(i+team)%5,hair:(i+2)%5,hs:i%4,boot:0x111111});person.position.set(side*15+(i-2)*1.65,0,40.1);person.rotation.y=side>0?Math.PI:0;pitchCrew.push({m:person,pose:i%2?'talk':'sit',phase:i+team*2})}});
+[-1,1].forEach((side,team)=>{for(let i=0;i<5;i++){const person=mk(team?0xd8342f:0x2a7de1,S,{shorts:0x171a20,skin:(i+team)%5,hair:(i+2)%5,hs:i%4,boot:0x111111});person.position.set(side*15+(i-2)*1.65,0,-40.1);person.rotation.y=side>0?0:Math.PI;pitchCrew.push({m:person,pose:i%2?'talk':'sit',phase:i+team*2})}});
 
 let mode='play',tt=0,cm=3,sprint=false,camYaw=0,chg=0,chgK=null,chgT=0;const FP={yaw:0,pit:-.08},ORB={yaw:0,pit:0,idle:0};
 const CM=[[34,92,0],[11,20,14],[43,112,0]],CN=['default','player','stadium','3rd person','1st person'];
