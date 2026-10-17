@@ -59,6 +59,22 @@ for(const o of S.p){if(o.t===p.t||o.off)continue;const t=cl(((o.x-p.x)*ax+(o.z-p
 function blocked(S,p,tx,tz){return laneClear(S,p,tx,tz)<1.6}
 function offList(S,p){const rs=S.rs;if(rs&&(rs.kind==='throw'||rs.kind==='goalkick'||rs.kind==='corner'))return null;const dir=p.t?-1:1,bx=S.ball.x*dir,ds=S.p.filter(q=>q.t!==p.t&&!q.off).map(q=>q.x*dir).sort((a,c)=>c-a),ln=Math.max(ds[1]===undefined?0:ds[1],bx,0),ids=[];
 for(const q of S.p)if(q.t===p.t&&q!==p&&!q.gk&&!q.off&&q.x*dir>ln+.35)ids.push(q.id);return ids.length?{t:p.t,ids,at:S.time}:null}
+/* PRESS: tap it and your player charges the carrier on his own (leading his run, finishing goal-side and shadowing him), or runs onto a loose pass.
+   Push the stick hard the other way to take control back. */
+function pressDrive(S,p,own,ix,iz,m){
+if(S.time-p.pst0>4.5){p.prs=0;return null}
+const base=6.8*S.mood.sp*(p.stun>0?.5:1);let tx,tz,mode=0;
+if(own&&own.t!==p.t){const dx=own.x-p.x,dz=own.z-p.z,d=hyp(dx,dz),tl=cl(d/9,0,.7);tx=own.x+own.vx*tl;tz=own.z+own.vz*tl;
+ const gx=p.t?L:-L,gdx=gx-own.x,gdz=-own.z,gl=hyp(gdx,gdz)||1,near=cl((5-d)/4,0,1)*.9;tx+=gdx/gl*near;tz+=gdz/gl*near;mode=1;p.prs=Math.max(p.prs,.5)}
+else if(S.owner<0&&(S.lastT!==p.t||(S.lastPass&&S.lastPass.t!==p.t))){const ip=icpt(S,p,base*1.3);tx=ip.x;tz=ip.z;mode=2;p.prs=Math.max(p.prs,.4)}
+else{p.prs=0;return null}
+const dx=tx-p.x,dz=tz-p.z,dd=hyp(dx,dz);
+if(m>.75){const dn=(ix*dx+iz*dz)/(hyp(ix,iz)*(dd||1));if(dn<.15){p.prs=0;return null}}
+const sprint=S.stam>.04&&dd>3.2,vmax=base*(sprint?1.34:1),s=Math.min(vmax,mode===1?2.6+dd*3.4:2+dd*4.5);
+let wx=dd>.05?dx/dd*s:0,wz=dd>.05?dz/dd*s:0;
+if(mode===1){const dc=hyp(own.x-p.x,own.z-p.z);if(dc<2.4){const k=cl((2.4-dc)/1.3,0,1);wx+=(own.vx*.96-wx)*k;wz+=(own.vz*.96-wz)*k}if(dc<1.05){wx*=.5;wz*=.5}}
+else if(dd<.5){wx=wz=0}
+return{wx,wz,sr:sprint}}
 /* ball flight prediction (ground friction approximation) and intercept search */
 function icpt(S,p,spd){const b=S.ball;
 for(let k=0;k<=2.6;k+=.2){const f=b.y>.6?k:(1-Math.exp(-.7*k))/.7,x=b.x+b.vx*f,z=b.z+b.vz*f;
@@ -214,7 +230,7 @@ return null}
 /* Keeper state machine (p.gst): set | dive | down | rise | catch | punch | parry | claim | throw | kick | collect
    p.gt0 = time the state started, p.gdur = its length (read by the animation). */
 const GKA=.55;
-function gkReset(p){p.gst='set';p.gt0=-9;p.gdur=0;p.dvT=.4;p.ddx=0;p.ddz=0;p.dlat=1;p.dfwd=0;p.dh=1;p.gball=0;p.gsay=-9;p.gsk='';p.gshk=-9;p.gerr=0;p.gerr2=0;p.gthr=-9;p.gfa=null;p.g1=-1;p.gholdT=1;p.gsm=0;p.dv=0;p.gjump=0;p.gpose='ready';p.gwait=0;p.gdec=0}
+function gkReset(p){p.gst='set';p.gt0=-9;p.gdur=0;p.dvT=.4;p.ddx=0;p.ddz=0;p.dlat=1;p.dfwd=0;p.dh=1;p.gball=0;p.gsay=-9;p.gsk='';p.gshk=-9;p.gerr=0;p.gerr2=0;p.gthr=-9;p.gfa=null;p.g1=-1;p.gholdT=1;p.gsm=0;p.dv=0;p.gjump=0;p.gpose='ready';p.gwait=0;p.gdec=0;p.gwu=0;p.gwp=null;p.gwk='';p.gwd=.4;p.gcy=1}
 function gkInit(p){p.gh=.86+Math.random()*.26;p.gcr=.25+Math.random()*.65;gkReset(p)}
 function gkSet(S,p,st,dur){p.gst=st;p.gt0=S.time;p.gdur=dur||0}
 function gkGo(p,tx,tz,vmax){const dx=tx-p.x,dz=tz-p.z,d=hyp(dx,dz);if(d<.06)return[0,0,0];const s=Math.min(vmax,1.5+d*5.2);return[dx/d*s,dz/d*s,0]}
@@ -255,7 +271,7 @@ else if(!dvv&&Math.abs(along)<.55&&Math.abs(lat)<.52&&y<1.9){kind='block';q=.15}
 if(!kind)return null;
 return{p,q,kind,lat,y,along,dv:dvv}}
 /* what happens when the ball meets the keeper */
-function gkTouch(S,h){const p=h.p;if(!h.dv)p.dlat=h.lat>=0?1:-1;const b=S.ball,gs=p.t?1:-1,gl=gs*L,sp=Math.hypot(b.vx,b.vy,b.vz),hs=hyp(b.vx,b.vz),sh=S.shot&&S.shot.t!==p.t,
+function gkTouch(S,h){const p=h.p;p.gcy=S.ball.y;if(!h.dv)p.dlat=h.lat>=0?1:-1;const b=S.ball,gs=p.t?1:-1,gl=gs*L,sp=Math.hypot(b.vx,b.vy,b.vz),hs=hyp(b.vx,b.vz),sh=S.shot&&S.shot.t!==p.t,
  dfc=p.t?S.diff:1,gh=p.gh*(.9+.1*dfc),inBox=Math.abs(b.x-gl)<16.6&&Math.abs(b.z)<20.2,P=S.p;
 const lk=S.lkid>=0?P[S.lkid]:null,bp=!!(lk&&lk.t===p.t&&lk!==p&&!lk.gk&&S.lastT===p.t&&S.time-S.kickT<3.2&&!(S.rs&&S.rs.kind==='throw'));
 const aer=!sh&&(b.y>1.15||p.gst==='claim'||p.gjump>0)&&sp<27;
@@ -264,14 +280,14 @@ const done=(kind,great)=>{S.lastT=p.t;S.rcv=-1;S.thru=null;S.cross=null;S.lastPa
  if(sh&&sp>8){S.st.sot[S.shot.t]++;if(kind!=='goal')S.st.saves++;S.shot=null}
  S.ev.push({type:'save',id:p.id,t:p.t,kind,great:!!great,sp,shot:!!sh})};
 const side=()=>Math.abs(b.z)>.9?Math.sign(b.z):(h.lat>=0?1:-1)*(p.a>1.5?-1:1)*(S.rng()<.5?1:-1);
-const hold=(hands)=>{S.owner=p.id;p.hold=0;p.gball=hands?1:0;S.rcv=-1;b.vx=b.vy=b.vz=0;p.gholdT=hands?(.8+S.rng()*.9):(.32+S.rng()*.2);if(hands)p.vx*=.4,p.vz*=.4};
+const hold=(hands)=>{S.owner=p.id;p.hold=0;p.gwu=0;p.gwp=null;p.gball=hands?1:0;S.rcv=-1;b.vx=b.vy=b.vz=0;p.gholdT=hands?(.8+S.rng()*.9):(.32+S.rng()*.2);if(hands)p.vx*=.4,p.vz*=.4};
 /* feet: outside the box or a back-pass, the keeper may not use his hands */
 if((!inBox||bp)&&(h.kind!=='block'||hs<14)){
- if(hs<19&&b.y<1.0){hold(false);if(!p.gst||p.gst==='set')gkSet(S,p,'collect',.3);done('collect',false);return}
+ if(hs<19&&b.y<1.0){hold(false);if(!p.gst||p.gst==='set')gkSet(S,p,'collect',.6);done('collect',false);return}
  const sg2=Math.sign(b.z)||1;b.vx=-gs*(6+S.rng()*6);b.vz=sg2*(3+S.rng()*6);b.vy=2+S.rng()*3;p.cd=.35;gkSet(S,p,'parry',.4);done('block',false);return}
 if(h.kind==='block'){/* hit his body / legs: big deflection, no control */
  const sg2=Math.sign(b.z-p.z)||(S.rng()<.5?-1:1);
- if(hs<8&&b.y<.9){hold(true);gkSet(S,p,'collect',.35);done('catch',false);return}
+ if(hs<8&&b.y<.9){hold(true);gkSet(S,p,'collect',.6);done('catch',false);return}
  b.vx=-gs*(Math.max(2.5,hs*.3)+S.rng()*3);b.vz=sg2*(2+S.rng()*5)+b.vz*.2;b.vy=1+S.rng()*2.5;p.cd=.3;done('block',false);return}
 /* aerial ball: claim it, or punch it clear when contested */
 if(aer){const pc=cl(.94*gh-opp*.14-(1-h.q)*.3-Math.max(0,hs-16)*.02,.18,.97);
@@ -378,20 +394,42 @@ function gkThrow(S,p,q,roll){const b=S.ball,ld=lead(p,q,.8,3),dx=ld[0]-p.x,dz=ld
 if(roll){b.y=.22;kick(S,p,n[0],n[1],cl(d*.9+5,9,15),0)}
 else{const y0=1.6,uh=cl(15+d*.28,17,26),T=d/uh,vy=(12.5*T*T-(y0-.22))/T;b.y=y0;kick(S,p,n[0],n[1],uh,vy)}
 p.kt=kt;p.gthr=S.time;p.gthk=roll?1:0;p.gball=0;gkSet(S,p,'throw',.6);S.rcv=q.id;S.st.passes[p.t]++;S.lastPass={t:p.t,from:p.id,to:q.id,time:S.time}}
+/* wind-up lengths (s) before the ball actually leaves: the animation plays the back-swing / coil, the ball is released at the end */
+const GWD={roll:.4,throw:.55,punt:.48,pass:.38,lob:.48,lobTo:.42};
+function gkRelease(S,p,pl,gs,b){const k=pl.k;
+if(k==='roll'){gkThrow(S,p,pl.q,true);return}
+if(k==='throw'){gkThrow(S,p,pl.q,false);return}
+if(k==='punt'){b.y=.7;lob(S,p,false);p.gball=0;gkSet(S,p,'kick',.5);return}
+if(k==='pass'){passTo(S,p,pl.q,false);gkSet(S,p,'kick',.5);return}
+if(k==='lob'){lob(S,p,false);gkSet(S,p,'kick',.5);return}
+lobTo(S,p,p.x-gs*28,(S.rng()-.5)*30);gkSet(S,p,'kick',.45)}
 function gkDistribute(S,p){const dir=p.t?-1:1,gs=p.t?1:-1,b=S.ball;
+if(p.gwu){if(S.owner!==p.id){p.gwu=0;p.gwp=null;return}
+ if(S.time-p.gwu0<p.gwd)return;
+ const pl=p.gwp;p.gwu=0;p.gwp=null;if(pl)gkRelease(S,p,pl,gs,b);return}
 if(p.hold<(S.rs&&S.rs.taker===p.id?Math.max(1.1,p.gholdT):p.gholdT))return;
 const kind=S.rs&&S.rs.taker===p.id?S.rs.kind:'',pr=nearOpp(S,p).d,opts=passOptions(S,p).filter(e=>!e.q.gk&&e.kind==='g'&&e.sc>-.4);
-const o=opts[0],d=o?hyp(o.q.x-p.x,o.q.z-p.z):0;
+const o=opts[0],d=o?hyp(o.q.x-p.x,o.q.z-p.z):0;let pl;
 if(p.gball){
- if(o&&d<15&&(pr>4.5||d<9)&&S.rng()<.72){gkThrow(S,p,o.q,true);return}
- if(o&&d<34&&S.rng()<.9){gkThrow(S,p,o.q,false);return}
- b.y=.7;lob(S,p,false);p.gball=0;gkSet(S,p,'kick',.5);return}
-/* feet: goal kick, back-pass, or a loose ball outside the area */
-if(kind==='goalkick'){
- if(o&&d<26&&pr>3.5&&S.rng()<.55){passTo(S,p,o.q,false);gkSet(S,p,'kick',.5);return}
- lob(S,p,false);gkSet(S,p,'kick',.5);return}
-if(o&&(d<30||pr<5)&&o.sc>-.2){passTo(S,p,o.q,false);gkSet(S,p,'kick',.45);return}
-lobTo(S,p,p.x-gs*28,(S.rng()-.5)*30);gkSet(S,p,'kick',.45)}
+ if(o&&d<15&&(pr>4.5||d<9)&&S.rng()<.72)pl={k:'roll',q:o.q};
+ else if(o&&d<34&&S.rng()<.9)pl={k:'throw',q:o.q};
+ else pl={k:'punt'}}
+else if(kind==='goalkick'){
+ if(o&&d<26&&pr>3.5&&S.rng()<.55)pl={k:'pass',q:o.q};else pl={k:'lob'}}
+else if(o&&(d<30||pr<5)&&o.sc>-.2)pl={k:'pass',q:o.q};
+else pl={k:'lobTo'};
+p.gwp=pl;p.gwu=1;p.gwu0=S.time;p.gwd=GWD[pl.k]||.42;p.gwk=(pl.k==='roll'||pl.k==='throw'||pl.k==='punt')?pl.k:'lob';gkSet(S,p,'wind',p.gwd+.3)}
+/* where the ball sits while the keeper holds it: it travels with his hands (scoop up, claim at full stretch, cocked throwing arm...) */
+function gkHold(S,o){const age=S.time-o.gt0,dur=Math.max(.05,o.gdur||.5),q=cl(age/dur,0,1),st=o.gst,sm=x=>{x=cl(x,0,1);return x*x*(3-2*x)},gy=Math.max(.22,o.gcy===undefined?1:o.gcy);
+if(st==='down'||st==='dive')return{off:.28,y:.34,k:16};
+if(st==='rise')return{off:.3,y:.34+.74*sm(q),k:12};
+if(st==='claim'){const up=sm((q-.1)/.3)*(1-sm((q-.55)/.3));return{off:.34,y:1.08+1.3*up,k:15}}
+if(st==='collect'||st==='catch'){const g=sm((q-.3)/.5);return{off:.58-.22*g,y:gy+(1.08-gy)*g,k:18}}
+if(st==='wind'){const qw=cl(age/Math.max(.1,o.gwd||.4),0,1),wk=o.gwk;
+ if(wk==='throw'){const c=sm(qw/.55),w=sm((qw-.5)/.5);return{off:.36-.26*c+.3*w,y:1.08+.55*c,k:16}}
+ if(wk==='roll'){const c=sm(qw/.6),w=sm((qw-.55)/.45);return{off:.36-.14*c+.4*w,y:1.08-.62*c-.25*w,k:16}}
+ if(wk==='punt'){const c=sm(qw/.5);return{off:.36+.22*c,y:1.08-.3*c,k:16}}}
+return{off:.36,y:1.08,k:14}}
 /* ---------------- outfield AI movement ---------------- */
 function shapeTarget(S,p,att){const dir=p.t?-1:1,b=S.ball,bX=b.x*dir,hZ=p.hz,hm=S.hxm&&S.hxm[p.t]?S.hxm[p.t][p.role]:undefined,hX=hm!==undefined?p.hx*dir*.35+hm*.65:p.hx*dir;let X,Z;
 if(att){const k=p.role==='D'?.4:p.role==='M'?.58:.64;X=hX+cl(bX+30,0,60)*k;Z=hZ*1.14+(b.z-hZ)*.1;
@@ -505,9 +543,10 @@ for(const p of P){if(p.off)continue;p.cd-=dt;p.imm-=dt;p.dv-=dt;p.lunge-=dt;p.jp
  if(!p.gk&&p.jp<=0&&p.cd<=0&&b.y>1.25&&b.y<3.2&&b.vy<6&&hyp(b.vx,b.vz)>3&&hyp(b.x-p.x,b.z-p.z)<2.4)p.jp=.5;
  let wx=0,wz=0,gd=0;
  if(isU(p)){const i=S.inp,m=hyp(i.ix,i.iz);let ix=m>1?i.ix/m:i.ix,iz=m>1?i.iz/m:i.iz;
-  if(p.prs>0&&own&&own.t!==p.t){/* pressure assist: lean the stick towards the carrier */const dx=own.x+own.vx*.3-p.x,dz=own.z+own.vz*.3-p.z,d=hyp(dx,dz)||1;ix=ix*.55+dx/d*.45;iz=iz*.55+dz/d*.45}
-  const sr=i.sprint&&S.stam>.02&&m>.1;S.stam=sr?S.stam-dt*.2:Math.min(1,S.stam+dt*.1);
-  const sp=6.8*S.mood.sp*(sr?1.34:1)*(p.lunge>0?1.7:1)*(own===p?.97:1)*(p.stun>0?.5:1);wx=ix*sp;wz=iz*sp}
+  const au=p.prs>0&&!p.gk?pressDrive(S,p,own,ix,iz,m):null;
+  if(au){S.stam=au.sr?Math.max(0,S.stam-dt*.2):Math.min(1,S.stam+dt*.1);const lg=p.lunge>0?1.7:1;wx=au.wx*lg;wz=au.wz*lg}
+  else{const sr=i.sprint&&S.stam>.02&&m>.1;S.stam=sr?S.stam-dt*.2:Math.min(1,S.stam+dt*.1);
+  const sp=6.8*S.mood.sp*(sr?1.34:1)*(p.lunge>0?1.7:1)*(own===p?.97:1)*(p.stun>0?.5:1);wx=ix*sp;wz=iz*sp}}
  else if(p.gk){const g=gkStep(S,p,own,dt);wx=g[0];wz=g[1];gd=g[2]}
  else{const t=aiMove(S,p,own),dx=t[0]-p.x,dz=t[1]-p.z,d=hyp(dx,dz);if(d>.6){const s=t[2]*Math.min(1,d/3)*(p.stun>0?.5:1);wx=dx/d*s;wz=dz/d*s}
   /* AI tackle decisions for the first presser */
@@ -529,7 +568,7 @@ for(const p of P){if(p.off)continue;p.cd-=dt;p.imm-=dt;p.dv-=dt;p.lunge-=dt;p.jp
 if(own){const o=own,sp=hyp(o.vx,o.vz),spf=Math.min(sp/9,1);
  const glued=o.gk||(S.rs&&S.rs.taker===o.id);
  if(o.gk){const fx=Math.cos(o.a),fz=Math.sin(o.a);
-  if(o.gball){const lie=o.gst==='down'||o.gst==='dive',off=lie?.28:.36;b.x=o.x+fx*off;b.z=o.z+fz*off;b.y=lie?.34:1.08}
+  if(o.gball){const hd=gkHold(S,o),kk=Math.min(1,dt*hd.k);b.x+=(o.x+fx*hd.off-b.x)*kk;b.z+=(o.z+fz*hd.off-b.z)*kk;b.y+=(hd.y-b.y)*kk}
   else{b.x=o.x+fx*.62;b.z=o.z+fz*.62;b.y=.22}
   b.vx=o.vx;b.vz=o.vz;b.vy=0}
  else if(glued){const ph=o.dph*1.55,touch=Math.max(0,Math.sin(ph)),off=.7+.12*spf+touch*(.1+.5*spf),lat=Math.cos(ph*.5)*.07*spf;
@@ -577,7 +616,7 @@ const hs=hyp(b.vx,b.vz);let pick=null,pd=1e9,hd=false,aer=null;
 /* goalkeepers first: hands / body reach envelope */
 let gkh=null;for(const q of P){if(!q.gk||q.off)continue;const h=gkReach(S,q,hs);if(h&&(!gkh||h.q>gkh.q))gkh=h}
 if(gkh)gkTouch(S,gkh);
-for(const q of P){if(gkh||q.cd>0||q.off||q.gk)continue;const d=hyp(q.x-b.x,q.z-b.z),r=q.gk?(q.dv>0?2.05:1.35):(q.id===S.rcv?1.7:1.05);
+for(const q of P){if(gkh||q.cd>0||q.off||q.gk)continue;const d=hyp(q.x-b.x,q.z-b.z),cls=d>.01?(q.vx*(b.x-q.x)+q.vz*(b.z-q.z))/d:0,r=q.gk?(q.dv>0?2.05:1.35):(q.id===S.rcv?1.7:1.05+(cls>2?Math.min(.35,cls*.05):0));
  if(d<r&&b.y<(q.gk?2.9:1.1)&&(q.gk||hs<22)&&d<pd&&!(q.gk&&hs>20&&S.roll>.6-.2*(d/r))){pd=d;pick=q}}
 if(!gkh&&!pick&&b.y>1.1&&b.y<3&&hs>3){const cs=[];for(const q of P){if(q.off||q.gk||q.cd>0||q.stun>0)continue;const d=hyp(q.x-b.x,q.z-b.z);if(d<(q.jp>0?1.7:1.3))cs.push([d,q])}
  if(cs.length){let bq=null,bsc=-9;for(const [d,q] of cs){const sc=q.hd*(q.jp>0?1.08:1)-d*.22+(S.rng()-.5)*.55+(q.t===S.lastT?.06:0)+(q.id===S.rcv?.12:0);if(sc>bsc){bsc=sc;bq=q}}
@@ -596,6 +635,8 @@ if(pick){const q=pick;
   q.cd=.5;S.cross=null;S.ev.push({type:'header',id:q.id})}
  else if(hs>12&&S.rng()<((hs-12)/32)*(1.35-q.pc)){b.vx*=.38;b.vz*=.38;b.vx+=(S.rng()-.5)*2;b.vz+=(S.rng()-.5)*2;q.cd=.22;S.rcv=-1}
  else{const lp=S.lastPass;if(lp){if(q.t===lp.t){if(q.id!==lp.from)S.st.passOK[q.t]++}else S.st.inter[q.t]++;S.lastPass=null}
+  if(hs>7&&b.y<.8){const ck=hs>16?.5:.62;b.vx=b.vx*ck+q.vx*(1-ck)*.6;b.vz=b.vz*ck+q.vz*(1-ck)*.6}
+  q.ttime=S.time;q.tpar^=1;
   S.owner=q.id;q.hold=0;S.rcv=-1;S.thru=null;S.cross=null;S.lastT=q.t;S.shot=null;b.curve=0;if(S.rs&&S.rs.taker!==q.id)S.rs=null}}}
 own=S.owner>=0?P[S.owner]:null;
 if(own&&(!isU(own)||(S.rs&&S.rs.taker===own.id&&S.time>S.rs.until)))aiCarrier(S,own,dt);
@@ -616,7 +657,7 @@ if(k===4){manualSwitch(S);return}
 if(k===6){if(S.owner>=0&&P[S.owner].t!==p.t){p.lunge=.5;p.cd=Math.max(p.cd,0)}else if(S.owner<0&&hyp(S.ball.vx,S.ball.vz)>1){kick(S,p,p.t?-1:1,0,13,2);S.lastT=p.t}return}
 if(k===1){const c=S.owner>=0&&P[S.owner].t!==p.t?P[S.owner]:null;
  if(c&&hyp(c.x-p.x,c.z-p.z)<2.1){p.tkw=.42;p.imm=.1}else{p.lunge=.46;p.imm=.12}return}
-if(k===0){p.prs=1.1;p.tkw=Math.max(p.tkw,0);return}
+if(k===0){p.prs=2.6;p.pst0=S.time;p.tkw=Math.max(p.tkw,0);return}
 if(k===2){manualSwitch(S);return}
 p.lunge=.3}
 const Sim={create,reset,step,act,setFormation,previewPass,FORM,N,L,W};

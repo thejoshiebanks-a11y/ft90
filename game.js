@@ -32,7 +32,6 @@ for(let z=-3.5;z<=3.51;z+=.5){const v=new T.Mesh(new T.BoxGeometry(3.08,.025,.02
 goalMesh(1);goalMesh(-1);
 [[-55,-36],[55,-36],[-55,36],[55,36]].forEach(([x,z])=>{const p=new T.Mesh(new T.CylinderGeometry(.05,.05,1.6,5),new T.MeshBasicMaterial({color:0xffffff}));p.position.set(x,.8,z);S.add(p);const f=new T.Mesh(new T.PlaneGeometry(.6,.4),new T.MeshBasicMaterial({color:0xf1c40f,side:T.DoubleSide}));f.position.set(x+.3,1.4,z);S.add(f)});
 /* ---------- stadium: solid two-tier banks, sections, concourse, gates, roofs ---------- */
-const __bowl0=S.children.length;
 let ca=0;const crowdA=new T.Group(),crowdB=new T.Group();S.add(crowdA,crowdB);
 const conc=new T.MeshStandardMaterial({color:0x4a505e,roughness:.95}),concD=new T.MeshStandardMaterial({color:0x2c303a,roughness:1}),seatRec=[];
 const KT=[0xc0392b,0xecf0f1,0x2980b9,0xf1c40f,0x7f8c8d,0x27ae60,0x8e44ad,0x1c1c22,0xe67e22,0xd8342f],SKT=[0xf1c6a0,0xd9a77a,0xb07850,0x7a4a2a,0x4a2c1a];
@@ -104,7 +103,6 @@ const housing=new T.Group();S.add(housing);
 {const blk=new T.Mesh(new T.BoxGeometry(9.5,11.1,17.9),concD);blk.position.set(0,9.45,-(42+8.95));housing.add(blk);
 const sg=new T.Mesh(new T.PlaneGeometry(8.6,1.5),new T.MeshBasicMaterial({map:tex(512,90,g=>{g.fillStyle='#0b1b3a';g.fillRect(0,0,512,90);g.fillStyle='#fff';g.font='bold 54px Barlow Condensed, sans-serif';g.textAlign='center';g.fillText("PLAYERS' TUNNEL",256,64)})}));sg.position.set(0,8.2,-41.9);housing.add(sg)}
 /* ---------- exterior arrival plaza: FT90's Bernabeu-inspired matchday approach ---------- */
-window.FT90_OLD_BOWL=S.children.slice(__bowl0);
 const ext=new T.Group();S.add(ext);
 const facade=new T.MeshStandardMaterial({color:0x8a909a,metalness:.68,roughness:.38});
 const facadeDark=new T.MeshStandardMaterial({color:0x202733,metalness:.35,roughness:.62});
@@ -144,7 +142,7 @@ const front=new T.Mesh(new T.BoxGeometry(12.4,2.1,.08),glass);front.position.set
 [-6.2,6.2].forEach(sx=>{const post=new T.Mesh(new T.BoxGeometry(.12,2.35,3.2),frame);post.position.set(sx,1.15,0);d.add(post)});
 const back=new T.Mesh(new T.BoxGeometry(12.4,1.9,.08),glass);back.position.set(0,1.05,1.55);d.add(back);
 for(let i=0;i<8;i++){const sx=-5.1+i*1.46;const base=new T.Mesh(new T.BoxGeometry(1.12,.16,.86),seatmat);base.position.set(sx,.68,.42);d.add(base);const backrest=new T.Mesh(new T.BoxGeometry(1.12,.7,.12),seatmat);backrest.position.set(sx,1.05,.79);d.add(backrest);const arm1=new T.Mesh(new T.BoxGeometry(.08,.32,.65),frame);arm1.position.set(sx-.52,.86,.42);d.add(arm1);const arm2=arm1.clone();arm2.position.x=sx+.52;d.add(arm2)}
-const fascia=new T.Mesh(new T.BoxGeometry(12.7,.22,.12),new T.MeshBasicMaterial({color:team?0xe74c3c:0x2a7de1}));fascia.position.set(0,2.2,-1.62);d.add(fascia);d.position.set(x,0,40.6);S.add(d);(window.FT90_DUG=window.FT90_DUG||[]).push(d);
+const fascia=new T.Mesh(new T.BoxGeometry(12.7,.22,.12),new T.MeshBasicMaterial({color:team?0xe74c3c:0x2a7de1}));fascia.position.set(0,2.2,-1.62);d.add(fascia);d.position.set(x,0,40.6);S.add(d);
 dugoutTeams.push([x,team]);
 });
 /* ---------- players: shared geometry, tapered kit, face, hair styles, procedural gait ---------- */
@@ -155,6 +153,8 @@ const gBox=(w,h,d)=>{const k=['b',w,h,d].join();return GC[k]||(GC[k]=new T.BoxGe
 const gSph=(r,a,b,p0,pl,t0,tl)=>{const k=['s',r,a,b,p0,pl,t0,tl].join();return GC[k]||(GC[k]=new T.SphereGeometry(r,a||10,b||8,p0||0,pl||Math.PI*2,t0||0,tl||Math.PI))};
 function numTex(n){return NT[n]||(NT[n]=tex(64,64,g=>{g.clearRect(0,0,64,64);g.lineWidth=6;g.strokeStyle='#0008';g.fillStyle='#fff';g.font='bold 46px sans-serif';g.textAlign='center';g.strokeText(n,32,48);g.fillText(n,32,48)}))}
 const KM={};function kitMat(col){if(KM[col])return KM[col];const t=tex(64,128,g=>{const c=new T.Color(col);g.fillStyle='#'+c.getHexString();g.fillRect(0,0,64,128);g.fillStyle='rgba(255,255,255,.07)';for(let i=0;i<64;i+=8)g.fillRect(i,0,4,128);const gr=g.createLinearGradient(0,0,0,128);gr.addColorStop(0,'rgba(255,255,255,.12)');gr.addColorStop(.55,'rgba(0,0,0,0)');gr.addColorStop(1,'rgba(0,0,0,.2)');g.fillStyle=gr;g.fillRect(0,0,64,128);g.fillStyle='rgba(0,0,0,.25)';g.fillRect(0,0,64,6)});return KM[col]=new T.MeshStandardMaterial({map:t,roughness:.8})}
+/* gait: thigh swing amplitude by speed, and the phase rate that keeps the planted foot still on the turf (no skating) */
+const GAIT=v=>Math.min(1,.2+.11*v),GAITW=v=>v<.05?0:Math.min(12,v/(.8*GAIT(v)));
 function mk(col,sc,o){sc=sc||S;o=o||{};const HI=!!(o.num||o.hi);const gp=new T.Group(),M=mat,sh=M(col),shorts=M(o.shorts===undefined?0xf2f2f2:o.shorts),sock=M(o.sock===undefined?col:o.sock),skin=M(SK[o.skin||0]),hair=M(HR[o.hair||0]),boot=M(o.boot||0x111111,.5),hand=M(o.gk?0x7CFC9A:SK[o.skin||0]),dark=M(0x111111),band=M(0xffffff),boot2=M(0x161616),kit=HI?kitMat(col):sh;
 const cs=[],A=(geo,m,par,x,y,z,cast)=>{const e=new T.Mesh(geo,m);e.position.set(x||0,y||0,z||0);par.add(e);if(cast)cs.push(e);return e};
 const hip=new T.Group();hip.position.y=1.02;gp.add(hip);if(HI){const pv=A(gCyl(.2,.225,.26,'top',10),shorts,hip,0,.12,0,1);pv.scale.x=.72}else A(gBox(.3,.22,.5),shorts,hip,0,.06,0,1);
@@ -188,88 +188,167 @@ const l=new T.Group();l.position.set(0,0,sd*.12);hip.add(l);A(gCyl(.11,.085,.5,'
 const f=new T.Group();f.position.y=-.46;k.add(f);A(gBox(.3,.1,.15),boot,f,.07,-.04,0);A(gSph(.075,6,5),boot,f,.2,-.045,0);legs.push(l);knees.push(k);ft.push(f)});
 const bl=new T.Mesh(new T.CircleGeometry(.55,12),new T.MeshBasicMaterial({color:0,transparent:true,opacity:.28}));bl.rotation.x=-Math.PI/2;bl.position.y=.03;gp.add(bl);
 cs.forEach(e=>e.castShadow=true);gp.ph0=Math.random()*6;gp.J={hip,torso,hd,arms,elb,legs,knees,ft};
-/* ---- goalkeeper animation: stance, side-shuffle, dives, catches, punches, claims, throws, get-up ---- */
+/* ---- animation v4: ground-contact solver, discontinuity smoothing, gait that matches ground speed, full keeper moveset ---- */
+const gc=(x,a,b)=>Math.max(a,Math.min(b,x)),sm=x=>{x=gc(x,0,1);return x*x*(3-2*x)},eo=x=>{x=gc(x,0,1);return 1-(1-x)*(1-x)},ei=x=>{x=gc(x,0,1);return x*x},lp=(a,b,t)=>a+(b-a)*t;
+const SCL=HI?.85:1.02;
+/* height the hip must sit at (gp-local) so the lowest point of either boot touches the turf */
+const hipG=()=>{let m=1e9;for(let i=0;i<2;i++){const a=legs[i].rotation.z,s=legs[i].rotation.x,kz=knees[i].rotation.z,th=a+kz+ft[i].rotation.z,cs=Math.cos(s),b=-(.5*Math.cos(a)+.46*Math.cos(a+kz))*cs,yh=-.08*Math.sin(th)-.0975*Math.cos(th),yt=.25*Math.sin(th)-.09*Math.cos(th);m=Math.min(m,b+Math.min(yh,yt)*cs)}return -m};
+/* 2-link arm reach in the sagittal plane: put both hands at (tx,ty) measured from the hip origin, in gp-local units */
+const reach=(tx,ty,spread,tz)=>{const rz=torso.rotation.z,sx=-.55*Math.sin(rz),sy=.16+.55*Math.cos(rz),L1=.3,L2=.34;let dx=tx-sx,dy=ty-sy,D=Math.hypot(dx,dy);const mx=L1+L2-.012,mn=.2;if(D>mx){dx*=mx/D;dy*=mx/D;D=mx}if(D<mn){D=mn}
+ const ce=gc((D*D-L1*L1-L2*L2)/(2*L1*L2),-1,1),e=Math.acos(ce),dl=Math.atan2(L2*Math.sin(e),L1+L2*Math.cos(e)),ps=Math.atan2(dx,-dy),al=ps-dl;
+ for(let i=0;i<2;i++){arms[i].rotation.set(0,(i?-1:1)*(spread||0),al);elb[i].rotation.z=e}};
+/* body-surface sample points: used to stop a lying keeper sinking into (or hovering over) the turf */
+const CP=[],CV=new T.Vector3();
+CP.push([hd,0,.12,0,.13],[hip,0,0,0,.17],[torso,0,.4,0,.17]);ft.forEach(f=>CP.push([f,0,-.06,0,.07],[f,.22,-.06,0,.07]));knees.forEach(k=>CP.push([k,0,0,0,.09]));elb.forEach(e=>CP.push([e,0,0,0,.07],[e,0,-.34,0,.08]));
+const lowest=()=>{gp.updateMatrixWorld(true);let lo=1e9;for(let i=0;i<CP.length;i++){const c=CP[i];CV.set(c[1],c[2],c[3]);c[0].localToWorld(CV);lo=Math.min(lo,CV.y-c[4]*SCL)}return lo};
 const gkA=(v,ph,st)=>{
-const gc=(x,a,b)=>Math.max(a,Math.min(b,x)),sm=x=>{x=gc(x,0,1);return x*x*(3-2*x)},eo=x=>{x=gc(x,0,1);return 1-(1-x)*(1-x)},lp=(a,b,t)=>a+(b-a)*t;
 const tn=sim.time,gs=st.gst||'set',age=tn-st.gt0,dur=Math.max(.05,st.gdur||.5),q=gc(age/dur,0,1),bb=sim.ball,
  fx=Math.cos(st.a),fz=Math.sin(st.a),vf=st.vx*fx+st.vz*fz,vl=-st.vx*fz+st.vz*fx,sp=Math.hypot(st.vx,st.vz),hw=1.02*gp.scale.x,ry=gp.rotation.y,
- lxw=Math.sin(ry),lzw=Math.cos(ry),fxw=Math.cos(ry),fzw=-Math.sin(ry),holding=sim.owner===st.id&&st.gball;
+ lxw=Math.sin(ry),lzw=Math.cos(ry),fxw=Math.cos(ry),fzw=-Math.sin(ry),holding=sim.owner===st.id&&st.gball,tw=performance.now()/1000;
 const NEU=()=>{hip.rotation.set(0,0,0);hip.position.y=1.02;torso.rotation.set(0,0,0);hd.rotation.set(0,0,0);for(let i=0;i<2;i++){legs[i].rotation.set(0,0,0);knees[i].rotation.z=0;ft[i].rotation.z=0;arms[i].rotation.set(0,0,0);elb[i].rotation.z=0}gp.rotation.x=0;gp.rotation.z=0;gp.position.y=0;bl.visible=true};
-/* both legs: thigh forward a, knee bend b, foot kept flat; returns hip height */
-const squat=(a,b,side)=>{for(let i=0;i<2;i++){legs[i].rotation.z=a;knees[i].rotation.z=-b;ft[i].rotation.z=b-a}
- const s=side||0;legs[0].rotation.x=s;legs[1].rotation.x=-s;return .5*Math.cos(a)*Math.cos(s)+.46*Math.cos(a-b)*Math.cos(s)+.07};
-/* roll/pitch the whole body about the hip so the hip stays over the keeper at height H */
+/* both legs: thigh forward a, knee bend b, foot flat; lateral stance s */
+const stance=(a,b,s)=>{for(let i=0;i<2;i++){legs[i].rotation.z=a;knees[i].rotation.z=-b;ft[i].rotation.z=b-a}legs[0].rotation.x=s||0;legs[1].rotation.x=-(s||0)};
+/* roll/pitch the whole body about the hip so the hip stays over the keeper at height H (world) */
 const place=(roll,pitch,H)=>{gp.rotation.x=roll;gp.rotation.z=pitch;const cr=Math.cos(roll),cp=Math.cos(pitch);gp.position.y=H-hw*cr*cp;
  const sr=Math.sin(roll)*hw*cp,spc=Math.sin(pitch)*hw;gp.position.x+=-sr*lxw+spc*fxw;gp.position.z+=-sr*lzw+spc*fzw;bl.visible=Math.abs(roll)<.35&&Math.abs(pitch)<.35};
-const look=()=>{let rel=Math.atan2(bb.z-st.z,bb.x-st.x)-st.a;rel=((rel+Math.PI*3)%(Math.PI*2))-Math.PI;hd.rotation.y=-gc(rel,-1.1,1.1)*.6};
-const cradle=(k)=>{/* arms hugging the ball to the chest */arms[0].rotation.set(lp(.35,.22,k),0,lp(1.5,1.02,k));arms[1].rotation.set(-lp(.35,.22,k),0,lp(1.5,1.02,k));elb[0].rotation.z=elb[1].rotation.z=lp(.2,1.55,k)};
-const sg=st.dlat>=0?1:-1;
-/* ---------- on the ground: dive, lying, getting up ---------- */
+const look=(w)=>{let rel=Math.atan2(bb.z-st.z,bb.x-st.x)-st.a;rel=((rel+Math.PI*3)%(Math.PI*2))-Math.PI;hd.rotation.y=-gc(rel,-1.2,1.2)*(w||.6)};
+const cradle=(k)=>{arms[0].rotation.set(lp(.35,.22,k),0,lp(1.5,1.02,k));arms[1].rotation.set(-lp(.35,.22,k),0,lp(1.5,1.02,k));elb[0].rotation.z=elb[1].rotation.z=lp(.2,1.55,k)};
+const sg=st.dlat>=0?1:-1,H0=()=>SCL*hipG();
+/* alert-stance arms: elbows bent, hands out in front, ready to react */
+const alertArms=(sw)=>{arms[0].rotation.set(.55,0,.8-(sw||0));arms[1].rotation.set(-.55,0,.8+(sw||0));elb[0].rotation.z=elb[1].rotation.z=.9};
+/* gait: thigh/knee/foot cycle in the direction of travel, locked to ground speed */
+const gait=(a0,b0,cr,Af,lift)=>{const tf=sp>.05?vf/sp:1,tl=sp>.05?vl/sp:0;
+ for(let i=0;i<2;i++){const f=ph+i*Math.PI,sf=Math.sin(f),cf=Math.cos(f),sw=cf>0?cf:0,a=cr*a0+tf*Af*sf,s=(i?-1:1)*(.07+.05*cr)-tl*Af*sf,kz=cr*b0+lift*sw*(.5+.5*Math.abs(tf)+.5*Math.abs(tl));
+  const stW=gc(-cf*1.6+.3,0,1);legs[i].rotation.z=a;legs[i].rotation.x=s;knees[i].rotation.z=-kz;ft[i].rotation.z=lp(-.3,-(a-kz),stW)}};
+const lie=()=>{/* shared limb layout when lying on the ground */};
+/* ================= DIVE / DOWN / RISE ================= */
 if(gs==='dive'||gs==='down'||gs==='rise'){NEU();
- const smo=!!st.gsm,dh=st.dh||0,fl=Math.max(.2,st.dvT||.4),rm=smo?1.4:(dh===2?1.22:dh===1?1.38:1.5);let roll=0,H=1,reach=0,crouch=0,lying=false;
+ const smo=!!st.gsm,dh=st.dh||0,fl=Math.max(.2,st.dvT||.4),rm=smo?1.4:(dh===2?1.22:dh===1?1.38:1.5);
+ const tgt=holding;
+ let roll=0,H=H0(),reach_=0,crouch=0,land=0;
  if(gs==='dive'){const qf=age/fl;
-  if(qf<.14){crouch=sm(qf/.14);H=.98-.12*crouch}
-  else if(qf<=1){const u=(qf-.14)/.86;roll=rm*eo(Math.min(1,u*1.15));H=lp(.88,.3,sm(u))+[0,.2,.42][dh]*Math.sin(Math.PI*u)*(smo?.6:1);reach=eo(u*1.3)}
-  else{const u=gc((age-fl)/.22,0,1);roll=lp(rm,1.5,sm(u));H=.3-.05*sm(u)+.03*Math.sin(Math.PI*u);reach=1;lying=true}}
- else if(gs==='down'){roll=1.5;H=.25+Math.sin(tn*6)*.004;reach=holding?0:.85;lying=true}
- else{roll=1.5*(1-sm(q*1.15));H=.25+.77*sm(q);crouch=1-q;lying=q<.5}
- if(gs==='rise'){const c=squat(lp(.5,.05,q),lp(1.0,.05,q),0);hip.position.y=1.02;torso.rotation.z=-.45*Math.sin(Math.PI*q);
-  arms[0].rotation.set(.2,0,lp(1.2,0,q));arms[1].rotation.set(-.2,0,lp(1.2,0,q));elb[0].rotation.z=elb[1].rotation.z=lp(1.2,.2,q);if(holding)cradle(1)}
- else if(crouch>0&&roll===0){squat(.35+.2*crouch,.7+.3*crouch,.12);hip.position.y=1.02;torso.rotation.z=-.25;arms[0].rotation.set(.5,0,1.0);arms[1].rotation.set(-.5,0,1.0);elb[0].rotation.z=elb[1].rotation.z=.8}
+  if(qf<.15){crouch=sm(qf/.15)}
+  else if(qf<=1){const u=(qf-.15)/.85;roll=rm*eo(Math.min(1,u*1.12));H=lp(H0()*.9,.34,sm(u))+[0,.22,.45][dh]*Math.sin(Math.PI*u)*(smo?.55:1);reach_=eo(u*1.25);crouch=1-sm(u*3)}
+  else{const u=gc((age-fl)/.26,0,1);roll=lp(rm,1.5,sm(u));H=.34-.07*sm(u)+.03*Math.sin(Math.PI*u);reach_=1;land=sm(u)}}
+ else if(gs==='down'){roll=1.5;H=.27+Math.sin(tn*5)*.004;reach_=holding?0:.8;land=1}
+ else{/* get-up: prop on forearm, knees under, one knee, stand */
+  const r1=sm(q/.34),r2=sm((q-.3)/.36),r3=sm((q-.62)/.38);roll=1.5*(1-r1)+.0*r2;H=lp(.27,.5,r1);H=lp(H,H0()*.82,r2);H=lp(H,H0(),r3);land=1-r1;}
+ const rr=gs==='rise'?q:0;
+ if(gs==='rise'){/* kneeling then standing */
+  const r1=sm(q/.34),r2=sm((q-.3)/.36),r3=sm((q-.62)/.38),kn=lp(lp(.3,1.1,r2),.35,r3),th=lp(lp(.2,1.0,r2),.4,r3);
+  stance(lp(.2,.4,r3)+(1-r3)*.35*r2,lp(1.0,.78,r3),.1*(1-r3));
+  legs[1].rotation.z=lp(lp(-.15,-.5,r2),.4,r3);knees[1].rotation.z=-lp(lp(1.8,2.0,r2),.78,r3);ft[1].rotation.z=lp(1.2,.3,r3);
+  torso.rotation.z=-.5*Math.sin(Math.PI*gc(q*1.1,0,1))-.1;torso.rotation.x=sg*.3*(1-r2);
+  arms[0].rotation.set(.3,0,lp(1.4,.8,r3));arms[1].rotation.set(-.3,0,lp(1.4,.8,r3));elb[0].rotation.z=elb[1].rotation.z=lp(.5,.9,r3);
+  if(holding)cradle(1);hd.rotation.x=-sg*.1*(1-r3);
+  if(roll>.02)place(smo?0:sg*roll,smo?-roll:0,H);else{hip.position.y=1.02;gp.position.y=0;}
+  if(roll<=.02&&r3<1){/* knee-down stage keeps hip lower than standing: lower body group so feet stay on turf */gp.position.y=0}
+  look();return}
+ /* ---- dive / down limb layout ---- */
+ if(crouch>0&&roll===0){stance(.35+.25*crouch,.7+.4*crouch,.14+.08*crouch);torso.rotation.z=-.28;torso.rotation.x=sg*.08*crouch;arms[0].rotation.set(.55,0,.95);arms[1].rotation.set(-.55,0,.95);elb[0].rotation.z=elb[1].rotation.z=.85;look();return}
+ /* airborne / landed layout: spine arcs toward the ball, trailing leg bends, lead arm reaches */
+ const fly=gs==='dive'&&!land?1:0,az=lp(1.0,2.75,reach_);
+ if(holding&&(land||gs==='down')){const k=gs==='dive'?sm(land):1;cradle(k);arms[0].rotation.z=lp(az,arms[0].rotation.z,k);arms[1].rotation.z=lp(az,arms[1].rotation.z,k);elb[0].rotation.z=lp(.12,elb[0].rotation.z,k);elb[1].rotation.z=lp(.12,elb[1].rotation.z,k)}
  else{
-  const az=lp(1.0,2.85,reach);
-  if(holding&&(lying||gs==='down')){cradle(1);const k=sm((age-fl)/.15);cradle(gs==='dive'?k:1)}
-  else{arms[0].rotation.set(-.1*reach,0,az);arms[1].rotation.set(.1*reach,0,az);elb[0].rotation.z=elb[1].rotation.z=.12*(1-reach)}
-  legs[0].rotation.z=.2;knees[0].rotation.z=-.25;legs[1].rotation.z=-.12;knees[1].rotation.z=-.6;ft[0].rotation.z=.3;ft[1].rotation.z=.4;
-  torso.rotation.z=smo?-.05:.1;hd.rotation.z=.3;hd.rotation.x=-sg*.25;if(smo){legs[0].rotation.z=-.1;legs[1].rotation.z=-.2;knees[0].rotation.z=-.5;knees[1].rotation.z=-.7}}
- if(gs==='rise'&&roll<.02)hip.position.y=1.02;
- if(roll>0||smo&&roll>0)place(smo?0:sg*roll,smo?-roll:0,H);else if(gs==='rise')place(0,0,H);
- if(gs==='dive'&&roll===0&&crouch>0)gp.position.y=0;
+  /* lead (upper) arm stretches fully, trailing arm slightly lower and bent => natural reach, not two stiff poles */
+  arms[0].rotation.set(-.1*reach_,.12*reach_,az);arms[1].rotation.set(.1*reach_,-.12*reach_,az-.18*reach_*(1-land));elb[0].rotation.z=.06*(1-reach_);elb[1].rotation.z=.1+.3*(1-reach_)*(1-land)}
+ /* legs: pushing leg extends & trails, other knee tucks up */
+ const tuck=fly?sm(reach_):.55;legs[0].rotation.z=.28-.12*tuck;knees[0].rotation.z=-.35-.55*tuck;legs[1].rotation.z=-.22-.18*tuck;knees[1].rotation.z=-.3-.15*tuck;ft[0].rotation.z=.2;ft[1].rotation.z=-.35;
+ legs[0].rotation.x=-sg*.08;legs[1].rotation.x=sg*.1;
+ torso.rotation.z=smo?-.12:.04*(1-land)+.08*land;torso.rotation.x=sg*.34*reach_*(1-.7*land);torso.rotation.y=sg*.3*(1-.6*land);
+ hd.rotation.z=.28;hd.rotation.x=-sg*.3;
+ if(smo){legs[0].rotation.z=-.1;legs[1].rotation.z=-.2;knees[0].rotation.z=-.55;knees[1].rotation.z=-.75;torso.rotation.z=-.4*reach_;}
+ const pp=smo?-roll:0,rl=smo?0:sg*roll;if(roll>0)place(rl,pp,H);
  if(!(roll>.5))look();return}
-/* ---------- other ball-handling actions ---------- */
-if(gs==='catch'||gs==='claim'||gs==='punch'||gs==='parry'||gs==='collect'||gs==='throw'){
+/* ================= BALL-HANDLING ACTIONS ================= */
+const gcy=st.gcy===undefined?.9:st.gcy;
+if(gs==='catch'||gs==='claim'||gs==='punch'||gs==='parry'||gs==='collect'||gs==='throw'||gs==='wind'||gs==='kick'){
  NEU();
- if(gs==='catch'){const c=squat(.3,.55,.1);hip.position.y=c-.02;torso.rotation.z=-.2+.1*q;cradle(sm(q*2.2));look()}
- else if(gs==='claim'){const j=Math.sin(Math.PI*gc(q*1.05,0,1));gp.position.y=.62*j;squat(lp(.1,.05,q),0,.05);legs[1].rotation.z=.9*j;knees[1].rotation.z=-1.25*j;ft[1].rotation.z=.5*j;legs[0].rotation.z=-.1*j;
-  if(q<.62){arms[0].rotation.set(.1,0,2.85);arms[1].rotation.set(-.1,0,2.85);elb[0].rotation.z=elb[1].rotation.z=.1;torso.rotation.z=.1}else{cradle(sm((q-.62)/.3));torso.rotation.z=-.12}look()}
- else if(gs==='punch'){const j=Math.sin(Math.PI*gc(q*1.1,0,1));gp.position.y=.5*j;squat(.1,0,.05);legs[1].rotation.z=1.0*j;knees[1].rotation.z=-1.3*j;legs[0].rotation.z=-.15*j;
-  const ex=q<.35?sm(q/.35):1-sm((q-.35)/.5)*.7;arms[0].rotation.set(.18,0,lp(.8,2.5,ex));arms[1].rotation.set(-.18,0,lp(.8,2.5,ex));elb[0].rotation.z=elb[1].rotation.z=lp(1.7,.55,ex);torso.rotation.z=-.1+.25*ex;torso.rotation.x=sg*.08;look()}
- else if(gs==='parry'){const ex=q<.3?sm(q/.3):1-sm((q-.3)/.6)*.8,hy=squat(.3,.6,.15);hip.position.y=hy-.02;torso.rotation.x=sg*.2*ex;torso.rotation.z=-.15;
-  const a=sg>0?1:0,b=1-a,sa=a?-1:1,sb=-sa;arms[a].rotation.set(sa*lp(.5,1.5,ex),0,lp(.9,.45,ex));elb[a].rotation.z=lp(1.0,.15,ex);arms[b].rotation.set(sb*.55,0,.8);elb[b].rotation.z=.9;look()}
- else if(gs==='collect'){const k=Math.sin(Math.PI*gc(q,0,1));const c=squat(.65+.2*k,1.0+.4*k,.14);hip.position.y=c-.02;torso.rotation.z=-.5*k-.1;arms[0].rotation.set(.18,0,lp(1.1,1.5,k));arms[1].rotation.set(-.18,0,lp(1.1,1.5,k));elb[0].rotation.z=elb[1].rotation.z=.4;if(holding&&q>.5)cradle(sm((q-.5)*2));look()}
- else if(gs==='throw'){const rl=st.gthk===1,c=squat(.3,.5,.1);hip.position.y=c-.02;
-  if(rl){/* underarm roll */const sw=sm(q/.6);torso.rotation.z=-.35-.1*Math.sin(Math.PI*gc(q/.6,0,1));arms[1].rotation.set(0,0,lp(-.8,1.2,sw));elb[1].rotation.z=.2;arms[0].rotation.set(.5,0,.5);legs[0].rotation.z=.55*sw;legs[1].rotation.z=.1}
-  else{const wind=q<.3?sm(q/.3):1,rel=q<.3?0:sm((q-.3)/.3);torso.rotation.y=lp(0,-.5,wind)+lp(0,.8,rel);torso.rotation.z=lp(0,.08,wind)-.2*rel;
-   arms[1].rotation.set(-.2,0,lp(1.0,-1.3,wind)+lp(0,3.5,rel));elb[1].rotation.z=lp(.8,1.5,wind)-1.3*rel;arms[0].rotation.set(.4,0,lp(1.0,1.6,wind));elb[0].rotation.z=.4;legs[0].rotation.z=.2+.5*rel;legs[1].rotation.z=.05}look()}
+ if(gs==='catch'||gs==='collect'){
+  /* ground ball: bend, hands scoop low in front of the shins and gather it up to the chest; chest/high ball: hands go to the ball, then give with it */
+  const low=gs==='collect'?1:gc((.62-gcy)/.4,0,1),hi=gc((gcy-1.25)/.8,0,1);
+  const reachPh=sm(q/.34),gather=sm((q-.3)/.5),settle=sm((q-.78)/.22);
+  const bend=low*(1-gather)*reachPh;
+  stance(lp(.28,1.45,bend)-.1*gather*low,lp(.5,2.45,bend),.1+.06*bend);
+  torso.rotation.z=-.1-1.15*bend+.05*hi*reachPh;torso.rotation.x=sg*.05*bend;
+  const tx=lp(.62,.34,gather)+.0,ty0=lp(gcy/SCL-hipG(),0,0);
+  /* hand target in hip space: ball height relative to the hip while reaching, chest while gathering */
+  const hy=lp(Math.max(.06,gcy)/SCL-hipG(),.28,gather);
+  reach(lp(.82,.34,gather),hy,.1*(1-gather),0);
+  if(gather>.6)cradle(sm((gather-.6)/.4)*(1-.0));
+  hd.rotation.x=-.1*bend;look(.45);return}
+ if(gs==='claim'){/* take-off, reach, catch at the top, absorb the landing */
+  const ld=.2,ap=.5,j=q<ld?0:q>.9?0:Math.sin(Math.PI*gc((q-ld)/(.9-ld),0,1)),crouch=q<ld?sm(q/ld):q>.8?sm((q-.8)/.2)*.7:0;
+  gp.position.y=.62*j;stance(.1+.5*crouch,.1+.9*crouch,.06);
+  legs[1].rotation.z=.2+.8*j;knees[1].rotation.z=-.3-1.1*j;ft[1].rotation.z=.3;legs[0].rotation.z=-.1*j+.1;knees[0].rotation.z=-.2-.15*j;
+  const up=sm((q-.1)/.3)*(1-sm((q-.52)/.3));
+  torso.rotation.z=lp(-.2,.08,up)-.1*(q>.7?sm((q-.7)/.3):0);
+  arms[0].rotation.set(lp(.55,.05,up),0,lp(.9,2.85,up));arms[1].rotation.set(lp(-.55,-.05,up),0,lp(.9,2.85,up));elb[0].rotation.z=elb[1].rotation.z=lp(.9,.06,up);
+  if(q>.5)cradle(sm((q-.5)/.3));look();return}
+ if(gs==='punch'){const j=Math.sin(Math.PI*gc((q-.05)*1.15,0,1));gp.position.y=.5*j;stance(.15+.2*(1-j),.2+.5*(1-j),.05);legs[1].rotation.z=1.0*j;knees[1].rotation.z=-1.3*j;legs[0].rotation.z=-.15*j;
+  const ex=q<.35?sm(q/.35):1-sm((q-.35)/.5)*.7;arms[0].rotation.set(.18,0,lp(.8,2.5,ex));arms[1].rotation.set(-.18,0,lp(.8,2.5,ex));elb[0].rotation.z=elb[1].rotation.z=lp(1.7,.55,ex);torso.rotation.z=-.1+.25*ex;torso.rotation.x=sg*.08;look();return}
+ if(gs==='parry'){const ex=q<.3?sm(q/.3):1-sm((q-.3)/.6)*.8;stance(.3,.6,.15);torso.rotation.x=sg*.2*ex;torso.rotation.z=-.15;
+  const a=sg>0?1:0,b=1-a,sa=a?-1:1,sb=-sa;arms[a].rotation.set(sa*lp(.5,1.5,ex),0,lp(.9,.45,ex));elb[a].rotation.z=lp(1.0,.15,ex);arms[b].rotation.set(sb*.55,0,.8);elb[b].rotation.z=.9;look();return}
+ if(gs==='wind'||(gs==='kick')){
+  const wk=st.gwk||'lob',wd=Math.max(.1,st.gwd||.4),qw=gs==='wind'?gc(age/wd,0,1):1;
+  if(wk==='throw'){/* overarm: coil, step, whip */
+   const c=sm(qw/.55),w=sm((qw-.5)/.5);stance(.2+.1*c,.35+.1*c,.1);legs[0].rotation.z=lp(.3,.62,c);legs[1].rotation.z=lp(.1,-.05,c);
+   torso.rotation.y=lp(0,-.55,c)+lp(0,.95,w);torso.rotation.z=lp(-.05,.14,c)-.34*w;torso.rotation.x=sg*.05;
+   arms[1].rotation.set(-.15,0,lp(1.0,-1.25,c)+lp(0,3.5,w));elb[1].rotation.z=lp(.9,1.6,c)-1.45*w;arms[0].rotation.set(.35,0,lp(1.0,1.5,c)-.5*w);elb[0].rotation.z=.35;look(.5);return}
+  if(wk==='roll'){const c=sm(qw/.6),w=sm((qw-.55)/.45);stance(.3,.55,.1);legs[0].rotation.z=lp(.3,.8,w);knees[0].rotation.z=-lp(.55,.5,w);legs[1].rotation.z=lp(.3,-.05,w);
+   torso.rotation.z=lp(-.1,-.18,c)-.28*w;arms[1].rotation.set(0,0,lp(.9,-.95,c)+lp(0,2.15,w));elb[1].rotation.z=lp(.9,.15,c);arms[0].rotation.set(.45,0,.55);elb[0].rotation.z=.6;look(.5);return}
+  /* foot strike: goal kick / pass / punt. back-swing, plant, whip, follow-through */
+  const punt=wk==='punt';
+  let bk,fw,fl2=0;
+  if(gs==='wind'){bk=sm(qw/.55);fw=ei((qw-.5)/.5)}
+  else{const tkp=gc((tn-st.kt)/.55,0,1);bk=1;fw=1;fl2=sm(tkp/.45)*(1-sm((tkp-.5)/.5))}
+  const swingA=lp(lp(0,-.85,bk),.55+.8*fl2,fw),swingK=lp(lp(0,-1.25,bk),-.15-.2*fl2,fw);
+  stance(.18,.34,.04);legs[0].rotation.z=.12+.1*bk-.1*fl2;knees[0].rotation.z=-.3-.15*bk+0*fl2;ft[0].rotation.z=.2;
+  legs[1].rotation.z=swingA;knees[1].rotation.z=swingK<0?swingK:0;ft[1].rotation.z=lp(-.2,-.45,fw)*(1-fl2*.5);
+  torso.rotation.z=lp(lp(-.12,.1,bk),-.1,fw)-.18*fl2;torso.rotation.y=lp(lp(0,.3,bk),-.2,fw)+0*fl2;torso.rotation.x=sg*.04;
+  if(punt&&gs==='wind'){const hold=1-sm((qw-.62)/.2);arms[0].rotation.set(.1,0,lp(1.15,.7,1-hold)+0);arms[1].rotation.set(-.1,0,lp(1.15,-.4,1-hold));elb[0].rotation.z=lp(.6,.2,1-hold);elb[1].rotation.z=lp(.6,.2,1-hold)}
+  else{/* free arm swings out for balance, kicking-side arm counters */arms[0].rotation.set(.5,0,lp(lp(.2,1.0,bk),.3,fw)+.4*fl2);arms[1].rotation.set(-.45,0,lp(lp(.2,-.45,bk),.9,fw)+.3*fl2);elb[0].rotation.z=lp(.5,.9,bk);elb[1].rotation.z=lp(.5,.35,bk)}
+  look(.5);return}
+ if(gs==='throw'){/* follow-through after release */
+  const rl=st.gthk===1,f=sm(q/.55),rc=sm((q-.45)/.55);
+  stance(.2+.2*rc*0,.35,.1);legs[0].rotation.z=lp(.62,.15,rc);legs[1].rotation.z=lp(-.05,.1,rc);
+  if(rl){torso.rotation.z=lp(-.46,-.1,rc);arms[1].rotation.set(0,0,lp(1.2,.2,f));elb[1].rotation.z=.15;arms[0].rotation.set(.45,0,.55);elb[0].rotation.z=.6;legs[0].rotation.z=lp(.8,.15,rc);knees[0].rotation.z=-lp(.5,.35,rc)}
+  else{torso.rotation.y=lp(.4,0,rc);torso.rotation.z=lp(-.34,-.1,rc);arms[1].rotation.set(0,0,lp(2.2,.1,f));elb[1].rotation.z=lp(.3,.9,f);arms[0].rotation.set(.35,0,lp(.95,.8,rc));elb[0].rotation.z=.35}
+  look(.5);return}
  return}
-/* ---------- on his feet ---------- */
-const tw=performance.now()/1000;
-/* running forward at pace: keep the normal run cycle */
-if(!holding&&vf>3.4&&vf>Math.abs(vl)*1.6&&st.gpose!=='big'){return}
-if(sim.time-st.kt<.45){/* goal kick / clearance: base kick swing is already applied */arms[1].rotation.z=Math.max(arms[1].rotation.z,-.2);return}
+/* ================= ON HIS FEET ================= */
+if(sim.time-st.kt<.55&&gs!=='wind'){/* follow-through after a clearance / pass */
+ const tkp=gc((tn-st.kt)/.55,0,1),fl2=sm(tkp/.45)*(1-sm((tkp-.5)/.5)),rc=sm((tkp-.55)/.45);
+ stance(.18,.34,.04);legs[0].rotation.z=.12-.1*fl2;knees[0].rotation.z=-.3;ft[0].rotation.z=.2;legs[1].rotation.z=lp(.55+.8*fl2,.1,rc);knees[1].rotation.z=-lp(.35,.4,rc);ft[1].rotation.z=-.4*(1-rc);
+ torso.rotation.z=-.1-.18*fl2*(1-rc);arms[0].rotation.set(.5,0,.7+.4*fl2);arms[1].rotation.set(-.45,0,.9+.3*fl2);elb[0].rotation.z=.9;elb[1].rotation.z=.35;look(.5);return}
+if(!holding&&vf>3.4&&vf>Math.abs(vl)*1.6&&st.gpose!=='big')return;
 NEU();
-if(st.gjump>0){const jq=gc(1-st.gjump/.5,0,1),j=Math.sin(Math.PI*jq);gp.position.y=.62*j;squat(.2,.2,.1);legs[1].rotation.z=.7*j;knees[1].rotation.z=-1.1*j;arms[0].rotation.set(.12,0,2.85);arms[1].rotation.set(-.12,0,2.85);torso.rotation.z=-.04;look();return}
-if(holding){/* carrying the ball: tall, ball cradled at the chest */const c=squat(.14,.22,.06);hip.position.y=1.0;torso.rotation.z=-.08;cradle(1);hd.rotation.y=Math.sin(tw*.6+gp.ph0)*.25;
- if(sp>.8){const s=Math.sin(ph);legs[0].rotation.z=.14+s*.5;legs[1].rotation.z=.14-s*.5;knees[0].rotation.z=-.22-Math.max(0,-s)*.6;knees[1].rotation.z=-.22-Math.max(0,s)*.6}return}
-if(st.gpose==='big'){/* narrowing the angle: spread wide */squat(.4,.75,.3);hip.position.y=.9;torso.rotation.z=-.3;arms[0].rotation.set(1.25,0,.55);arms[1].rotation.set(-1.25,0,.55);elb[0].rotation.z=elb[1].rotation.z=.3;look();return}
+if(st.gjump>0){const jq=gc(1-st.gjump/.5,0,1),j=Math.sin(Math.PI*jq);gp.position.y=.62*j;stance(.2,.3,.06);legs[1].rotation.z=.7*j;knees[1].rotation.z=-1.1*j;arms[0].rotation.set(.12,0,2.85);arms[1].rotation.set(-.12,0,2.85);torso.rotation.z=-.04;look();return}
+const moving=sp>.12,A=moving?GAIT(sp)*gc(sp/.45,0,1)*.92:0;
+if(holding){/* carrying the ball: tall, ball cradled at the chest, natural walk */
+ if(moving){gait(.12,.2,1,A*.9,.75);torso.rotation.z=-.08;cradle(1);torso.rotation.y=-Math.sin(ph)*.1*A}
+ else{stance(.14,.22,.06);torso.rotation.z=-.08;cradle(1);hd.rotation.y=Math.sin(tw*.6+gp.ph0)*.25}
+ hd.rotation.y=Math.sin(tw*.6+gp.ph0)*.2;return}
+if(st.gpose==='big'){stance(.4,.75,.3);torso.rotation.z=-.3;arms[0].rotation.set(1.25,0,.55);arms[1].rotation.set(-1.25,0,.55);elb[0].rotation.z=elb[1].rotation.z=.3;look();return}
 const shout=tn-st.gsay<2.4&&st.gsk==='shout'&&sp<1.2;
-if(sp>.7&&Math.abs(vl)>Math.abs(vf)*.8){/* side shuffle, square to the ball */
- const sd=vl>0?1:-1,u=Math.sin(ph*1.7),a=sd>0?1:0,b=1-a;squat(.42,.8,0);hip.position.y=.95;
- const lead=.14+.26*Math.max(0,u),trail=.1+.22*Math.max(0,-u);
- if(sd>0){legs[1].rotation.x=-lead;legs[0].rotation.x=trail}else{legs[0].rotation.x=lead;legs[1].rotation.x=-trail}
- torso.rotation.z=-.16;torso.rotation.x=sd*.09;
- arms[0].rotation.set(.75,0,.9);arms[1].rotation.set(-.75,0,.9);elb[0].rotation.z=elb[1].rotation.z=.9;hip.position.y+=Math.abs(u)*.02;look();return}
-if(sp>.7&&vf<-1.2){/* back-pedal */const s=Math.sin(ph*1.5);squat(.34,.7,.06);hip.position.y=.96;legs[0].rotation.z+=s*.32;legs[1].rotation.z-=s*.32;torso.rotation.z=-.1;
- arms[0].rotation.set(.6,0,.8);arms[1].rotation.set(-.6,0,.8);elb[0].rotation.z=elb[1].rotation.z=.9;look();return}
-/* ready stance */
-const bob=Math.sin(tw*4.2+gp.ph0)*.012,hy=squat(.4,.78,.12);hip.position.y=hy-.02+bob;torso.rotation.z=-.22;
-arms[0].rotation.set(.6,0,.85);arms[1].rotation.set(-.6,0,.85);elb[0].rotation.z=elb[1].rotation.z=.85;
-if(shout){const w=Math.sin(tw*7);arms[1].rotation.set(-.15,0,2.35+.14*w);elb[1].rotation.z=.25;arms[0].rotation.set(1.1,0,.2);elb[0].rotation.z=.4;torso.rotation.y=.3;hd.rotation.y=-.5;hip.position.y=1.0;legs[0].rotation.z=.15;legs[1].rotation.z=.15;knees[0].rotation.z=knees[1].rotation.z=-.2;ft[0].rotation.z=ft[1].rotation.z=.35;return}
+if(shout){const w=Math.sin(tw*7),ws=sm(Math.min(1,(tn-st.gsay)/.35));stance(.25,.42,.1);
+ arms[1].rotation.set(-.15,0,lp(.85,2.35,ws)+.14*w*ws);elb[1].rotation.z=lp(.9,.25,ws);arms[0].rotation.set(lp(.55,0,ws),0,lp(.8,1.1,ws));elb[0].rotation.z=lp(.9,.4,ws);torso.rotation.y=.3*ws;torso.rotation.z=-.14;hd.rotation.y=-.45*ws;return}
+if(moving){/* alert walk / side-shuffle / back-pedal, always square to the ball, low and balanced */
+ const tf=vf/sp,tl=vl/sp,fwd=gc(tf,0,1),cr=lp(1,.3,sm((vf-1.6)/2.4)*fwd);
+ gait(.4,.78,cr,A,.65);
+ torso.rotation.z=-lp(.22,.12,1-cr);torso.rotation.y=-Math.sin(ph)*.12*A*Math.abs(tf);torso.rotation.x=tl*.07;
+ alertArms(Math.sin(ph)*.42*A*Math.abs(tf));if(Math.abs(tl)>.5){arms[0].rotation.x=.6+.15*Math.sin(ph);arms[1].rotation.x=-(.6+.15*Math.sin(ph+Math.PI))}
+ look();return}
+/* ready stance: weight rocking, hands alive, eyes on the ball */
+const bob=Math.sin(tw*2.6+gp.ph0),sw=Math.sin(tw*1.3+gp.ph0*2);
+stance(.4+.025*bob,.78+.05*bob,.12+.02*sw);torso.rotation.z=-.22-.015*bob;torso.rotation.x=.02*sw;
+alertArms(.04*sw);arms[0].rotation.z+=.05*bob;arms[1].rotation.z-=.05*bob;elb[0].rotation.z+=.06*sw;elb[1].rotation.z-=.06*sw;
 look()};
-const baseAnim=(v,ph,st)=>{const now=performance.now()/1000,k=Math.min(v/8,1),mv=Math.min(1,v/1.2),s=Math.sin(ph),c=Math.cos(ph);
+const baseAnim=(v,ph,st)=>{const now=performance.now()/1000,k=Math.min(v/8,1),mv=Math.min(1,v/.45),s=Math.sin(ph),c=Math.cos(ph),GA=GAIT(v)*mv;
 gp.rotation.z=0;gp.position.y=0;hip.rotation.set(0,s*.2*mv*(.4+.6*k),0);torso.rotation.set(0,-s*.3*mv*(.4+.6*k),-.3*k-.04*mv);hd.rotation.set(0,0,.25*k);hip.position.y=1.02+Math.abs(s)*.06*mv*(.4+.6*k);
-const sw=(.5+.5*k)*mv,kb=(.5+.9*k)*mv;legs[0].rotation.set(0,0,s*sw);legs[1].rotation.set(0,0,-s*sw);knees[0].rotation.z=-Math.max(0,c)*kb-.1*mv;knees[1].rotation.z=-Math.max(0,-c)*kb-.1*mv;ft[0].rotation.z=Math.max(0,s)*.4*mv;ft[1].rotation.z=Math.max(0,-s)*.4*mv;
-arms[0].rotation.set(0,0,-s*(.55+.5*k)*mv);arms[1].rotation.set(0,0,s*(.55+.5*k)*mv);elb[0].rotation.z=elb[1].rotation.z=(.3+.9*k)*mv+.12;
+const sw=GA,kb=(.85+.9*k)*mv;legs[0].rotation.set(0,0,s*sw);legs[1].rotation.set(0,0,-s*sw);knees[0].rotation.z=-Math.max(0,c)*kb-.1*mv;knees[1].rotation.z=-Math.max(0,-c)*kb-.1*mv;
+for(let i=0;i<2;i++){const cf=i?-c:c,stW=Math.max(0,Math.min(1,-cf*1.6+.3));ft[i].rotation.z=mv*(-.3+(-(legs[i].rotation.z+knees[i].rotation.z)+.3)*stW)}
+arms[0].rotation.set(0,0,-s*(.3+.6*k)*mv);arms[1].rotation.set(0,0,s*(.3+.6*k)*mv);elb[0].rotation.z=elb[1].rotation.z=(.3+.9*k)*mv+.12;
 if(mv<1)torso.rotation.z+=Math.sin(now*1.8+gp.ph0)*.014*(1-mv);
 if(st&&typeof sim!=='undefined'&&!st.gk){const bb=sim.ball;let rel=Math.atan2(bb.z-st.z,bb.x-st.x)-st.a;rel=((rel+Math.PI*3)%(Math.PI*2))-Math.PI;hd.rotation.y=-Math.max(-1.1,Math.min(1.1,rel))*.55;torso.rotation.y+=-Math.max(-1,Math.min(1,rel))*.12*(1-k*.6);
  const ow=sim.owner>=0?sim.p[sim.owner]:null;
@@ -289,7 +368,19 @@ if(typeof sim!=='undefined'&&!st.gk){const tn=sim.time;
   else if(st.sk==='burst'){torso.rotation.z=-.4*w;arms[0].rotation.z=-1.1*w;arms[1].rotation.z=1.1*w}
   else if(st.sk==='roulette'){hip.position.y-=.06*w;legs[1].rotation.z=.7*w;knees[1].rotation.z=-.5*w}}
  if(st.hdt>0&&tn-st.hdt<.5){const q=(tn-st.hdt)/.5,w=Math.sin(Math.min(1,q)*Math.PI);torso.rotation.z=-.55*w;hd.rotation.z=-.3*w;arms[0].rotation.z=-.9*w;arms[1].rotation.z=-.9*w}}}};
-gp.anim=(v,ph,st)=>{baseAnim(v,ph,st);if(st&&st.gk&&typeof sim!=='undefined'&&sim.p[st.id]===st)gkA(v,ph,st)};
+/* finishing pass for every animated player: head stays level over a leaning spine, sudden pose changes ease in instead of snapping, and the lowest boot is always planted on the turf */
+const CHN=[],SMc={on:false,t:0,pv:[],e:[],OFF:{x:0,z:0}};
+{const ad=(o,k,vm)=>CHN.push([o,k,vm]);[hip.rotation,torso.rotation,hd.rotation].forEach(r=>['x','y','z'].forEach(k=>ad(r,k,9)));ad(hip.position,'y',3.5);arms.forEach(a=>['x','y','z'].forEach(k=>ad(a.rotation,k,10)));elb.forEach(e=>ad(e.rotation,'z',11));legs.forEach(l=>['x','z'].forEach(k=>ad(l.rotation,k,10)));knees.forEach(k=>ad(k.rotation,'z',11));ft.forEach(f=>ad(f.rotation,'z',11));ad(gp.rotation,'x',7);ad(gp.rotation,'z',7);ad(gp.position,'y',3.4);ad(SMc.OFF,'x',4);ad(SMc.OFF,'z',4)}
+const finish=(px,pz,st)=>{
+ if(Math.abs(gp.rotation.x)<.3&&Math.abs(gp.rotation.z)<.3)hd.rotation.z+=gc(-torso.rotation.z,-.1,.8)*.45;
+ SMc.OFF.x=gp.position.x-px;SMc.OFF.z=gp.position.z-pz;
+ const nw=performance.now()/1000;let dt=nw-SMc.t;SMc.t=nw;const snap=!SMc.on||dt>.35;SMc.on=true;dt=gc(dt<=0?1/120:dt,1/240,.1);const dec=Math.exp(-15*dt);
+ for(let i=0;i<CHN.length;i++){const c=CHN[i],o=c[0],k=c[1],val=o[k];if(snap){SMc.pv[i]=val;SMc.e[i]=0}else{const d=val-SMc.pv[i],lim=c[2]*dt,ex=d-gc(d,-lim,lim);SMc.e[i]=SMc.e[i]*dec-ex;SMc.pv[i]=val;o[k]=val+SMc.e[i]}}
+ gp.position.x=px+SMc.OFF.x;gp.position.z=pz+SMc.OFF.z;
+ const w=gc(1-Math.abs(gp.position.y)/.07,0,1)*gc(1-(Math.abs(gp.rotation.x)+Math.abs(gp.rotation.z))/.6,0,1)*gc(1-(Math.abs(hip.rotation.x)+Math.abs(hip.rotation.z))/.2,0,1);
+ if(w>0)hip.position.y=lp(hip.position.y,hipG(),w);
+ if(st.gk&&(st.gst==='dive'||st.gst==='down'||st.gst==='rise'||Math.abs(gp.rotation.x)>.25||Math.abs(gp.rotation.z)>.25)){const lo=lowest(),settle=st.gst==='down'||st.gst==='rise';if(lo<0||(settle&&lo>.015))gp.position.y-=lo}};
+gp.anim=(v,ph,st)=>{const px=gp.position.x,pz=gp.position.z;baseAnim(v,ph,st);if(st&&st.gk&&typeof sim!=='undefined'&&sim.p[st.id]===st)gkA(v,ph,st);if(st)finish(px,pz,st)};
 gp.pose=(type,t)=>{gp.anim(0,0);const w=Math.sin(t*1.6+gp.ph0);
 if(type==='sit'||type==='tie'){hip.position.y=.64;legs[0].rotation.set(0,0,1.5);legs[1].rotation.set(0,0,1.5);knees[0].rotation.z=knees[1].rotation.z=-1.5;arms[0].rotation.z=arms[1].rotation.z=.6;elb[0].rotation.z=elb[1].rotation.z=.9;torso.rotation.z=-.05+w*.015;
 if(type==='tie'){torso.rotation.z=-.95+w*.03;hd.rotation.z=.5;arms[0].rotation.z=arms[1].rotation.z=1.1;elb[0].rotation.z=elb[1].rotation.z=.4}}
@@ -297,8 +388,8 @@ else if(type==='stretch'){arms[0].rotation.z=arms[1].rotation.z=2.7+w*.15;torso.
 else if(type==='talk'){arms[1].rotation.z=.9+Math.max(0,w)*.5;elb[1].rotation.z=1.4;torso.rotation.y=w*.1}};
 gp.rotation.order='YXZ';gp.scale.setScalar(HI?.85:1.02);sc.add(gp);gp.anim(0,0);return gp}
 // Populate the completed dugouts only after the shared human rig and its materials exist.
-dugoutTeams.forEach(([x,team])=>{for(let i=0;i<6;i++){const person=mk(team?0xd8342f:0x2a7de1,S,{shorts:0x171a20,skin:(i+team)%5,hair:(i+2)%5,hs:i%4,boot:0x111111});person.position.set(-(x-4.9+i*1.55),0,-40.25);person.rotation.y=team?0:Math.PI;dugoutPeople.push({m:person,pose:i%3===0?'talk':'sit',phase:i*.9+team})}
-const coach=mk(0x20242e,S,{shorts:0x20242e,sock:0x20242e,skin:team?3:1,hair:2,hs:2,boot:0x111111});coach.position.set(-(x+(team?-7.2:7.2)),0,-37.9);coach.rotation.y=team?0:Math.PI;dugoutPeople.push({m:coach,pose:'talk',phase:team+2});});
+dugoutTeams.forEach(([x,team])=>{for(let i=0;i<6;i++){const person=mk(team?0xd8342f:0x2a7de1,S,{shorts:0x171a20,skin:(i+team)%5,hair:(i+2)%5,hs:i%4,boot:0x111111});person.position.set(x-4.9+i*1.55,0,40.25);person.rotation.y=team?Math.PI:0;dugoutPeople.push({m:person,pose:i%3===0?'talk':'sit',phase:i*.9+team})}
+const coach=mk(0x20242e,S,{shorts:0x20242e,sock:0x20242e,skin:team?3:1,hair:2,hs:2,boot:0x111111});coach.position.set(x+(team?-7.2:7.2),0,37.9);coach.rotation.y=team?Math.PI:0;dugoutPeople.push({m:coach,pose:'talk',phase:team+2});});
 // Front-row supporters are individually rigged for small cheers and conversations; the upper tiers remain instanced for mobile performance.
 const bowlPeople=[];
 for(let side of [-1,1])for(let i=0;i<6;i++){const f=mk(pick(side<0?BLU:RED),S,{shorts:pick([0x171a20,0x303744,0xf2f2f2]),skin:i%5,hair:(i+2)%5,hs:i%5,boot:0x171717});f.position.set(-29+i*11,.92,side*43.2);f.rotation.y=side<0?Math.PI:0;bowlPeople.push({m:f,pose:i%3===0?'stretch':'talk',phase:i*.8+side})}
@@ -399,16 +490,16 @@ for(const [x,z,c] of [[-22,-92,0x246a86],[22,-88,0x8b4b2d]]){const kiosk=new T.G
 // Ball kids in high-visibility bibs near each touchline/end-zone corner.
 [[-52,-31],[52,-31],[-52,31],[52,31],[-34,-39],[34,-39]].forEach(([x,z],i)=>{const kid=mk(0xf1c40f,S,{shorts:0x101820,skin:i%5,hair:i%4,hs:i%3,boot:0x111111});kid.position.set(x,0,z);kid.rotation.y=Math.atan2(-x,-z);pitchCrew.push({m:kid,pose:'sit',phase:i*1.4})});
 // Coaches and substitutes occupy both dugouts instead of leaving the technical areas empty.
-[-1,1].forEach((side,team)=>{for(let i=0;i<5;i++){const person=mk(team?0xd8342f:0x2a7de1,S,{shorts:0x171a20,skin:(i+team)%5,hair:(i+2)%5,hs:i%4,boot:0x111111});person.position.set(side*15+(i-2)*1.65,0,-40.1);person.rotation.y=side>0?0:Math.PI;pitchCrew.push({m:person,pose:i%2?'talk':'sit',phase:i+team*2})}});
+[-1,1].forEach((side,team)=>{for(let i=0;i<5;i++){const person=mk(team?0xd8342f:0x2a7de1,S,{shorts:0x171a20,skin:(i+team)%5,hair:(i+2)%5,hs:i%4,boot:0x111111});person.position.set(side*15+(i-2)*1.65,0,40.1);person.rotation.y=side>0?Math.PI:0;pitchCrew.push({m:person,pose:i%2?'talk':'sit',phase:i+team*2})}});
 
-let mode='play',tt=0,cm=3,sprint=false,camYaw=0,chg=0,chgK=null,chgT=0;const FP={yaw:0,pit:-.08},ORB={yaw:0,pit:0,idle:0};
+let mode='play',tt=0,cm=3,sprint=false,camYaw=0,chg=0,chgK=null,chgT=0;const FP={yaw:0,pit:-.08},ORB={yaw:0,pit:0,idle:0};let camLk=null;const camHv=new T.Vector3();
 const CM=[[34,92,0],[11,20,14],[43,112,0]],CN=['default','player','stadium','3rd person','1st person'];
 let camTrackX=0,camTrackZ=0;
 const tn=t=>t?'City':'United',nm=id=>(id%11)+1,turnA=(a,b,m)=>{const d=((b-a+Math.PI*3)%(Math.PI*2))-Math.PI;return a+cl(d,-m,m)};
 const cap=t=>{$('cp').textContent=t},fade=f=>{$('fd').style.opacity=f?1:0};
 function say(t,ms){cap(t);clearTimeout(say.h);say.h=setTimeout(()=>cap(''),ms||1800)}
 function banner(t){const m=$('msg');m.textContent=t;m.style.display=t?'block':'none'}
-function sync(dt){sim.p.forEach((s,i)=>{const p=P[i],v=Math.hypot(s.vx,s.vz);p.p.set(s.x,s.z);p.v.set(s.vx,s.vz);p.a=s.a;p.ph+=v*dt*1.25;p.m.visible=!s.off;
+function sync(dt){sim.p.forEach((s,i)=>{const p=P[i],v=Math.hypot(s.vx,s.vz);p.p.set(s.x,s.z);p.v.set(s.vx,s.vz);p.a=s.a;p.ph+=GAITW(v)*dt;p.m.visible=!s.off;
 if(p.va===undefined||dt<=0)p.va=s.a;else{const pa=p.va;p.va=turnA(p.va,s.a,Math.min(1,dt*(v>5?9:13)));p.yr=((p.va-pa+Math.PI*3)%(Math.PI*2)-Math.PI)/Math.max(dt,.001)}
 p.m.position.set(s.x,0,s.z);p.m.rotation.y=-p.va+((s.sk==='roulette'&&sim.time-s.skt<.6)?((sim.time-s.skt)/.6)*Math.PI*2:0);
 const lean=s.dv>0?s.dd*(Math.cos(s.a)>0?1:-1)*Math.min(1.35,(1-s.dv/.7)*3):Math.max(-.32,Math.min(.32,(p.yr||0)*v*.011));
@@ -420,7 +511,7 @@ const b=sim.ball;const bsp=Math.hypot(b.vx,b.vz);if(bsp>.3&&dt>0){const ax=new T
 {const o=sim.owner>=0?P[sim.owner]:null;if(o&&o.thrown)ball.position.set(o.p.x,2.25,o.p.y)}
 bv.set(b.vx,b.vy,b.vz);owner=sim.owner>=0?P[sim.owner]:null;u=P[sim.user]||null}
 function reset(){Sim.reset(sim);sim.mood=st.m;sync(0)}
-function act(k,pw){if(!st.run||st.pause||st.freeze>0)return;Sim.act(sim,k,pw)}
+function act(k,pw){if(!st.run||st.pause||st.freeze>0)return;if(k===0&&!sim.kickoff){const up=sim.p[sim.user],ow=sim.owner>=0?sim.p[sim.owner]:null;if(up&&!up.gk&&ow&&ow.t!==up.t)say('Pressing!',900);else if(up&&!up.gk&&sim.owner<0&&sim.lastT!==up.t)say('Closing the pass!',900)}Sim.act(sim,k,pw)}
 const pad=$('pad'),kn=$('kn');
 function pm(e){const r=pad.getBoundingClientRect();let dx=e.clientX-r.left-60,dy=e.clientY-r.top-60;const l=Math.hypot(dx,dy);if(l>50){dx*=50/l;dy*=50/l}jx=dx/50;jy=dy/50;kn.style.transform=`translate(${dx}px,${dy}px)`}
 pad.style.touchAction='none';pad.addEventListener('pointerdown',e=>{e.preventDefault();pad.setPointerCapture(e.pointerId);pm(e)});pad.addEventListener('pointermove',e=>{if(pad.hasPointerCapture(e.pointerId))pm(e)});
@@ -480,7 +571,7 @@ sim.p.forEach(p=>{if(p.off)return;rg.fillStyle=p.t?'#e24b4a':'#4d9bff';rg.beginP
 rg.fillStyle='#fff';rg.beginPath();rg.arc(X(sim.ball.x),Z(sim.ball.z),2.4,0,7);rg.fill()}
 /* ---------- menus ---------- */
 document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{Sim.setFormation(sim,0,b.dataset.f);$('fm').textContent='Formation '+b.dataset.f;drawBoard(b.dataset.f)});
-function cycleCam(){cm=(cm+1)%5;ORB.yaw=ORB.pit=0;ORB.idle=0;$('cmb').textContent='Camera: '+CN[cm];$('viewbtn').textContent='VIEW: '+CN[cm].toUpperCase();rs();if(cm!==4&&u)u.m.visible=true;if(cm===4)FP.yaw=camYaw}
+function cycleCam(){cm=(cm+1)%5;camLk=null;ORB.yaw=ORB.pit=0;ORB.idle=0;$('cmb').textContent='Camera: '+CN[cm];$('viewbtn').textContent='VIEW: '+CN[cm].toUpperCase();rs();if(cm!==4&&u)u.m.visible=true;if(cm===4)FP.yaw=camYaw}
 $('cmb').onclick=cycleCam;$('cmb').textContent='Camera: '+CN[cm];
 $('pz').onclick=()=>{st.pause=true;$('pm').classList.add('on')};$('rsm').onclick=()=>{st.pause=false;$('pm').classList.remove('on')};
 function ctx(){const own=sim.owner===sim.user,att=sim.owner>=0?sim.p[sim.owner].t===0:sim.lastT===0,k=own?'own':att?'mine':'opp';if(k===ctx.s)return;ctx.s=k;
@@ -489,9 +580,9 @@ function ui(on){ctx.s=null;const d=on?'block':'none',f=on?'flex':'none';$('viewb
 function showWalkUI(on){$('pad').style.display=on?'block':'none';$('sc').parentNode.style.display=on?'none':'flex';$('ia').style.display='none';$('rad').style.display='none';$('mapbtn').style.display=on?'block':'none';$('viewbtn').style.display=on?'block':'none';$('walkobj').style.display=on?'block':'none';if(!on)$('cp').textContent=''}
 /* ---------- ceremony helpers (lineup, handshakes, kickoff) ---------- */
 function setP(p,x,z,a){p.p.set(x,z);p.a=a;p.v.set(0,0);p.m.position.set(x,0,z);p.m.rotation.set(0,-a,0);p.m.anim(0,0)}
-function walk(p,tx,tz,spd,dt){const dx=tx-p.p.x,dz=tz-p.p.y,d=Math.hypot(dx,dz);if(d>.3){p.p.x+=dx/d*spd*dt;p.p.y+=dz/d*spd*dt;p.a=Math.atan2(dz,dx);p.ph+=dt*spd*1.6;p.m.anim(Math.min(spd,8),p.ph)}else p.m.anim(0,0);p.m.position.set(p.p.x,0,p.p.y);p.m.rotation.y=-p.a}
+function walk(p,tx,tz,spd,dt){const dx=tx-p.p.x,dz=tz-p.p.y,d=Math.hypot(dx,dz);if(d>.3){p.p.x+=dx/d*spd*dt;p.p.y+=dz/d*spd*dt;p.a=Math.atan2(dz,dx);p.ph+=dt*GAITW(Math.min(spd,8));p.m.anim(Math.min(spd,8),p.ph)}else p.m.anim(0,0);p.m.position.set(p.p.x,0,p.p.y);p.m.rotation.y=-p.a}
 function refUpd(dt){const b=ball.position,tx=cl(b.x*.75-4,-40,40),tz=cl(b.z+(b.z>0?-8:8),-26,26),dx=tx-RF.position.x,dz=tz-RF.position.z,d=Math.hypot(dx,dz);if(d>1){const s=Math.min(6,d*1.5);RF.position.x+=dx/d*s*dt;RF.position.z+=dz/d*s*dt;RF.rotation.y=-Math.atan2(dz,dx);RF.anim(s,performance.now()/110)}}
-function kickoff(){mode='play';cap('');ext.visible=false;ESC.forEach(k=>k.visible=false);rs();reset();camYaw=0;FP.yaw=0;{const hp=sim.p[sim.hero]||sim.p[9];cam.position.set(hp.x-10,5,hp.z);cam.lookAt(hp.x+10,1,hp.z)}RF.position.set(0,0,12);st.run=true;ui(true)}
+function kickoff(){mode='play';cap('');ext.visible=false;ESC.forEach(k=>k.visible=false);rs();reset();camYaw=0;FP.yaw=0;camLk=null;{const hp=sim.p[sim.hero]||sim.p[9];cam.position.set(hp.x-10,5,hp.z);cam.lookAt(hp.x+10,1,hp.z)}RF.position.set(0,0,12);st.run=true;ui(true)}
 const ESC=[];
 function startLineup(){mode='lineup';tt=0;rs();cam.fov=45;cam.updateProjectionMatrix();owner=null;bv.set(0,0,0);
  P.forEach((p,i)=>{const n=i%Sim.N;p.m.visible=false;p.dl=1.6+n*.55+(p.t?.25:0);p.cx=p.t?1.5:-1.5;p.fx=(p.t?1:-1)*(3.6+(10-n)*2.15);p.x0=-15+n*3;p.ph=0;p.stg=0;setP(p,p.cx,-52,Math.PI/2)});
@@ -869,7 +960,7 @@ const solid=(x,z)=>inside(x,z)&&inside(x+.55,z)&&inside(x-.55,z)&&inside(x,z+.55
 if(solid(ax,WK.z))WK.x=ax;else WK.vx=0;if(!WK.busy){if(solid(WK.x,az))WK.z=az;else WK.vz=0}else{WK.vx*=.5;WK.vz=0;}
 if(WK.kind==='half'&&!WK.lock&&!WK.talked&&WK.z<-39)WK.lock=true;
 if(WK.lock&&!WK.talked&&WK.z>-38.6&&WK.vz>.5&&performance.now()>WK.msg){say('The gaffer wants a word first.',2000);WK.msg=performance.now()+3000}
-const v=Math.hypot(WK.vx,WK.vz);if(v>.4)WK.a=turnA(WK.a,Math.atan2(WK.vz,WK.vx),dt*12);WK.ph+=v*dt*1.6;
+const v=Math.hypot(WK.vx,WK.vz);if(v>.4)WK.a=turnA(WK.a,Math.atan2(WK.vz,WK.vx),dt*12);WK.ph+=GAITW(v*1.25)*dt;
 if(WK.kind==='pre'&&WK.x>=52&&WK.x<=62&&WK.z>=-198&&WK.z<-168.4)WK.z+=1.3*dt;if(WK.ride)rideStep(dt);U.position.set(WK.x,WK.y,WK.z);U.rotation.y=-WK.a;worldTick(now,dt);U.anim(v*1.25,WK.ph);
 if(WK.kind==='half')P.forEach((p,i)=>{if(!p.m.visible)return;const tx=p.t?p.p.x:cl(p.p.x*.3,-6,6)+(i%5-2)*.8,tz=p.t?40:-37.6;walk(p,tx,tz,6.5,dt);if(p.t?p.p.y>36.8:p.p.y<-36.8)p.m.visible=false});
 RM.forEach(o=>o.m.pose(o.pose,now));COACH.pose('talk',now);
@@ -908,8 +999,12 @@ if(cm===0){
  const px=cl(hx-fx*D,-80,80),pz=cl(hz-fz*D,-56,56),k=Math.min(1,dt*(dr?14:4.2));
  cam.position.x+=(px-cam.position.x)*k;cam.position.y+=(H-cam.position.y)*Math.min(1,dt*(dr?10:2.5));cam.position.z+=(pz-cam.position.z)*k;
  const tf=w?64:54;if(Math.abs(cam.fov-tf)>.1){cam.fov=tf;cam.updateProjectionMatrix()}
- const tx=hx+fx*(w?12:10)+cl(b.x-hx,-4,8)*.25,tz=hz+fz*(w?12:10)+cl(b.z-hz,-6,6)*.25,mx=hx+(b.x-hx)*.55,mz=hz+(b.z-hz)*.55;
- cam.lookAt(lerp(tx,mx,orb),lerp(1,.6,orb),lerp(tz,mz,orb));
+ /* orbit view: look the way your player is looking (aim point sits close to him while swung round, so he never leaves the screen) */
+ const ah=lerp(w?12:10,3.4,orb),k2=1-orb*.85,tx=hx+fx*ah+cl(b.x-hx,-4,8)*.25*k2,tz=hz+fz*ah+cl(b.z-hz,-6,6)*.25*k2,ty=lerp(1,1.1,orb);
+ if(!camLk)camLk=new T.Vector3(tx,ty,tz);else{const lk=Math.min(1,dt*(dr?16:7));camLk.x+=(tx-camLk.x)*lk;camLk.y+=(ty-camLk.y)*lk;camLk.z+=(tz-camLk.z)*lk}
+ cam.lookAt(camLk);cam.updateMatrixWorld();camHv.set(hx,1.15,hz).project(cam);
+ if(Math.abs(camHv.x)>.55||camHv.y<-.7||camHv.y>.5||camHv.z>1){/* safety net: pull the aim back onto the player until he is framed */
+  for(const t of [.4,.7,1]){camLk.x+=(hx-camLk.x)*t;camLk.y+=(1.1-camLk.y)*t;camLk.z+=(hz-camLk.z)*t;cam.lookAt(camLk);cam.updateMatrixWorld();camHv.set(hx,1.15,hz).project(cam);if(Math.abs(camHv.x)<=.55&&camHv.y>=-.7&&camHv.y<=.5&&camHv.z<=1)break}}
 }else if(cm===4){
  // CAREER 1ST PERSON: eyes of your player; drag to look, view eases toward your running direction.
  const hx=u?u.p.x:b.x,hz=u?u.p.y:b.z,hvx=u?u.v.x:0,hvz=u?u.v.y:0,hsp=Math.hypot(hvx,hvz);
