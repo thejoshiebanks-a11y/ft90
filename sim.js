@@ -350,16 +350,22 @@ if(own){const o=own,sp=hyp(o.vx,o.vz),spf=Math.min(sp/9,1);
   o.tc-=dt;let hx,hz,sti=0;
   if(isU(o)){const i=S.inp;sti=hyp(i.ix,i.iz);if(sti>.2){hx=i.ix/sti;hz=i.iz/sti}else{hx=Math.cos(o.a);hz=Math.sin(o.a)}}
   else{hx=o.dx;hz=o.dz;const hl=hyp(hx,hz);if(hl<.01){hx=Math.cos(o.a);hz=Math.sin(o.a)}else{hx/=hl;hz/=hl}}
-  const dB0=hyp(b.x-o.x,b.z-o.z),reach=1.3+.45*spf,moving=sp>.9||sti>.2;
+  const usr=isU(o),rv=usr&&sp>2&&spf>.5&&sti>.2&&(hx*o.vx+hz*o.vz)/sp<-.1,dB0=hyp(b.x-o.x,b.z-o.z),reach=(1.3+.45*spf)*(usr?(rv?1.05:1.4):1),moving=sp>.9||sti>.2;
+  /* you changed direction: take an early touch so the ball follows your new heading instead of being left behind */
+  if(usr&&!rv&&sti>.35&&o.lhx!==undefined&&o.tc>.05&&dB0<reach&&hx*o.lhx+hz*o.lhz<.85)o.tc=0;
   if(o.tc<=0&&dB0<reach&&(moving||dB0>1.05)){
    const T=.3-.07*spf+S.rng()*.04,ah=.62+.9*spf,tx=o.x+o.vx*T+hx*ah,tz=o.z+o.vz*T+hz*ah;
    let nvx=(tx-b.x)/T,nvz=(tz-b.z)/T;const nl=hyp(nvx,nvz),cap=Math.max(sp+7,9);if(nl>cap){nvx*=cap/nl;nvz*=cap/nl}
-   b.vx=nvx;b.vz=nvz;o.tc=T*.95;o.ttime=S.time;o.tpar^=1}
+   b.vx=nvx;b.vz=nvz;o.tc=T*.95;o.ttime=S.time;o.tpar^=1;o.lhx=hx;o.lhz=hz}
   b.y=.22;b.vy=0;b.x+=b.vx*dt;b.z+=b.vz*dt;
   const fr=moving?1.1:7,f=Math.max(0,1-fr*dt);b.vx*=f;b.vz*=f;
+  /* magnetic follow-through: while you steer, the ball is gently pulled along your heading (weaker at full sprint, so it can still run away) */
+  if(usr&&sti>.2&&dB0<3){const sp2=Math.max(0,spf-.8)/.2,as=(1-.55*sp2)*(rv?.12:1),cx=o.x+o.vx*.14+hx*(.75+.5*spf),cz=o.z+o.vz*.14+hz*(.75+.5*spf);
+   b.vx+=(cx-b.x)*7*as*dt;b.vz+=(cz-b.z)*7*as*dt;
+   const lat=(b.vx-o.vx)*(-hz)+(b.vz-o.vz)*hx,kk=Math.min(1,dt*6*as);b.vx+=hz*lat*kk;b.vz-=hx*lat*kk}
   if(!moving&&dB0<3){const k=1-Math.exp(-12*dt);b.vx+=((o.x+Math.cos(o.a)*.7-b.x)*4+o.vx-b.vx)*k;b.vz+=((o.z+Math.sin(o.a)*.7-b.z)*4+o.vz-b.vz)*k}
   const dB=hyp(b.x-o.x,b.z-o.z);
-  if(dB>3.3){S.owner=-1;S.lastT=o.t;o.cd=.3;S.rcv=-1}
+  if(dB>(usr&&!rv?4.2:3.3)){S.owner=-1;S.lastT=o.t;o.cd=.3;S.rcv=-1}
   else if(Math.abs(b.z)>W+.3||Math.abs(b.x)>L+.3){if(!(Math.abs(b.x)>L&&Math.abs(b.z)<GW)){S.owner=-1;S.lastT=o.t;S.rcv=-1}}
  }
  const dBo=hyp(b.x-o.x,b.z-o.z);
