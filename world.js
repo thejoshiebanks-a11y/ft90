@@ -9,8 +9,8 @@ const CITIES = {
   germany: { name: 'GERMANY', flag: '\uD83C\uDDE9\uD83C\uDDEA', file: 'city_germany.glb', nav: 'nav_germany.json', sky: 0x9cb8d8, sun: 0xf4f7ff, hemi: 0.9,  gnd: 0x59654f, ll: [52.52, 13.405] }
 };
 const STADIUM_NAME = 'FT 90 STADIUM';
-const IDLE_T = 13.375;                 // standing frame inside Ronaldo's clip
-const HOUSE = { x0: -2.2, x1: 3.4, z0: -1.6, z1: 2.0, y: 0.25, spawn: [0.6, 0.8], exitZ: 1.35 };
+const IDLE_T = 10.0;                 // standing frame inside Ronaldo's clip
+const HOUSE = { x0: -2.2, x1: 3.4, z0: -1.6, z1: 2.0, y: 0.25, spawn: [0.6, 0.8], exitZ: 1.35, door: [-0.1, 2.2] };
 const STAD = { hx0: 130, hx1: 125, hz0: 105, hz1: 98 };   // blocked rectangle around the stadium (from its centre)
 const T = THREE, $$ = id => document.getElementById(id);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -246,8 +246,8 @@ function analyzeHouse(root) {
     const ym = (ay + by + cy) / 3, lo = Math.min(ay, by, cy), hi = Math.max(ay, by, cy);
     if (n[1] > 0.85) {
       if (Math.abs(ym - floorY) < 0.15) fillTri(floor, ax, az, bx, bz, cx, cz);
-      else if (ym > floorY + 0.2 && ym < floorY + 1.4) fillTri(top, ax, az, bx, bz, cx, cz);
-    } else if (Math.abs(n[1]) < 0.85 && hi > floorY + 0.25 && lo < floorY + 1.6) {
+      else if (ym > floorY + 0.25 && ym < floorY + 1.3) fillTri(top, ax, az, bx, bz, cx, cz);
+    } else if (Math.abs(n[1]) < 0.6 && hi - lo >= 0.4 && hi > floorY + 0.3 && lo < floorY + 1.3) {
       markSeg(wall, ax, az, bx, bz); markSeg(wall, bx, bz, cx, cz); markSeg(wall, cx, cz, ax, az);
     }
   }
@@ -271,6 +271,7 @@ function analyzeHouse(root) {
   const isWall = (x, z) => { const i = ci(x), j = cj(z); return i < 0 || j < 0 || i >= NX || j >= NZ || wall[i * NZ + j] === 1; };
   let heading = Math.PI, hb = -1;
   for (let k = 0; k < 16; k++) { const a = k * Math.PI / 8; let run = 0; while (run < 12 && st1(sp[0] + Math.sin(a) * (run + 0.1), sp[1] + Math.cos(a) * (run + 0.1))) run += 0.1; if (run > hb) { hb = run; heading = a; } }
+  heading = 0;   // face the glass doors at the front of the house
   const ceilY = Math.max(2.0, Math.min(hgt - (floorY - yMin), 3.2)) - 0.12, ly = Math.min(2.1, ceilY - 0.15);
   const cells = []; for (let i = 0; i < NX; i += 2) for (let j = 0; j < NZ; j += 2) if (reg[i * NZ + j]) cells.push([gx0 + (i + 0.5) * CELL, gz0 + (j + 0.5) * CELL]);
   const lights = [[sp[0], ly, sp[1]]];
@@ -300,7 +301,7 @@ function bindInput() {
     window.addEventListener('mouseup', () => { if (I.m) end(); });
   }
   const cv = R.domElement; let lid = null, lx = 0, ly = 0;
-  cv.addEventListener('touchstart', e => { if (lid !== null || W.phase !== 'house') return; const t = e.changedTouches[0]; lid = t.identifier; lx = t.clientX; ly = t.clientY; }, { passive: true });
+  cv.addEventListener('touchstart', e => { if (lid !== null || (W.phase !== 'house' && W.phase !== 'foot')) return; const t = e.changedTouches[0]; lid = t.identifier; lx = t.clientX; ly = t.clientY; }, { passive: true });
   window.addEventListener('touchmove', e => { if (lid === null) return; for (const t of e.changedTouches) if (t.identifier === lid) { W.cy -= (t.clientX - lx) * 0.0065; W.cp = clamp(W.cp + (t.clientY - ly) * 0.004, -0.3, 0.8); lx = t.clientX; ly = t.clientY; } }, { passive: true });
   const le = e => { if (lid === null) return; for (const t of e.changedTouches) if (t.identifier === lid) lid = null; };
   window.addEventListener('touchend', le); window.addEventListener('touchcancel', le);
@@ -324,6 +325,7 @@ function mkNav(j) {
   const walk = b64(j.walk), gy = new Int16Array(b64(j.gy).buffer);
   const n = { W: j.W, H: j.H, c: j.cell, ox: j.ox, oz: j.oz, mode: j.mode, walk, gy, stad: null };
   n.idx = (x, z) => { const ix = Math.floor((x - n.ox) / n.c), iz = Math.floor((z - n.oz) / n.c); return (ix < 0 || iz < 0 || ix >= n.W || iz >= n.H) ? -1 : ix * n.H + iz; };
+  n.okFree = (x, z) => { const i = n.idx(x, z); return i < 0 ? Math.abs(x) < 2500 && Math.abs(z) < 2500 : walk[i] > 0; };
   n.ok = (x, z) => {
     if (n.stad && x > n.stad[0] - STAD.hx0 && x < n.stad[0] + STAD.hx1 && z > n.stad[1] - STAD.hz0 && z < n.stad[1] + STAD.hz1) return false;
     const i = n.idx(x, z); return i < 0 ? Math.abs(x) < 2500 && Math.abs(z) < 2500 : walk[i] > 0;
@@ -357,7 +359,7 @@ function pickHouse(n) {
 }
 function build(key, city, stad, player, house, navj) {
   const C = CITIES[key], nav = mkNav(navj); W.nav = nav;
-  prep(city.scene, true, { cap: 1024, lite: true, emi: 0.5, glass: true }); prep(stad.scene, true, { cap: 2048, lite: true, emi: 0.4, glass: true }); prep(player.scene, false, { cap: 2048, emi: 0.2 }); prep(house.scene, true, { cap: 2048, emi: 0.45 });
+  prepCity(city.scene, key); prep(stad.scene, true, { cap: 2048, lite: true, emi: 0.08, glass: true }); prep(player.scene, false, { cap: 2048, emi: 0.06 }); prep(house.scene, true, { cap: 2048, emi: 0.22 });
   city.scene.traverse(o => { if (o.isMesh) { o.updateMatrix(); o.matrixAutoUpdate = false; } });
   const gW = nav.W * nav.c, gH = nav.H * nav.c, cx = nav.ox + gW / 2, cz = nav.oz + gH / 2, big = Math.max(gW, gH), my = nav.mode;
   W.big = big; W.center = new T.Vector3(cx, my, cz);
@@ -365,32 +367,28 @@ function build(key, city, stad, player, house, navj) {
   const cs = new T.Scene(); const sky = makeSky(C); cs.background = sky.hor.clone(); cs.fog = new T.Fog(sky.hor.clone(), big * 0.6, big * 2.2);
   W.dome = sky.mesh; W.dome.scale.setScalar(Math.max(5000, big * 8) * 0.9); cs.add(W.dome); W.clouds = makeClouds(big, my); cs.add(W.clouds);
   W.cam.far = Math.max(5000, big * 8); W.cam.updateProjectionMatrix();
-  cs.add(new T.HemisphereLight(0xffffff, 0x556070, C.hemi)); cs.add(new T.AmbientLight(0xffffff, 0.32)); const sun = new T.DirectionalLight(C.sun, 1.0); sun.position.set(200, 400, 150); cs.add(sun);
+  cs.add(new T.HemisphereLight(0xffffff, 0x556070, C.hemi * 0.8)); cs.add(new T.AmbientLight(0xffffff, 0.1)); const sun = new T.DirectionalLight(C.sun, 1.0); sun.position.set(200, 400, 150); cs.add(sun);
   cs.add(city.scene);
-  const gm = new T.Mesh(new T.PlaneGeometry(12000, 12000), new T.MeshLambertMaterial({ color: C.gnd })); gm.rotation.x = -Math.PI / 2; gm.position.set(cx, my - 0.6, cz); cs.add(gm);
+  const gm = new T.Mesh(new T.PlaneGeometry(12000, 12000), new T.MeshLambertMaterial({ color: 0xffffff, map: makeGroundTex(C.gnd) })); gm.rotation.x = -Math.PI / 2; gm.position.set(cx, my - 0.6, cz); cs.add(gm);
   const house0 = pickHouse(nav); W.houseXZ = house0;
   const sx = nav.ox + gW + 210, sz = house0[1]; nav.stad = [sx, sz]; W.stadXZ = [sx, sz];
   stad.scene.position.set(sx, my, sz); cs.add(stad.scene);
+  try { stad.scene.updateMatrixWorld(true); W.walk = buildWalk(stad.scene, 0.5); } catch (e) { console.warn('stadium walk grid failed', e); W.walk = null; }
   const plaza = new T.Mesh(new T.PlaneGeometry(90, 150), new T.MeshLambertMaterial({ color: 0xb9bcc2 })); plaza.rotation.x = -Math.PI / 2; plaza.position.set(sx - 178, my + 0.02, sz); cs.add(plaza);
   const road = new T.Mesh(new T.PlaneGeometry(Math.max(10, sx - 178 - (nav.ox + gW)), 16), new T.MeshLambertMaterial({ color: 0x24272c })); road.rotation.x = -Math.PI / 2; road.position.set((sx - 178 + nav.ox + gW) / 2, my + 0.03, sz); cs.add(road);
   W.plaza = [sx - 170, sz];
+  try { W.outskirts = makeOutskirts(cs, C, nav, gW, gH, sx, sz, my, big); } catch (e) { console.warn('outskirts failed', e); }
   const bk = new T.Mesh(new T.CylinderGeometry(2, 2, 90, 16, 1, true), new T.MeshBasicMaterial({ color: 0x38d27a, transparent: true, opacity: 0.35, side: T.DoubleSide, depthWrite: false })); bk.position.set(W.plaza[0], my + 45, W.plaza[1]); cs.add(bk);
   const hb = new T.Mesh(new T.CylinderGeometry(1.2, 1.2, 60, 16, 1, true), new T.MeshBasicMaterial({ color: 0xffc83d, transparent: true, opacity: 0.4, side: T.DoubleSide, depthWrite: false })); hb.position.set(house0[0], nav.y(house0[0], house0[1]) + 30, house0[1]); cs.add(hb);
   W.cityScene = cs;
   // ---- player ----
-  const pm = player.scene; pm.updateMatrixWorld(true);
-  const bb = new T.Box3().setFromObject(pm), ph = bb.max.y - bb.min.y; let ps = ph > 0.01 ? 1.85 / ph : 1; if (!isFinite(ps) || ps * ph < 0.5 || ps * ph > 5) ps = 1;
-  pm.scale.setScalar(ps); pm.updateMatrixWorld(true); const b2 = new T.Box3().setFromObject(pm); pm.position.y -= isFinite(b2.min.y) ? b2.min.y : 0;
-  const pw = new T.Group(); pw.add(pm); W.player = pw;
-  if (player.animations && player.animations.length) {
-    W.mixer = new T.AnimationMixer(pm); W.act = W.mixer.clipAction(player.animations[0]); W.act.play(); W.act.paused = true; W.act.time = IDLE_T; W.mixer.update(0);
-  }
+  W.rig = fitPlayer(player); W.player = W.rig.pw; W.mixer = null; W.act = null;
   // ---- bike ----
   W.bike = makeBike(); cs.add(W.bike);
   // ---- house scene ----
   let G; try { G = analyzeHouse(house.scene); } catch (e) { console.error('house analysis failed, using fallback', e); G = fallbackHouse(); }
   W.hg = G;
-  const hs = new T.Scene(); hs.background = new T.Color(0x0b0d12); hs.add(new T.HemisphereLight(0xffffff, 0x998877, 1.0)); hs.add(new T.AmbientLight(0xffffff, 0.55));
+  const hs = new T.Scene(); hs.background = new T.Color(0x0b0d12); hs.add(new T.HemisphereLight(0xffffff, 0x998877, 0.85)); hs.add(new T.AmbientLight(0xffffff, 0.4));
   const dl = new T.DirectionalLight(0xfff2dd, 0.6); dl.position.set(3, 8, 4); hs.add(dl); hs.add(house.scene);
   G.lights.forEach(p => { const l = new T.PointLight(0xffe8c8, 0.9, 9); l.position.set(p[0], p[1], p[2]); hs.add(l); });
   W.houseScene = hs;
@@ -464,9 +462,9 @@ function startHouse() {
   W.hp = { x: G.spawn[0], z: G.spawn[1], h: G.heading, sp: 0 }; W.cy = G.heading + Math.PI; W.cp = 0.22; W.cam.position.set(W.hp.x, 1.6, W.hp.z);
   W.player.position.set(W.hp.x, 0, W.hp.z); W.player.rotation.set(0, W.hp.h, 0);
   show('whud'); $$('wview').style.display = 'block'; padOn(true);
-  hint('Left stick: walk. Drag the screen: look around. Tap GO OUTSIDE when you are ready to ride.');
-  setAct('GO OUTSIDE', leaveHouse); W.exitShown = false; fade(false);
-  setTimeout(() => { if (W.phase === 'house') hint(''); }, 8000);
+  setAct(null); W.exitShown = false; fade(false);
+  hint('Left stick: walk. Drag the screen: look around. Walk to the glass doors at the front of the living room to go outside.');
+  setTimeout(() => { if (W.phase === 'house') hint(''); }, 10000);
 }
 function setAct(label, fn) { const b = $$('wact'); if (!label) { b.style.display = 'none'; b.onclick = null; return; } b.textContent = label; b.style.display = 'block'; b.onclick = fn; }
 function moveFace(o, vx, vz, dt) {
@@ -483,7 +481,9 @@ function houseUpdate(dt) {
     moveFace(hp, vx, vz, dt);
   }
   W.player.position.set(hp.x, 0, hp.z); W.player.rotation.y = hp.h;
-  setClip(spd > 0, spd / 1.7 * 0.9); if (W.mixer) W.mixer.update(dt);
+  animPlayer(dt, spd, false);
+  const dd = Math.hypot(hp.x - HOUSE.door[0], hp.z - HOUSE.door[1]), near = dd < 1.1;
+  if (near && !W.exitShown) { W.exitShown = true; setAct('GO OUTSIDE', leaveHouse); } else if (!near && W.exitShown) { W.exitShown = false; setAct(null); }
   const k = Math.min(1, dt * 14);
   if (W.fp) {
     W.player.visible = false; const cy = W.cy, pit = W.cp - 0.22;
@@ -534,6 +534,7 @@ function bikeUpdate(dt) {
   else if (free(b.x, nz)) { b.z = nz; b.v *= 0.7; }
   else if ([0.4, -0.4, 0.8, -0.8, 1.2, -1.2].some(da => { const ax = Math.sin(b.h + da) * step, az = Math.cos(b.h + da) * step; if (free(b.x + ax, b.z + az)) { b.x += ax; b.z += az; b.v *= 0.85; return true; } return false; })) { /* slid along the obstacle */ }
   else { b.v = -b.v * 0.25; if (thr < -0.05 || Math.abs(b.v) < 0.3) { const rx = b.x - fx * 0.6 * dt * 4, rz = b.z - fz * 0.6 * dt * 4; if (n.ok(rx, rz)) { b.x = rx; b.z = rz; } } }
+  animPlayer(dt, b.v, true);
   const gy = n.y(b.x, b.z); b.y += (gy - b.y) * Math.min(1, dt * 10);
   b.lean += (-steer * clamp(b.v / maxV, 0, 1) * 0.35 - b.lean) * Math.min(1, dt * 6);
   W.bike.position.set(b.x, b.y, b.z); W.bike.rotation.set(0, b.h, b.lean, 'YXZ');
@@ -550,14 +551,272 @@ function bikeUpdate(dt) {
   const rel = Math.atan2(dx, dz) - b.h; $$('warrg').style.transform = 'rotate(' + (-90 - rel * 180 / Math.PI) + 'deg)';
   $$('wdist').textContent = 'STADIUM ' + Math.round(dist) + ' M';
   const near = dist < 28;
-  if (near && !W.enterShown) { W.enterShown = true; setAct('ENTER STADIUM', enterStadium); } else if (!near && W.enterShown) { W.enterShown = false; setAct(null); }
+  if (near && !W.enterShown) { W.enterShown = true; setAct('PARK & WALK IN', startFoot); } else if (!near && W.enterShown) { W.enterShown = false; setAct(null); }
 }
-function enterStadium() {
+
+
+
+/* ---------------- city materials (rules from inspecting the four city files) ---------------- */
+function prepCity(root, key) {
+  const lin = R.outputEncoding !== T.sRGBEncoding;
+  const fix = t => { if (t && lin) { t.encoding = T.LinearEncoding; t.needsUpdate = true; } };
+  const seen = new Set();
+  root.traverse(o => {
+    if (!o.isMesh) return;
+    o.frustumCulled = true; o.matrixAutoUpdate = false; o.updateMatrix();
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    // England ships every building twice (albedo + baked "Lightmap" overlay) and invisible collision volumes: hide the overlays and helpers
+    if (mats.some(m => /collision|lightmap/i.test(m.name || ''))) { o.visible = false; return; }
+    // Spain's vertex colours are almost black (mean 0.13): drop them when they are dark
+    const ca = o.geometry && o.geometry.attributes.color;
+    if (ca) {
+      let sum = 0, n = 0; for (let i = 0; i < ca.count; i += 7) { sum += ca.getX(i) + ca.getY(i) + ca.getZ(i); n += 3; }
+      if (n && sum / n < 0.55) { o.geometry.deleteAttribute('color'); mats.forEach(m => { m.vertexColors = false; m.needsUpdate = true; }); }
+    }
+    mats.forEach(m => {
+      if (seen.has(m)) return; seen.add(m);
+      m.side = T.DoubleSide;
+      if ('metalness' in m) { m.metalness = 0; m.roughness = Math.max(m.roughness || 0, 0.7); }
+      m.normalMap = null; m.roughnessMap = null; m.metalnessMap = null; m.aoMap = null;
+      if (m.transparent) {
+        if (/cross|decal|parking/i.test(m.name || '')) { m.depthWrite = false; m.polygonOffset = true; m.polygonOffsetFactor = -2; m.polygonOffsetUnits = -2; }
+        else if (m.map) { m.alphaTest = Math.max(m.alphaTest || 0, 0.3); m.transparent = false; m.depthWrite = true; }
+        else { m.transparent = false; m.opacity = 1; }
+      }
+      if ('emissive' in m && m.map) { m.emissive = new T.Color(0xffffff); m.emissiveMap = m.map; m.emissiveIntensity = 0.1; }
+      fix(m.map); fix(m.emissiveMap); m.needsUpdate = true;
+    });
+  });
+}
+
+/* ---------------- outskirts: buildings around the city, along the avenue and the stadium so it is not floating on a flat plane ---------------- */
+function makeOutskirts(cs, C, nav, gW, gH, sx, sz, my, big) {
+  const cv = document.createElement('canvas'); cv.width = 64; cv.height = 128; const g = cv.getContext('2d');
+  g.fillStyle = '#d9dde2'; g.fillRect(0, 0, 64, 128);
+  for (let r = 0; r < 8; r++) for (let q = 0; q < 4; q++) { g.fillStyle = ((r * 7 + q * 3) % 5) === 0 ? '#f2d98a' : '#4b5b70'; g.fillRect(q * 16 + 3, r * 16 + 4, 10, 9); }
+  const tex = new T.CanvasTexture(cv); tex.wrapS = tex.wrapT = T.RepeatWrapping; tex.anisotropy = 4; tex.encoding = R.outputEncoding === T.sRGBEncoding ? T.sRGBEncoding : T.LinearEncoding;
+  const P = [], N = [], UV = [], COL = [];
+  let sd = 21; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  const tint = new T.Color(C.sky).lerp(new T.Color(0xffffff), 0.75);
+  const quad = (c4, nx, ny, nz, u, v, col) => {
+    const uv = [[0, 0], [u, 0], [u, v], [0, v]];
+    [0, 1, 2, 0, 2, 3].forEach(i => { P.push(c4[i][0], c4[i][1], c4[i][2]); N.push(nx, ny, nz); UV.push(uv[i][0], uv[i][1]); COL.push(col.r, col.g, col.b); });
+  };
+  const box = (cx, cz, w, d, h, col) => {
+    const x0 = cx - w / 2, x1 = cx + w / 2, z0 = cz - d / 2, z1 = cz + d / 2, y0 = my - 0.5, y1 = my + h, uw = w / 10, ud = d / 10, vh = h / 25.6;
+    quad([[x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]], 0, 0, 1, uw, vh, col);
+    quad([[x1, y0, z0], [x0, y0, z0], [x0, y1, z0], [x1, y1, z0]], 0, 0, -1, uw, vh, col);
+    quad([[x1, y0, z1], [x1, y0, z0], [x1, y1, z0], [x1, y1, z1]], 1, 0, 0, ud, vh, col);
+    quad([[x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0]], -1, 0, 0, ud, vh, col);
+    quad([[x0, y1, z1], [x1, y1, z1], [x1, y1, z0], [x0, y1, z0]], 0, 1, 0, 0.001, 0.001, col);
+  };
+  const cx0 = nav.ox + gW / 2, cz0 = nav.oz + gH / 2, span = big * 2.4, step = 55; let count = 0;
+  for (let x = cx0 - span; x <= cx0 + span && count < 2500; x += step) for (let z = cz0 - span; z <= cz0 + span && count < 2500; z += step) {
+    const px = x + (rnd() - 0.5) * 28, pz = z + (rnd() - 0.5) * 28;
+    if (px > nav.ox - 25 && px < nav.ox + gW + 25 && pz > nav.oz - 25 && pz < nav.oz + gH + 25) continue;
+    if (Math.abs(px - sx) < 250 && Math.abs(pz - sz) < 130) continue;
+    const d = Math.hypot(px - cx0, pz - cz0), prob = clamp(0.92 - d / (span * 1.2), 0.12, 0.9); if (rnd() > prob) continue;
+    const k = 0.78 + rnd() * 0.27, h = (14 + rnd() * 40) * clamp(1.5 - d / span, 0.45, 1.3);
+    box(px, pz, 22 + rnd() * 26, 22 + rnd() * 26, h, new T.Color(tint.r * k, tint.g * k, tint.b * k)); count++;
+  }
+  const geo = new T.BufferGeometry();
+  geo.setAttribute('position', new T.Float32BufferAttribute(P, 3)); geo.setAttribute('normal', new T.Float32BufferAttribute(N, 3));
+  geo.setAttribute('uv', new T.Float32BufferAttribute(UV, 2)); geo.setAttribute('color', new T.Float32BufferAttribute(COL, 3));
+  const mesh = new T.Mesh(geo, new T.MeshLambertMaterial({ map: tex, vertexColors: true, side: T.DoubleSide }));
+  mesh.frustumCulled = false; cs.add(mesh); return mesh;
+}
+
+/* ---------------- ground texture ---------------- */
+function makeGroundTex(hex) {
+  const cv = document.createElement('canvas'); cv.width = cv.height = 256; const g = cv.getContext('2d'), c = new T.Color(hex);
+  g.fillStyle = '#' + c.getHexString(); g.fillRect(0, 0, 256, 256);
+  let sd = 11; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 700; i++) {
+    const k = 0.82 + rnd() * 0.36, cc = new T.Color(c.r * k, c.g * (0.9 + rnd() * 0.25), c.b * k), x = rnd() * 256, y = rnd() * 256, r = 3 + rnd() * 16;
+    g.fillStyle = 'rgba(' + Math.round(cc.r * 255) + ',' + Math.round(cc.g * 255) + ',' + Math.round(cc.b * 255) + ',.35)';
+    [-256, 0, 256].forEach(ox => [-256, 0, 256].forEach(oy => { g.beginPath(); g.arc(x + ox, y + oy, r, 0, 6.3); g.fill(); }));
+  }
+  const t = new T.CanvasTexture(cv); t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(240, 240); t.anisotropy = 4;
+  t.encoding = R.outputEncoding === T.sRGBEncoding ? T.sRGBEncoding : T.LinearEncoding; return t;
+}
+
+/* ---------------- player: correct size from the skeleton + procedural walk/run/idle/ride ---------------- */
+const BONE_KEYS = {
+  hips: ['hips', 'pelvis'], spine: ['spine'], spine1: ['spine1'], spine2: ['spine2', 'chest'], head: ['head'],
+  lthigh: ['leftupleg', 'thighl', 'lthigh', 'leftthigh'], rthigh: ['rightupleg', 'thighr', 'rthigh', 'rightthigh'],
+  lcalf: ['leftleg', 'calfl', 'lcalf', 'leftcalf', 'leftshin'], rcalf: ['rightleg', 'calfr', 'rcalf', 'rightcalf', 'rightshin'],
+  larm: ['leftarm', 'upperarml', 'lupperarm', 'leftupperarm'], rarm: ['rightarm', 'upperarmr', 'rupperarm', 'rightupperarm'],
+  lfore: ['lforearm', 'leftforearm', 'lowerarml', 'llowerarm', 'leftlowerarm'], rfore: ['rforearm', 'rightforearm', 'lowerarmr', 'rlowerarm', 'rightlowerarm'],
+  lfoot: ['leftfoot', 'footl', 'lfoot'], rfoot: ['rightfoot', 'footr', 'rfoot']
+};
+function fitPlayer(player) {
+  const pm = player.scene, pw = new T.Group(); pw.add(pm);
+  pm.traverse(o => { if (/ball/i.test(o.name)) o.visible = false; });
+  let mixer = null, act = null;
+  if (player.animations && player.animations.length) {
+    const clip = player.animations[0]; mixer = new T.AnimationMixer(pm); act = mixer.clipAction(clip); act.play(); act.paused = true; act.time = Math.min(IDLE_T, Math.max(0, clip.duration - 0.05)); mixer.update(0);
+  }
+  pm.updateMatrixWorld(true);
+  const bones = []; pm.traverse(o => { if (o.isBone) bones.push(o); });
+  const tmp = new T.Vector3(); let lo = 1e9, hi = -1e9, topBone = false;
+  bones.forEach(b => { b.getWorldPosition(tmp); lo = Math.min(lo, tmp.y); hi = Math.max(hi, tmp.y); if (/headtop|head_end|headnub/i.test(b.name)) topBone = true; });
+  let ph, useBones = bones.length >= 10 && hi - lo > 1e-4;
+  if (useBones) ph = (hi - lo) * (topBone ? 1.0 : 1.07); else { const bb = new T.Box3().setFromObject(pm); ph = bb.max.y - bb.min.y; }
+  let ps = ph > 1e-6 ? 1.8 / ph : 1; if (!isFinite(ps) || ps <= 0) ps = 1;
+  pm.scale.multiplyScalar(ps); pm.updateMatrixWorld(true);
+  let foot = 0;
+  if (useBones) { lo = 1e9; bones.forEach(b => { b.getWorldPosition(tmp); lo = Math.min(lo, tmp.y); }); foot = lo - 0.02; } else { foot = new T.Box3().setFromObject(pm).min.y; }
+  pm.position.y -= isFinite(foot) ? foot : 0; pm.updateMatrixWorld(true);
+  // bone lookup
+  const b = {}; const norm = s => s.replace(/(_\d+)+$/, '').toLowerCase().replace(/[^a-z0-9]/g, '').replace(/^(mixamorig|bip001|bip01)/, '');
+  bones.forEach(o => { const n = norm(o.name); Object.keys(BONE_KEYS).forEach(k => { if (!b[k] && BONE_KEYS[k].indexOf(n) >= 0) b[k] = o; }); });
+  const ok = !!(b.lthigh && b.rthigh && b.lcalf && b.rcalf && b.larm && b.rarm);
+  // facing: toes should point to +Z
+  if (ok && b.lfoot) {
+    let toe = null; b.lfoot.traverse(o => { if (!toe && o !== b.lfoot && /toe/i.test(o.name)) toe = o; });
+    if (toe) { const p1 = new T.Vector3(), p2 = new T.Vector3(); toe.getWorldPosition(p1); b.lfoot.getWorldPosition(p2); if (p1.z - p2.z < -0.005) { pm.rotation.y += Math.PI; pm.updateMatrixWorld(true); } }
+  }
+  const rest = {}; Object.keys(b).forEach(k => { rest[k] = b[k].quaternion.clone(); });
+  return { pm, pw, mixer, act, b, rest, ok, y0: pm.position.y, ph: 0, pd: 0, mv: 0, t: 0 };
+}
+const _qa = new T.Quaternion(), _qp = new T.Quaternion(), _qw = new T.Quaternion(), _qr = new T.Quaternion(), _AX = new T.Vector3(1, 0, 0);
+function swingBone(r, key, ang) {
+  const bn = r.b[key]; if (!bn || !bn.parent) return;
+  bn.parent.getWorldQuaternion(_qp); r.pw.getWorldQuaternion(_qw); _qp.premultiply(_qw.invert());   // parent orientation in player space
+  _qa.setFromAxisAngle(_AX, ang); _qr.copy(_qp).invert().multiply(_qa).multiply(_qp).multiply(r.rest[key]); bn.quaternion.copy(_qr);
+}
+function animPlayer(dt, spd, seated) {
+  const r = W.rig; if (!r) return; const sp = Math.abs(spd);
+  if (!r.ok) {   // unknown skeleton: fall back to the baked clip
+    if (r.mixer && r.act) { if (sp > 0.15 && !seated) { r.act.paused = false; r.act.timeScale = clamp(sp / 1.7, 0.4, 1.6); r.mixer.update(dt); } else if (!r.act.paused) { r.act.paused = true; r.act.time = IDLE_T; r.mixer.update(0); } }
+    return;
+  }
+  r.t += dt; r.mv += ((sp > 0.15 ? 1 : 0) - r.mv) * Math.min(1, dt * 8);
+  if (seated) r.pd += dt * Math.max(0, spd) * 0.9; else r.ph += dt * (3.0 + sp * 1.6);
+  const a = clamp(sp / 1.7, 0, 1.6) * 0.5 * r.mv, s = Math.sin(r.ph), c = Math.cos(r.ph);
+  if (seated) {
+    const p = Math.sin(r.pd * 3), pa = 0.3 * clamp(spd / 6, 0, 1);
+    swingBone(r, 'spine', 0.22); swingBone(r, 'head', -0.18);
+    swingBone(r, 'lthigh', -0.95 + pa * p); swingBone(r, 'rthigh', -0.95 - pa * p);
+    swingBone(r, 'lcalf', 1.15 - pa * 1.2 * p); swingBone(r, 'rcalf', 1.15 + pa * 1.2 * p);
+    swingBone(r, 'larm', -0.8); swingBone(r, 'rarm', -0.8); swingBone(r, 'lfore', -0.55); swingBone(r, 'rfore', -0.55);
+    r.pm.position.y = r.y0;
+  } else {
+    const lean = 0.03 + 0.1 * clamp((sp - 1.7) / 1.5, 0, 1) * r.mv, br = Math.sin(r.t * 1.7) * 0.012 * (1 - r.mv);
+    swingBone(r, 'spine', lean * 0.5 + br); swingBone(r, 'spine1', lean * 0.5); swingBone(r, 'head', -lean * 0.6);
+    swingBone(r, 'lthigh', -s * a); swingBone(r, 'rthigh', s * a);
+    swingBone(r, 'lcalf', Math.max(0, c) * a * 1.6); swingBone(r, 'rcalf', Math.max(0, -c) * a * 1.6);
+    swingBone(r, 'larm', s * a * 0.9); swingBone(r, 'rarm', -s * a * 0.9);
+    const fb = -(0.22 + a * 0.5); swingBone(r, 'lfore', fb); swingBone(r, 'rfore', fb);
+    r.pm.position.y = r.y0 + Math.abs(s) * 0.035 * r.mv;
+  }
+}
+
+/* ---------------- stadium walk grid (multi-level: plaza, concourse, stairs, pitch) ---------------- */
+function buildWalk(root, CELL) {
+  root.updateMatrixWorld(true);
+  const bb = new T.Box3().setFromObject(root), sz = new T.Vector3(); bb.getSize(sz);
+  const gx0 = bb.min.x - 1, gz0 = bb.min.z - 1, NX = Math.ceil((sz.x + 2) / CELL), NZ = Math.ceil((sz.z + 2) / CELL), N = NX * NZ;
+  if (!(N > 0) || N > 1.5e6) throw new Error('walk grid size ' + N);
+  const surf = new Array(N), wal = new Array(N);
+  const ci = x => Math.floor((x - gx0) / CELL), cj = z => Math.floor((z - gz0) / CELL);
+  const va = new T.Vector3(), vb = new T.Vector3(), vc = new T.Vector3();
+  const addS = (c, y) => { let a = surf[c]; if (!a) { surf[c] = [y]; return; } for (let q = 0; q < a.length; q++) if (Math.abs(a[q] - y) < 0.1) return; if (a.length < 12) a.push(y); };
+  const addW = (c, lo, hi) => { let a = wal[c]; if (!a) a = wal[c] = []; if (a.length < 24) a.push(lo, hi); };
+  const seg = (x0, z0, x1, z1, lo, hi) => { const n = Math.max(1, Math.ceil(Math.hypot(x1 - x0, z1 - z0) / (CELL * 0.5))); for (let q = 0; q <= n; q++) { const i = ci(x0 + (x1 - x0) * q / n), j = cj(z0 + (z1 - z0) * q / n); if (i >= 0 && j >= 0 && i < NX && j < NZ) addW(i * NZ + j, lo, hi); } };
+  root.traverse(o => {
+    if (!o.isMesh || !o.geometry || !o.geometry.attributes.position) return;
+    const m = Array.isArray(o.material) ? o.material[0] : o.material; if (m && m.transparent && m.opacity < 0.15) return;
+    const g = o.geometry, pos = g.attributes.position, idx = g.index, cnt = idx ? idx.count : pos.count;
+    for (let t = 0; t + 2 < cnt; t += 3) {
+      const a = idx ? idx.getX(t) : t, b = idx ? idx.getX(t + 1) : t + 1, c = idx ? idx.getX(t + 2) : t + 2;
+      va.fromBufferAttribute(pos, a).applyMatrix4(o.matrixWorld); vb.fromBufferAttribute(pos, b).applyMatrix4(o.matrixWorld); vc.fromBufferAttribute(pos, c).applyMatrix4(o.matrixWorld);
+      const ux = vb.x - va.x, uy = vb.y - va.y, uz = vb.z - va.z, wx = vc.x - va.x, wy = vc.y - va.y, wz = vc.z - va.z;
+      const nx = uy * wz - uz * wy, ny = uz * wx - ux * wz, nz = ux * wy - uy * wx, l = Math.sqrt(nx * nx + ny * ny + nz * nz); if (l < 1e-9) continue;
+      const yn = ny / l;
+      if (yn > 0.7) {
+        const d = (vb.z - vc.z) * (va.x - vc.x) + (vc.x - vb.x) * (va.z - vc.z); if (Math.abs(d) < 1e-12) continue;
+        const i0 = Math.max(0, ci(Math.min(va.x, vb.x, vc.x))), i1 = Math.min(NX - 1, ci(Math.max(va.x, vb.x, vc.x))), j0 = Math.max(0, cj(Math.min(va.z, vb.z, vc.z))), j1 = Math.min(NZ - 1, cj(Math.max(va.z, vb.z, vc.z)));
+        for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) {
+          const px = gx0 + (i + 0.5) * CELL, pz = gz0 + (j + 0.5) * CELL;
+          const l1 = ((vb.z - vc.z) * (px - vc.x) + (vc.x - vb.x) * (pz - vc.z)) / d, l2 = ((vc.z - va.z) * (px - vc.x) + (va.x - vc.x) * (pz - vc.z)) / d, l3 = 1 - l1 - l2;
+          if (l1 >= -0.02 && l2 >= -0.02 && l3 >= -0.02) addS(i * NZ + j, l1 * va.y + l2 * vb.y + l3 * vc.y);
+        }
+      } else if (Math.abs(yn) < 0.5) {
+        const lo = Math.min(va.y, vb.y, vc.y), hi = Math.max(va.y, vb.y, vc.y);
+        if (hi - lo >= 0.45) { seg(va.x, va.z, vb.x, vb.z, lo, hi); seg(vb.x, vb.z, vc.x, vc.z, lo, hi); seg(vc.x, vc.z, va.x, va.z, lo, hi); }
+      }
+    }
+  });
+  const cell = (x, z) => { const i = ci(x), j = cj(z); return (i < 0 || j < 0 || i >= NX || j >= NZ) ? -1 : i * NZ + j; };
+  const surfAt = (x, z, y) => { const c = cell(x, z); if (c < 0) return null; const a = surf[c]; if (!a) return null; let best = null; for (let q = 0; q < a.length; q++) { const v = a[q]; if (v <= y + 0.6 && v >= y - 1.5 && (best === null || v > best)) best = v; } return best; };
+  const hit = (x, z, y0, y1) => { const c = cell(x, z); if (c < 0) return false; const a = wal[c]; if (!a) return false; for (let q = 0; q < a.length; q += 2) if (a[q] < y1 && a[q + 1] > y0) return true; return false; };
+  const blocked = (x, z, y) => hit(x, z, y + 0.4, y + 1.5);
+  const stand = (x, z, y) => !blocked(x, z, y) && !blocked(x + 0.3, z, y) && !blocked(x - 0.3, z, y) && !blocked(x, z + 0.3, y) && !blocked(x, z - 0.3, y);
+  const inB = (x, z) => x >= bb.min.x && x <= bb.max.x && z >= bb.min.z && z <= bb.max.z;
+  // pitch spot: dominant floor level near the centre
+  const mx = (bb.min.x + bb.max.x) / 2, mz = (bb.min.z + bb.max.z) / 2, hist = new Map(), RR = 35;
+  for (let i = Math.max(0, ci(mx - RR)); i <= Math.min(NX - 1, ci(mx + RR)); i++) for (let j = Math.max(0, cj(mz - RR)); j <= Math.min(NZ - 1, cj(mz + RR)); j++) { const a = surf[i * NZ + j]; if (a) a.forEach(y => { const k = Math.round(y / 0.1); hist.set(k, (hist.get(k) || 0) + 1); }); }
+  let bk = null, bv = 0; hist.forEach((v, k) => { if (v > bv) { bv = v; bk = k; } });
+  let pitch = null;
+  if (bk !== null) {
+    const yP = bk * 0.1; let bd = 1e18;
+    for (let i = Math.max(0, ci(mx - RR)); i <= Math.min(NX - 1, ci(mx + RR)); i++) for (let j = Math.max(0, cj(mz - RR)); j <= Math.min(NZ - 1, cj(mz + RR)); j++) {
+      const a = surf[i * NZ + j]; if (!a) continue; const px = gx0 + (i + 0.5) * CELL, pz = gz0 + (j + 0.5) * CELL, d = (px - mx) * (px - mx) + (pz - mz) * (pz - mz);
+      if (d < bd && a.some(y => Math.abs(y - yP) < 0.15) && stand(px, pz, yP)) { bd = d; pitch = [px, yP, pz]; }
+    }
+  }
+  return { inB, surf: surfAt, hit, blocked, stand, bb, pitch };
+}
+
+/* ---------------- phase 4: on foot - plaza, gates and stadium (same world, same player) ---------------- */
+function startFoot() {
   if (W.phase !== 'bike') return; W.phase = 'trans'; setAct(null); padOn(false); fade(true);
   setTimeout(() => {
-    W.on = false; W.scene = null; $$('wl').style.display = 'none'; hideGameHud(false);
-    try { begin(); } catch (e) { console.error(e); const s = $$('st'); if (s) s.classList.add('on'); }
-  }, 750);
+    const b = W.b, n = W.nav, ang = Math.atan2(W.stadXZ[0] - b.x, W.stadXZ[1] - b.z);
+    W.bike.remove(W.player); W.cityScene.add(W.player); W.player.visible = true; W.player.rotation.set(0, ang, 0);
+    const x = b.x + Math.cos(b.h) * 1.3, z = b.z - Math.sin(b.h) * 1.3, ok = n.ok(x, z);
+    W.foot = { x: ok ? x : b.x, z: ok ? z : b.z, y: b.y, ty: b.y, h: ang, in: null };
+    W.cy = ang + Math.PI; W.cp = 0.22; W.phase = 'foot'; W.scene = W.cityScene; W.cam.fov = 60; W.cam.near = 0.12; W.cam.updateProjectionMatrix();
+    W.cam.position.set(W.foot.x - Math.sin(ang) * 3, W.foot.y + 2, W.foot.z - Math.cos(ang) * 3);
+    $$('warr').style.display = 'none'; show('whud'); $$('wview').style.display = 'block'; padOn(true); W.enterShown = false;
+    hint('Bike parked. Walk to the stadium with the left stick, drag the screen to look around.'); setTimeout(() => { if (W.phase === 'foot') hint(''); }, 8000);
+    fade(false);
+  }, 650);
+}
+function footTeleport(x, y, z) {
+  fade(true); setTimeout(() => { const f = W.foot; f.x = x; f.y = y; f.ty = y; f.z = z; fade(false); }, 450);
+}
+function toPitch() { const w = W.walk; if (!w || !w.pitch) { hint('The stadium interior is not available yet.'); return; } footTeleport(w.pitch[0], w.pitch[1], w.pitch[2]); }
+function toPlaza() { const n = W.nav; footTeleport(W.plaza[0], n.y(W.plaza[0], W.plaza[1]), W.plaza[1]); }
+function footUpdate(dt) {
+  const n = W.nav, f = W.foot, s = stick(), mag = Math.min(1, Math.hypot(s[0], s[1])), Wk = W.walk;
+  const spd = mag > 0.12 ? (mag > 0.95 ? 4.2 : 1.9) * mag : 0;
+  const okAt = (x, z) => {
+    if (Wk && Wk.inB(x, z)) { const y = Wk.surf(x, z, f.y); return (y !== null && Wk.stand(x, z, y)) ? y : null; }
+    return n.okFree(x, z) ? n.y(x, z) : null;
+  };
+  if (spd > 0) {
+    const cy = W.cy, fx = -Math.sin(cy), fz = -Math.cos(cy), rx = Math.cos(cy), rz = -Math.sin(cy);
+    let vx = fx * -s[1] + rx * s[0], vz = fz * -s[1] + rz * s[0]; const l = Math.hypot(vx, vz) || 1; vx /= l; vz /= l;
+    const nx = f.x + vx * spd * dt, nz = f.z + vz * spd * dt; let y = okAt(nx, nz);
+    if (y !== null) { f.x = nx; f.z = nz; f.ty = y; } else if ((y = okAt(nx, f.z)) !== null) { f.x = nx; f.ty = y; } else if ((y = okAt(f.x, nz)) !== null) { f.z = nz; f.ty = y; }
+    moveFace(f, vx, vz, dt);
+  }
+  f.y += (f.ty - f.y) * Math.min(1, dt * 12);
+  W.player.position.set(f.x, f.y, f.z); W.player.rotation.y = f.h; animPlayer(dt, spd, false);
+  const inside = !!(Wk && Wk.inB(f.x, f.z));
+  if (inside !== f.in) { f.in = inside; setAct(inside ? 'BACK TO PLAZA' : 'ENTER STADIUM', inside ? toPlaza : toPitch); }
+  const k = Math.min(1, dt * 9);
+  if (W.fp) {
+    W.player.visible = false; const cy = W.cy, pit = W.cp - 0.22;
+    W.cam.position.set(f.x, f.y + 1.62, f.z); W.cam.lookAt(f.x - Math.sin(cy) * 3, f.y + 1.62 - Math.sin(pit) * 3, f.z - Math.cos(cy) * 3);
+  } else {
+    const cp = clamp(W.cp, -0.3, 0.8), ch = Math.cos(cp), sh = Math.sin(cp), DIST = 3.4;
+    let d = DIST; if (Wk && Wk.inB(f.x, f.z)) for (let q = 0.3; q <= DIST; q += 0.25) { const px = f.x + Math.sin(W.cy) * ch * q, pz = f.z + Math.cos(W.cy) * ch * q, py = f.y + 1.4 + sh * q; if (Wk.hit(px, pz, py - 0.15, py + 0.15)) { d = Math.max(0.3, q - 0.35); break; } }
+    W.cam.position.x += (f.x + Math.sin(W.cy) * ch * d - W.cam.position.x) * k; W.cam.position.z += (f.z + Math.cos(W.cy) * ch * d - W.cam.position.z) * k; W.cam.position.y += (f.y + 1.4 + sh * d - W.cam.position.y) * k;
+    W.player.visible = d > 0.9; W.cam.lookAt(f.x, f.y + 1.3, f.z);
+  }
 }
 
 /* ---------------- per-frame ---------------- */
@@ -566,6 +825,6 @@ function frame() {
   const el = R.domElement, a = el.clientWidth / Math.max(1, el.clientHeight);
   if (Math.abs(W.cam.aspect - a) > 1e-3) { W.cam.aspect = a; W.cam.updateProjectionMatrix(); }
   if (W.dome && W.scene === W.cityScene) W.dome.position.copy(W.cam.position);
-  if (W.phase === 'fly') flyUpdate(dt); else if (W.phase === 'house') houseUpdate(dt); else if (W.phase === 'bike') bikeUpdate(dt);
+  if (W.phase === 'fly') flyUpdate(dt); else if (W.phase === 'house') houseUpdate(dt); else if (W.phase === 'bike') bikeUpdate(dt); else if (W.phase === 'foot') footUpdate(dt);
 }
 })();
